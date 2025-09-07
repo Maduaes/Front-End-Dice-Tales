@@ -1,9 +1,9 @@
 function Footer() {
-    return (
-        <>
-            <p>Footer aqui!</p>
-        </>
-    )
+  return (
+    <>
+      <p>Footer aqui!</p>
+    </>
+  );
 }
 
-export default Footer
+export default Footer;

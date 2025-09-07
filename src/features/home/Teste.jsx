@@ -1,9 +1,9 @@
 function Teste() {
-    return (
-        <>
-            <p>Teste funcionando!</p>
-        </>
-    )
+  return (
+    <>
+      <p>Teste funcionando!</p>
+    </>
+  );
 }
 
-export default Teste
+export default Teste;
