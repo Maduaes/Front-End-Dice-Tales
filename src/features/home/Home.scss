@@ -1,0 +1,311 @@
+main{
+    color: white;
+}
+.section-row{
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+
+/* GAME CONTENT */
+.game-container{
+    background-color: #363547;
+    border-radius: 16px;
+    margin: 5vh 0;
+    font-family: "Inter", sans-serif;
+}
+.header-container{
+    padding: 22px 16px 20px 8px;
+    display: flex;
+    justify-content: space-between;
+}
+.header-container h2{
+    width: auto;
+}
+.search{
+    border: 2px solid #61D9BA;
+    border-radius: 30px;
+    background-color:#363547;
+    color: white;
+}
+.card{
+    background: none;
+    color: white;
+    padding: 0;
+    margin: 2%;
+    overflow: hidden;
+    border-radius: 25px;
+}
+.card img{
+    height: 100%;
+    object-fit: cover;
+    max-height: 250px;
+}
+.card:hover{
+    cursor: pointer;
+    filter: brightness(80%);
+    transition-duration: 0.45s;
+}
+.card-body{
+    display: flex;
+    /* padding-left: 20px; */
+    background: linear-gradient(to right, #6346BA, #365F68);
+    align-items: center;
+    justify-content: center;
+}
+.empty-color{
+    background: linear-gradient(to bottom, #B3384A, #410F53);
+    width: 100%;
+    height: 100%;
+}
+
+.btn-more{
+    margin: 2rem 0;
+    font-weight: 700;
+    border: 0;
+    border-radius: 50px;
+    background-color: #61D9BA;
+    color: #363547;
+    height: 50px;
+}
+.btn-more:hover{
+    transition-duration: 0.45s;
+    background-color: #a38fd3;
+}
+
+
+/* ASIDE */
+.aside{
+    display: flex;
+    flex-direction: column;
+    margin: 5vh 0;
+    gap: 20px;
+    padding: 0;
+}
+.btn-aside{
+    display: flex;
+    background-color: #7758D1;
+    color: white;
+    border-radius: 50px;
+    border: 2px solid #7758D1;
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+    gap: 1vw;
+}
+.btn-aside img{
+    height: 25px;
+}
+.btn-aside:hover{
+    transition-duration: 0.35s;
+    background: linear-gradient(to right, #7758D1, #56469c);
+    border: 2px solid #b7a4ef;
+}
+.btn-aside:not(:hover){
+    transition-duration: 0.35s;
+    display: flex;
+    background-color: #7758D1;
+    color: white;
+    border-radius: 50px;
+    border: 2px solid #7758D1;
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+    gap: 1vw;
+}
+
+
+/* SHEETS */
+.sheets-container{
+    display: flex;
+    flex-direction: column;
+    background-color: #529692;
+    border-radius: 16px;
+    padding-bottom: 6%;
+    height: auto;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+}
+.nav-sheets-container{
+    background-color: #363547;
+    font-weight: 700;
+    border-radius: 16px;
+}
+.nav-tabs .btn-tab.active {
+    background-color: #529692;
+    color: white;
+    cursor: default;
+    border-bottom: none;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    position: relative;
+}
+.nav-tabs .btn-tab{
+    color: #D1CFF4;
+    border: none;
+    background-color: #363547;
+    height: 6vh;
+}
+.nav-tabs-sheets{
+    border-bottom: none;
+}
+.div-text-sheets{
+    background-color: #418181;
+    margin: 4% 0 4% 0;
+    border-radius: 30px;
+    color: #9EC5D1;
+}
+.sheets-group{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.sheets{
+    align-content: center;
+    width: 90%;
+    height: 7vh;
+    border: 0;
+    background-color: #363547;
+    border-radius: 5px;
+    color: white;
+}
+.sheets:hover{
+    background-color: #2d2c3a;
+    transition-duration: 0.45s;
+}
+
+
+/* MEDIA QUERY */
+@media screen and (max-width: 1400px) {
+    .card-body{
+        height: 7vh;
+    }
+}
+
+@media screen and (max-width: 1199px) {
+    .card-title{
+        font-size: 2.4vh;
+    }
+    .card-body{
+        height: 6.3vh;
+    }
+}
+
+
+@media screen and (max-width: 990px) {
+    .section-row{
+        flex-direction: column;
+        gap: 0;
+    }
+    .aside{
+        width: auto;
+        margin: 0;
+    }
+    .btn-div{
+        margin: 0;
+    }
+    .game-container{
+        width: auto;
+    }
+    .sheets-container{
+        overflow: visible;
+        margin-bottom: 10vh;
+        
+    }
+}
+
+@media screen and (max-width: 730px) {
+    .card-body{
+        height: 6vh;
+    }
+}
+
+@media screen and (max-width: 575px){
+    .aside{
+        gap: 25px;
+    }
+    .game-container{
+        border-radius: 0;
+        margin-top: 1px;
+    }
+    .game-box{
+        width: auto;
+        border-radius: 15px;
+    }
+    .nav-sheets-container{
+        border-radius: 0;
+    }
+    .header-container{ 
+        height: auto;
+        justify-content: center;
+        padding: 15px 0 0 0; 
+    }
+    .search{
+        display: none;
+    }
+    .sheets-container{
+        border-radius: 0;
+    }
+    .card-title{
+        font-size: 2.5vh;
+    }
+    .nav-tabs, .btn-tab.active{
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+        height: 9vh;
+    }
+    .card-body{
+        display: flex;
+        height: 7.5vh;
+        padding: 0;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+@media screen and (max-width: 530px){
+    .card-title{
+        font-size: 2.2vh;
+    }
+    .card-body{
+        height: 6.6vh;
+    }
+}
+
+@media screen and (max-width: 425px){
+    .card-title{
+        font-size: 1.8vh;
+    }
+    .card-body{
+        height: 6.2vh;
+    }
+}
+
+@media screen and (max-width: 371px){
+    .card-title{
+        font-size: 1.5vh;
+    }
+    .card-body{
+        height: 5vh;
+    }
+}
+
+@media screen and (max-width: 320px){
+    .card-title{
+        font-size: 1.35vh;
+    }
+    .card-body{
+        height: 4.8vh;
+    }
+}
+
+@media screen and (max-width: 306px){
+    .card-title{
+        font-size: 1.2vh;
+    }
+    .card-body{
+        height: 5vh;
+    }
+}
