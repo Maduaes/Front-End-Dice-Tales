@@ -1,4 +1,4 @@
-function Home() {
+const Home = () => {
   return (
     <>
       <p>Home está funcionando!</p>

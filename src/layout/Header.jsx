@@ -1,7 +1,7 @@
 import './Header.scss';
 import { NavLink } from 'react-router-dom';
 
-function Header() {
+const Header = () => {
 
   const expand = () => {
     let menu = document.getElementById("mb-nav");
