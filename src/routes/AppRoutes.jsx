@@ -1,15 +1,12 @@
-import { Route, Routes } from "react-router-dom";
-import Layout from "../layout/Layout";
-import Home from "../features/home/Home";
-import Teste from "../features/home/Teste";
+import { Routes } from "react-router-dom";
+import { MainRoutes } from "./MainRoutes.jsx";
+import { AuthRoutes } from "./AuthRoutes.jsx";
 
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path='/' element={<Layout />}>
-        <Route index element={<Home />} />
-        <Route path='teste' element={<Teste />} />
-      </Route>
+      {MainRoutes}
+      {AuthRoutes}
     </Routes>
   )
 }
