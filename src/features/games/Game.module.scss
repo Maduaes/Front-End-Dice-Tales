@@ -1,0 +1,101 @@
+.gameContainer{
+  background-color: #363547;
+  border-radius: 10px;
+  font-family: "Inter", sans-serif;
+  padding: 0 10px;
+
+  .headerContainer{
+    padding: 22px 16px 20px 8px;
+    display: flex;
+    justify-content: space-between;
+
+    .groupTitleGames{
+      margin: 0;
+      padding: 0;
+      .boxTitleGame{
+        min-width: 100%;
+        background-color: #61D9BA;
+        height: 6vh;
+        margin: 0;
+        padding: 0;
+      }
+    }
+    h2{
+      width: auto;
+    }
+  }
+  .search{
+    border: 1px solid #61D9BA;
+    border-radius: 30px;
+    background: none;
+    color: white;
+  }
+  .search::placeholder{
+    color: rgb(136, 136, 136);
+    padding-left: 5px;
+  }
+  .btnMore{
+    margin: 1.6rem 0;
+    font-weight: 700;
+    border: 0;
+    border-radius: 50px;
+    background-color: #61D9BA;
+    color: #363547;
+    height: 50px;
+  }
+  .btnMore:hover{
+    transition-duration: 0.45s;
+    background-color: #a38fd3;
+  }
+}
+
+.card{
+  background: none;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 20px;
+
+  .card:hover{
+    cursor: pointer;
+    filter: brightness(80%);
+    transition-duration: 0.45s;
+  }
+  .imgBox{
+    min-height: 19vh;
+    max-height: 19vh;
+    overflow: hidden;
+    background: linear-gradient(217deg, rgba(255, 114, 175, 0.7), rgba(255,0,0,0) 70%),
+                linear-gradient(127deg, #61D9BA, rgba(55,200,200,0) 70%),
+                linear-gradient(336deg, rgba(7, 28, 222, 0.9), rgba(0,0,255,0) 70%);
+  }
+  .cardBody{
+    display: flex;
+    background: linear-gradient(to right, #6346BA, #365F68);
+    color: white;
+    padding: 10px 15px;
+  }
+}
+
+.cardMain{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btnAside{
+    display: flex;
+    background-color: #7758D1;
+    border-radius: 50px;
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+    gap: 1vw;
+    img{
+      height: 25px;
+    }
+  }
+  .btnAside:hover{
+    transition-duration: 0.45s;
+    color: white;
+    background: linear-gradient(to right, #7758D1, #56469c);
+  }

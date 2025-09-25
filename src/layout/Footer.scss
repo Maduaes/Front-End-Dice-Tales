@@ -1,4 +1,4 @@
-footer{
+.footer{
     width: 100%;
     font-family: $font-inter;
     font-optical-sizing: auto;
@@ -54,7 +54,7 @@ footer{
   .form-control::placeholder{
     color: rgb(139, 137, 142);
   }
-  button{
+  .button{
     padding: 7px 15px;
     background-color:#493c6b;
     font-weight: bold;
