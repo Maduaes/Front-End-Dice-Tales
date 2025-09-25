@@ -4,6 +4,11 @@
             "id_game": 1,
             "name_game": "Herança de Trevas", 
             "image_path": ""      
+        },
+        {
+            "id_game": 2,
+            "name_game": "Ruínas de uma Maldição", 
+            "image_path": "" 
         }
     ],
     "recent_sheets": [

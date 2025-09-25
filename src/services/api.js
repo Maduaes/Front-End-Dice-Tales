@@ -4,7 +4,7 @@ let isRefreshing = false
 let failedRequestQueue  = []
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: '/api',
   withCredentials: true
 })
 
