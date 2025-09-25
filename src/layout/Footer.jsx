@@ -4,7 +4,7 @@ import instagram from "../assets/icons/social-media/instagram.png";
 import twitter from "../assets/icons/social-media/twitter.png";
 import github from "../assets/icons/social-media/github.png";
 
-function Footer() {
+const Footer = () => {
   return (
     <footer>
       <div class="container mt-auto container-footer">

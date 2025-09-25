@@ -1,7 +1,7 @@
 import './Home.scss'
 import gameImage from '../../assets/icons/social-media/instagram.png'
 
-function Home() {
+const Home = () => {
   const game = {
     game_image: gameImage,
     game_title: 'Herança de Trevas'

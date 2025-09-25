@@ -1,4 +1,4 @@
-function Teste() {
+const Teste = () => {
   return (
     <>
       <p>Teste funcionando!</p>
