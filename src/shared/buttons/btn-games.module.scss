@@ -1,0 +1,20 @@
+.btn-game{
+  display: flex;
+  border: 0;
+  border-radius: 5vh;
+  padding: 2vh 0;
+  font-weight: 600;
+  font-size: 1.3rem;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+  background-color: #7758D1;
+  color: white;
+  img{
+    height: 25px;
+  }
+}
+.btn-game:hover{
+  transition-duration: 0.45s;
+  background-color: #5c47b7;
+}

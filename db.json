@@ -4,6 +4,51 @@
             "id_game": 1,
             "name_game": "Herança de Trevas", 
             "image_path": ""      
+        },
+        {
+            "id_game": 2,
+            "name_game": "Ruínas de uma Maldição", 
+            "image_path": "" 
+        },
+        {
+            "id_game": 3,
+            "name_game": "Areia e Sangue",
+            "image_path": ""
+        },
+        {
+            "id_game": 4,
+            "name_game": "D&D Cinema",
+            "image_path": ""
+        },
+        {
+            "id_game": 5,
+            "name_game": "Neve e Sangue",
+            "image_path": ""
+        },
+        {
+            "id_game": 6,
+            "name_game": "Terra e Sangue",
+            "image_path": ""
+        },
+        {
+            "id_game": 7,
+            "name_game": "Lama e Sangue",
+            "image_path": ""
+        },
+        {
+            "id_game": 8,
+            "name_game": "Ruínas e Sangue",
+            "image_path": ""
+        },
+        {
+            "id_game": 9,
+            "name_game": "Água e Sangue",
+            "image_path": ""
+        },
+        {
+            "id_game": 10,
+            "name_game": "Mar Dormente",
+            "image_path": ""
         }
     ],
     "recent_sheets": [
@@ -11,6 +56,18 @@
             "id_sheet": 1,
             "id_game_sheets": 1,
             "name_sheet": "Megaera",
+            "image_sheet_path": ""
+        },
+        {
+            "id_sheet": 2,
+            "id_game_sheets": 3,
+            "name_sheet": "Leblanc",
+            "image_sheet_path": ""
+        },
+        {
+            "id_sheet": 3,
+            "id_game_sheets": 5,
+            "name_sheet": "Azotho Embrulhado",
             "image_sheet_path": ""
         }
     ]

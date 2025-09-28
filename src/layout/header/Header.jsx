@@ -18,14 +18,15 @@ const Header = () => {
             <div className="col-2">
               <div className="logo-box">
                 <img
-                  src="logo_simbolo.png"
+                  src="Logotipo_Dice_Tales.png"
                   alt="Logo - Dado em chamas em um livro aberto"
                   style={{ height: "72px" }}
                 />
                 <img
                   src="logo_fonte.png"
                   alt="Logo - Dice Tales"
-                  style={{ height: "72px" }}
+                  style={{ height: "45px" }}
+                  className='logo-fonte'
                 />
               </div>
             </div>
@@ -96,7 +97,7 @@ const Header = () => {
                 />
                 {username}
               </a>
-              <div className="mb-menu" onclick={expand}>
+              <div className="mb-menu" onClick={expand}>
                 <div className="menu-icon"></div>
                 <div className="menu-icon"></div>
                 <div className="menu-icon"></div>

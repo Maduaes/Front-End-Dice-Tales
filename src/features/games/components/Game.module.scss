@@ -1,0 +1,24 @@
+.card{
+  background: none;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 13px;
+  .imgBox{
+    min-height: 19vh;
+    max-height: 19vh;
+    overflow: hidden;
+  }
+  .cardBody{
+    display: flex;
+    // background: linear-gradient(to right, #6346BA, #365F68);
+    background:  linear-gradient(to right, #3c3b506e, #4b4a62 70%);
+    color: white;
+    padding: 10px 15px;
+  }
+}
+
+.card:hover{
+  cursor: pointer;
+  transform: scale(1.03);
+  transition-duration: 0.25s;
+}

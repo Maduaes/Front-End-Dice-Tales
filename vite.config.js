@@ -16,5 +16,16 @@ export default defineConfig({
         additionalData: `@use "@/styles/variables" as *;`
       }
     }
+  },
+  server: {
+    host: true,
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, "")
+      },
+    },
   }
 })
