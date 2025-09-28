@@ -1,5 +1,7 @@
 import axios from "axios"
 
+let accessToken = null
+
 let isRefreshing = false
 let failedRequestQueue  = []
 
@@ -8,23 +10,10 @@ const api = axios.create({
   withCredentials: true
 })
 
-const processQueue = (erro, token = null) => {
-   failedRequestQueue.forEach(promise => {
-    if (erro) {
-      promise.reject(erro)
-    } else {
-      promise.resolve(token)
-    }
-  })
-  failedRequestQueue = []
-}
-
 // antes da requisição
-// a função recebe o objeto config das requisições, e por ele, adiciona o token à header
 api.interceptors.request.use((config) => { 
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`
   }
   return config
 })
@@ -33,13 +22,14 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (erro) => {
-    const originalRequest = erro.config;
+    const originalRequest = erro.config
 
-    if(erro.response && erro.response.status === 401 && !originalRequest._retry) {
+    if(erro.response.status === 401 && !originalRequest._retry) {
       if(isRefreshing) {
         return new Promise((resolve, reject) => {
           failedRequestQueue.push({ resolve, reject })
-        }).then((token) => {
+        })
+        .then((token) => {
           originalRequest.headers.Authorization = `Bearer ${token}`
           return api(originalRequest)
         }).catch(err => Promise.reject(err))
@@ -48,10 +38,10 @@ api.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const response = await api.post('/auth/refresh'); // se usar cookie HttpOnly, não precisa enviar token
+        const response = await api.post('/auth/refresh');
         const { accessToken: newToken } = response.data;
 
-        localStorage.setItem('token', newToken);
+        setAccessToken(newToken)
         api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
 
         processQueue(null, newToken);
@@ -69,5 +59,22 @@ api.interceptors.response.use(
     return Promise.reject(erro)
   }
 )
+
+const processQueue = (erro, token = null) => {
+   failedRequestQueue.forEach(promise => {
+    if (erro) {
+      promise.reject(erro)
+    } else {
+      promise.resolve(token)
+    }
+  })
+  failedRequestQueue = []
+}
+
+export const setAccessToken = (token) => {
+  accessToken = token
+}
+
+export const getAccessToken = () => accessToken
 
 export default api

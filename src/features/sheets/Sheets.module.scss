@@ -1,0 +1,19 @@
+.sheets-group{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.sheets{
+    align-content: center;
+    width: 90%;
+    height: 7vh;
+    border: 0;
+    background-color: #363547;
+    border-radius: 5px;
+    color: white;
+}
+.sheets:hover{
+    background-color: #2d2c3a;
+    transition-duration: 0.45s;
+}

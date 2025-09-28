@@ -1,26 +1,21 @@
-main{
-    color: white;
-}
 .section-row{
     display: flex;
     justify-content: center;
     gap: 20px;
 }
 
-
 /* GAME CONTENT */
 .game-container{
     background-color: #363547;
     border-radius: 16px;
     margin: 5vh 0;
-    font-family: "Inter", sans-serif;
 }
-.header-container{
+.header-games{
     padding: 22px 16px 20px 8px;
     display: flex;
     justify-content: space-between;
 }
-.header-container h2{
+.header-games h2{
     width: auto;
 }
 .search{
@@ -29,36 +24,11 @@ main{
     background-color:#363547;
     color: white;
 }
-.card{
-    background: none;
-    color: white;
-    padding: 0;
-    margin: 2%;
-    overflow: hidden;
-    border-radius: 25px;
+.search::placeholder{
+    padding-left: 10px;
+    color: #638883e2;
 }
-.card img{
-    height: 100%;
-    object-fit: cover;
-    max-height: 250px;
-}
-.card:hover{
-    cursor: pointer;
-    filter: brightness(80%);
-    transition-duration: 0.45s;
-}
-.card-body{
-    display: flex;
-    /* padding-left: 20px; */
-    background: linear-gradient(to right, #6346BA, #365F68);
-    align-items: center;
-    justify-content: center;
-}
-.empty-color{
-    background: linear-gradient(to bottom, #B3384A, #410F53);
-    width: 100%;
-    height: 100%;
-}
+
 
 .btn-more{
     margin: 2rem 0;
@@ -125,7 +95,6 @@ main{
     padding-bottom: 6%;
     height: auto;
     overflow: hidden;
-    font-family: 'Inter', sans-serif;
 }
 .nav-sheets-container{
     background-color: #363547;
@@ -156,25 +125,7 @@ main{
     border-radius: 30px;
     color: #9EC5D1;
 }
-.sheets-group{
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-.sheets{
-    align-content: center;
-    width: 90%;
-    height: 7vh;
-    border: 0;
-    background-color: #363547;
-    border-radius: 5px;
-    color: white;
-}
-.sheets:hover{
-    background-color: #2d2c3a;
-    transition-duration: 0.45s;
-}
+
 
 
 /* MEDIA QUERY */
@@ -237,7 +188,7 @@ main{
     .nav-sheets-container{
         border-radius: 0;
     }
-    .header-container{ 
+    .header-games{ 
         height: auto;
         justify-content: center;
         padding: 15px 0 0 0; 

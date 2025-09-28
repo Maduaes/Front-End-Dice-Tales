@@ -1,35 +1,43 @@
-import { useState } from "react"
 import classNames from "classnames/bind";
 import styles from "./Game.module.scss"
 
 const cx = classNames.bind(styles)
 
-export const Game = () => {
-  const [game, setGame] = useState({})
+const gradients = [
+  "linear-gradient(45deg, #b83cceff 0%, #7687e6ff 50%, #3bd2d7ff 100%)",
+  "linear-gradient(45deg, #38b4fe, #00c8ae, #c9ba5a)", 
+  "linear-gradient(45deg, #2932b6ff, #1384caff, #9fedd8ff)",                                                                           
+  "linear-gradient(45deg, #454ae1ff, #9641d7ff, #f247abff)",
+  "linear-gradient(45deg, #df6840ff, #7010a8ff)"                                                                                                                     
+]
+
+
+function getRandomGradient() {
+  const index = Math.floor(Math.random() * gradients.length)
+  return gradients[index]
+}
+
+export const Game = ({game}) => {
+  console.log(game)
+  
+  const style = {
+    background: getRandomGradient()
+  }
 
   return (
-    <div className={cx("container", "cardMain")}>
-      <div className="row">
-        <div className="col-4 mb-3">
-          <div className={cx("card", "cardGame", "shadow")}>
-            <div className={cx("imgBox", "emptyImage")}>
-              <img
-                className={cx("cardImgTop")}
-                src={game.game_image}
-                aria-label="Imagem do Jogo"
-              />
-            </div>
-            <div className={cx("cardBody")}>
-              <h6 className={cx("cardTitle")}>{game.game_title}</h6>
-            </div>
-          </div>
+    <div className={cx("col-4", "mb-3", "cardGame")}>
+      <div className={cx("card", "shadow")}>
+        <div className={cx("imgBox", "emptyImage")} style={style}>
+          <img
+            className={cx("cardImgTop")}
+            // src={game.image_path}
+            aria-label="Imagem do Jogo"
+          />
         </div>
-        {/* <div className="p-4 container">
-          <p>It looks like you don't have any games yet!</p>
-            <div><app-btn-games [backgroundColor]="'white'" [disabledIcon]="true"
-          ></app-btn-games></div>
-        </div> */}
+        <div className={cx("cardBody")}>
+          <h6 className={cx("cardTitle")}>{game.name_game}</h6>
+        </div>
       </div>
-    </div>
+    </div>  
   )
 }

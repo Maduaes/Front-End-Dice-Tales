@@ -1,100 +1,108 @@
 import { Game } from '../games/Game';
-import './Home.scss'
 import { useEffect, useState } from 'react'
-import api from "../../services/api"
+import { getGamesView } from '../../services/gamesService';
+import classNames from 'classnames/bind';
+import styles from './Home.module.scss'
+import { getRecentSheets } from '../../services/sheetsService';
+import { Sheets } from '../sheets/Sheets';
+
+const cx = classNames.bind(styles)
 
 const Home = () => {
 
-  const [sheet, setSheet] = useState({})
+  const [sheetsList, setSheetsList] = useState([])
   const [gamesList, setGamesList] = useState([])
-  // const gamesList = []
 
   useEffect(() => {
-    api
-    .get("/games_view")
-    .then((response) => {
-      setGamesList(response.data)
-    }).catch((err) => {
-      console.error("ops! ocorreu um erro" + err);
-    })
+    const fetchData = async () => {
+      try {
+      const games = await getGamesView()
+      const sheets = await getRecentSheets()
+      setGamesList(games)
+      setSheetsList(sheets)
+      } catch (error) {
+        console.error(error)
+      }
+    }
+
+    fetchData()
   }, [])
 
-  return (
-    <main className="container">
-      <section className="row mt-3 gap-3">
+  const hasItems = (list) => list && list.length > 0
 
-        <section className="game-container shadow col-8">
-          <header className="container">
-            <div className="row header-container">
-              <div className="col-4 container group-title-games">
-                <div className="row">
-                  <h2 className="col-4">Your Games</h2>
-                </div>
+  return (
+    <main className='container main'>
+      <section className={cx('section-row', 'row', 'mt-3', 'gap-2')}>
+
+        <section className={cx('game-container', 'shadow', 'col-8', 'container')}>
+          <header className={cx('container', 'header-games', 'row')}>
+            <div className={cx('col-4', 'container', 'group-title-games')}>
+              <div className={cx('row')}>
+                <h2 className={cx('col-4')}>Your Games</h2>
               </div>
-              <input className="col-7 search" type="search" placeholder="Search for your games" />
             </div>
+            <input className={cx('col-7', 'search')} 
+              type='search' 
+              placeholder='Search for your games' />
           </header>
 
-          <main>
-            {gamesList.map((game) => (
-              <Game key={game.id_game} gameTitle={game.name_game} className="col-8" />
-            ))}
+          <main className={cx('container', 'pb-3')}>
+            { hasItems(gamesList) ? (
+              <div className='row ps-3 pe-3'>
+                { gamesList.map((game) => ( <Game key={game.id} game={game} /> )) }
+              </div>
+            ) : (
+              <div className='p-4 container'>
+                <p>It looks like you don't have any games yet!</p>
+                <div></div>
+              </div>
+            )} 
           </main>
 
-          {/* <app-spinner *ngIf="loading"></app-spinner> */}
-          
-          <div className="row d-flex justify-content-center">
-            <input  className="btn-more col-4" type="button" value="More" />
-          </div>
+          { gamesList.length > 9 && (
+            <footer className={cx('row', 'd-flex', 'justify-content-center')}>
+              <input className={cx('btn-more', 'col-4')} type='button' value='More' />
+            </footer>
+          )}
         </section>
-        <aside className="aside col">
-          <div className="container">
-            <div className="row d-flex justify-content-around btn-div">
-              {/* <app-btn-games [backgroundColor]="'#7758D1'"
-              ></app-btn-games> */}
+
+        <aside className={cx('aside', 'col')}>
+          <div className={cx('container')}>
+            <div className={cx('row', 'd-flex', 'justify-content-around', 'btn-div')}>
+              {/* Botões do aside */}
             </div>
           </div>
 
-          <section className="sheets-container">
-            <nav className="container nav-sheets-container">
-              <div className="nav nav-tabs row nav-tabs-sheets" id="nav-tab">
-                <button className="col nav-link btn-tab active" data-bs-toggle="tab" data-bs-target="#nav-player" type="button">Player</button>
-                <button className="col nav-link btn-tab" data-bs-toggle="tab" data-bs-target="#nav-game" type="button">Game Master</button>
+          <section className={cx('sheets-container')}>
+            <nav className={cx('container', 'nav-sheets-container')}>
+              <div className='nav nav-tabs row nav-tabs-sheets' id='nav-tab'>
+                <button className='col nav-link btn-tab active' data-bs-toggle='tab' data-bs-target='#nav-player' type='button'>Player</button>
+                <button className='col nav-link btn-tab' data-bs-toggle='tab' data-bs-target='#nav-game' type='button'>Game Master</button>
               </div>
             </nav>
 
-            <div className="d-flex justify-content-center">
-              <div className="col-8 text-center div-text-sheets">Most Recent Sheets</div>
+            <div className={cx('d-flex', 'justify-content-center')}>
+              <div className={cx('col-8', 'text-center', 'div-text-sheets')}>Most Recent Sheets</div>
             </div>
 
-            <div className="tab-content" id="nav-tabContent">
-              {/* <app-spinner *ngIf="loading"></app-spinner> */}
-              <div className="tab-pane active" id="nav-player">
-                <div className="sheets-group list-group">
-                  <div className="sheets list-group-item mb-2 d-flex flex-row">
-                    <div className="box-sheet"></div>
-                    { sheet.sheet_name }
-                  </div>
-                </div>
+            <div className='tab-content' id='nav-tabContent'>
+              <div className='tab-pane active' id='nav-player'>
+                {sheetsList.map((sheet) => (
+                  <Sheets key={sheet.id} sheet={sheet} userType='player' />
+                ))}
               </div>
-              {/* <app-spinner *ngIf="loading"></app-spinner> */}
-              <div className="tab-pane fade" id="nav-game">
-                <div className="sheets-group list-group">
-                  <div className="sheets list-group-item mb-2"></div>
-                  <a className="sheets list-group-item">
-                    { sheet.sheet_name }
-                  </a>
-                </div>
+              <div className='tab-pane fade' id='nav-game'>
+                {sheetsList.map((sheet) => (
+                  <Sheets key={sheet.id} sheet={sheet} userType='gameMaster' />
+                ))}
               </div>
             </div>
 
           </section>
-
-          {/* <app-sheets></app-sheets> */}
         </aside>
       </section>
     </main>
   );
-}
+};
 
 export default Home;
