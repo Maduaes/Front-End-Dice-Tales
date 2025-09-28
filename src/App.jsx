@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-import './App.scss';
-import AppRoutes from './routes/AppRoutes.jsx';
-
-const App = () => {
-=======
 import { useEffect, useState } from 'react';
 import AppRoutes from './routes/AppRoutes.jsx';
 import api, { setAccessToken } from './services/api.js';
@@ -27,9 +21,8 @@ const App = () => {
   }, [])
 
   if (loading) {
-    return <div>Carregando...</div> // spinner ou algo assim
+    return <div>Carregando...</div> // spinner ou algo assim depois faço
   }
->>>>>>> feature-home
 
   return (
     <AppRoutes />
