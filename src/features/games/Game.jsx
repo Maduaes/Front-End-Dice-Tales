@@ -11,7 +11,6 @@ const gradients = [
   "linear-gradient(45deg, #df6840ff, #7010a8ff)"                                                                                                                     
 ]
 
-
 function getRandomGradient() {
   const index = Math.floor(Math.random() * gradients.length)
   return gradients[index]
