@@ -1,11 +1,11 @@
-import { Game } from '../games/Game';
+import { Game } from '../../games/components/Game';
 import { useEffect, useState } from 'react'
-import { getGamesView } from '../../services/gamesService';
+import { getGamesView } from '../../../services/gamesService';
 import classNames from 'classnames/bind';
 import styles from './Home.module.scss'
-import { BtnGames } from '../../shared/buttons/Btn-games';
-import { Icon } from '../../shared/Icon';
-import { SheetsContainer } from '../sheets/components/SheetsContainerHome';
+import { BtnGames } from '../../../shared/buttons/Btn-games';
+import { Icon } from '../../../shared/icones/Icon';
+import { SheetsContainer } from '../../sheets/components/SheetsContainerHome';
 
 const cx = classNames.bind(styles)
 

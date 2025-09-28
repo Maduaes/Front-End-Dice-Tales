@@ -1,6 +1,6 @@
 import classNames from "classnames/bind";
 import styles from "./btn-games.module.scss"
-import { Icon } from "../Icon";
+import { Icon } from "../icones/Icon";
 
 const cx = classNames.bind(styles)
 

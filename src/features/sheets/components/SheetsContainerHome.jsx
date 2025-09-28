@@ -25,13 +25,21 @@ export const SheetsContainer = () => {
     <section className={cx('sheets-container')}>
       <nav className={cx('container', 'nav-sheets-container')}>
         <div className='nav nav-tabs row nav-tabs-sheets' id='nav-tab'>
-          <button className='col nav-link btn-tab active' data-bs-toggle='tab' data-bs-target='#nav-player' type='button'>Player</button>
-          <button className='col nav-link btn-tab' data-bs-toggle='tab' data-bs-target='#nav-game' type='button'>Game Master</button>
+          <button className='col nav-link btn-tab active' 
+            data-bs-toggle='tab' data-bs-target='#nav-player' type='button'>
+              Player
+          </button>
+          <button className='col nav-link btn-tab' 
+            data-bs-toggle='tab' data-bs-target='#nav-game' type='button'>
+              Game Master
+          </button>
         </div>
       </nav>
 
       <div className={cx('d-flex', 'justify-content-center')}>
-        <div className={cx('col-8', 'text-center', 'div-text-sheets')}>Most Recent Sheets</div>
+        <div className={cx('col-8', 'text-center', 'div-text-sheets')}>
+          Most Recent Sheets
+        </div>
       </div>
 
       <div className='tab-content' id='nav-tabContent'>
