@@ -42,18 +42,22 @@ export const SheetsContainer = () => {
         </div>
       </div>
 
-      <div className='tab-content' id='nav-tabContent'>
+      <main className='tab-content' id='nav-tabContent'>
         <div className='tab-pane active' id='nav-player'>
-          {sheetsList.map((sheet) => (
-            <Sheets key={sheet.id} sheet={sheet} userType='player' />
-          ))}
+          <div className="sheets-group list-group" >
+            {sheetsList.map((sheet) => (
+              <Sheets key={sheet.id} sheet={sheet} userType='player' />
+            ))}
+          </div>
         </div>
         <div className='tab-pane fade' id='nav-game'>
-          {sheetsList.map((sheet) => (
-            <Sheets key={sheet.id} sheet={sheet} userType='gameMaster' />
-          ))}
+          <div className="sheets-group list-group" >
+            {sheetsList.map((sheet) => (
+              <Sheets key={sheet.id} sheet={sheet} userType='gameMaster' />
+            ))}
+          </div>
         </div>
-      </div>
+      </main>
     </section>
   )
 }

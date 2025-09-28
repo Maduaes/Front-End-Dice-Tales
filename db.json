@@ -59,9 +59,15 @@
             "image_sheet_path": ""
         },
         {
-            "id_sheet": 1,
+            "id_sheet": 2,
             "id_game_sheets": 3,
             "name_sheet": "Leblanc",
+            "image_sheet_path": ""
+        },
+        {
+            "id_sheet": 3,
+            "id_game_sheets": 5,
+            "name_sheet": "Azotho Embrulhado",
             "image_sheet_path": ""
         }
     ]
