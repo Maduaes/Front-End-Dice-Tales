@@ -4,7 +4,9 @@ const icons = {
   circlePlus: LucideIcons.CirclePlus,
   swords: LucideIcons.Swords,
   dices: LucideIcons.Dices,
-  search: LucideIcons.Search
+  search: LucideIcons.Search,
+  phone: LucideIcons.Phone,
+  mail: LucideIcons.Mail
 }
 
 export function Icon({ name, size = 20, className }) {

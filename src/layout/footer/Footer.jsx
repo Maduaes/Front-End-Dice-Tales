@@ -3,10 +3,11 @@ import facebook from "../../assets/icons/social-media/facebook.png";
 import instagram from "../../assets/icons/social-media/instagram.png";
 import twitter from "../../assets/icons/social-media/twitter.png";
 import github from "../../assets/icons/social-media/github.png";
+import { Icon } from "../../shared/icones/Icon";
 
 const Footer = () => {
   return (
-    <footer>
+    <footer className="footer">
       <div className="container mt-auto container-footer">
         <section className="container-footer-top">
           <div className="div-txt-logo">
@@ -24,19 +25,19 @@ const Footer = () => {
             <div className="col mb-continue">
               <p className="text-ti-purple">Contact Us</p>
               <div className="ft-box gap-1">
-                <address className="ft-sp-text">-- dicetales&#64;gmail.com</address>
-                <address className="ft-sp-text">-- +55 (42) 9 6969-6969</address>
+                <address className="ft-sp-text"><Icon name='mail' /> dicetales&#64;gmail.com</address>
+                <address className="ft-sp-text"><Icon name='phone' /> +55 (42) 9 6969-6969</address>
               </div>
             </div>
             <div className="col-5 mb-continue">
               <p className="text-ti-purple">Share your thoughts with us!</p>
-              <div className="input-group" style={{ maxWidth: "100%" }}>
+              <div className="input-group" style={{ maxWidth: '100%' }}>
                 <input
                   type="text"
                   className="form-control"
                   placeholder="Your feedback here"
                 />
-                <button className="" type="button">
+                <button className="button" type="button">
                   Send
                 </button>
               </div>
