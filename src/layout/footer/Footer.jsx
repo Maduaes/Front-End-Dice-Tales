@@ -1,8 +1,4 @@
 import "./Footer.scss";
-import facebook from "../../assets/icons/social-media/facebook.png";
-import instagram from "../../assets/icons/social-media/instagram.png";
-import twitter from "../../assets/icons/social-media/twitter.png";
-import github from "../../assets/icons/social-media/github.png";
 import { Icon } from "../../shared/icones/Icon";
 
 const Footer = () => {
@@ -11,7 +7,7 @@ const Footer = () => {
       <div className="container mt-auto container-footer">
         <section className="container-footer-top">
           <div className="div-txt-logo">
-            <img src="logo_fonte.png" alt="" className="logo-texto" />
+            <img src="logo_fonte.png" alt="Logo Dice Tales" className="logo-texto" />
           </div>
           <div className="texts-area row">
             <div className="col-4 description">
@@ -47,10 +43,9 @@ const Footer = () => {
         <div className="purple-line"></div>
         <section className="icons-area">
           <div className="imgs">
-            <img src={facebook} alt="Ícone do Facebook" />
-            <img src={instagram} alt="Ícone do Instagram" />
-            <img src={twitter} alt="Ícone do Twitter" />
-            <img src={github} alt="Ícone do Github" />
+            <Icon name='instagram' size='25' />
+            <Icon name='x' size='25' />
+            <Icon name='github' size='25' />
           </div>
         </section>
         <span className="text-ti-purple center-sp">FOLLOW US</span>
