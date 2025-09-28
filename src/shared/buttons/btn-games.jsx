@@ -7,7 +7,7 @@ const cx = classNames.bind(styles)
 export const BtnGames = ({label, icon = '', onClick}) => {  
   return (
     // <div class="row d-flex justify-content-around btn-div">
-    <button className={cx("btn-game", "col")}
+    <button className={cx("btn-game", "col fs-responsive")}
     onClick={onClick}>
       {(icon != '') && <Icon name={icon} />}
         {label}

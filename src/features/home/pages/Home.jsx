@@ -32,7 +32,7 @@ const Home = () => {
     <main className='container main'>
       <section className={cx('section-row', 'row', 'mt-3', 'gap-2')}>
 
-        <section className={cx('game-container', 'shadow', 'col-8')}>
+        <section className={cx('game-container', 'shadow col-12 col-lg-8')}>
           <header className={cx('container', 'header-games')}>
             <div className={cx('container', 'group-title-games')}>
               <div className={cx('row')}>

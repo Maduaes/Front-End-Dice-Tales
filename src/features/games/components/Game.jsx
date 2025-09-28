@@ -16,15 +16,13 @@ function getRandomGradient() {
   return gradients[index]
 }
 
-export const Game = ({game}) => {
-  console.log(game)
-  
+export const Game = ({game}) => {  
   const style = {
     background: getRandomGradient()
   }
 
   return (
-    <div className={cx("col-4", "mb-3", "cardGame")}>
+    <div className={cx("col-12 col-md-6 col-xl-4 mb-3")}>
       <div className={cx("card", "shadow")}>
         <div className={cx("imgBox", "emptyImage")} style={style}>
           <img
@@ -34,7 +32,7 @@ export const Game = ({game}) => {
           />
         </div>
         <div className={cx("cardBody")}>
-          <h6 className={cx("cardTitle")}>{game.name_game}</h6>
+          <h6 className={cx("text-truncate fs-responsive")}>{game.name_game}</h6>
         </div>
       </div>
     </div>  

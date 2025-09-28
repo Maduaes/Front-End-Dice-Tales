@@ -97,7 +97,7 @@ const Header = () => {
                 />
                 {username}
               </a>
-              <div className="mb-menu" onclick={expand}>
+              <div className="mb-menu" onClick={expand}>
                 <div className="menu-icon"></div>
                 <div className="menu-icon"></div>
                 <div className="menu-icon"></div>
