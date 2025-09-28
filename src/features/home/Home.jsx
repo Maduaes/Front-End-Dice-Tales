@@ -3,23 +3,21 @@ import { useEffect, useState } from 'react'
 import { getGamesView } from '../../services/gamesService';
 import classNames from 'classnames/bind';
 import styles from './Home.module.scss'
-import { getRecentSheets } from '../../services/sheetsService';
-import { Sheets } from '../sheets/Sheets';
+import { BtnGames } from '../../shared/buttons/Btn-games';
+import { Icon } from '../../shared/Icon';
+import { SheetsContainer } from '../sheets/components/SheetsContainerHome';
 
 const cx = classNames.bind(styles)
 
 const Home = () => {
 
-  const [sheetsList, setSheetsList] = useState([])
   const [gamesList, setGamesList] = useState([])
 
   useEffect(() => {
     const fetchData = async () => {
       try {
       const games = await getGamesView()
-      const sheets = await getRecentSheets()
       setGamesList(games)
-      setSheetsList(sheets)
       } catch (error) {
         console.error(error)
       }
@@ -34,16 +32,19 @@ const Home = () => {
     <main className='container main'>
       <section className={cx('section-row', 'row', 'mt-3', 'gap-2')}>
 
-        <section className={cx('game-container', 'shadow', 'col-8', 'container')}>
-          <header className={cx('container', 'header-games', 'row')}>
-            <div className={cx('col-4', 'container', 'group-title-games')}>
+        <section className={cx('game-container', 'shadow', 'col-8')}>
+          <header className={cx('container', 'header-games')}>
+            <div className={cx('container', 'group-title-games')}>
               <div className={cx('row')}>
-                <h2 className={cx('col-4')}>Your Games</h2>
+                <h2 className={cx('col', 'ps-3')}>Your Games</h2>
               </div>
             </div>
-            <input className={cx('col-7', 'search')} 
+            <div className={cx('col-7', 'search')}>
+              <input 
               type='search' 
               placeholder='Search for your games' />
+              <Icon name='search' />
+            </div>
           </header>
 
           <main className={cx('container', 'pb-3')}>
@@ -67,38 +68,15 @@ const Home = () => {
         </section>
 
         <aside className={cx('aside', 'col')}>
-          <div className={cx('container')}>
-            <div className={cx('row', 'd-flex', 'justify-content-around', 'btn-div')}>
-              {/* Botões do aside */}
+          <header className={cx('container')}>
+            <div className={cx('row', 'd-flex', 'justify-content-around', 'btn-div', 'gap-3')}>
+              <BtnGames label='New Game' icon='dices' />
+              <BtnGames label='Join a Game' icon='swords' />
             </div>
-          </div>
+          </header>
 
-          <section className={cx('sheets-container')}>
-            <nav className={cx('container', 'nav-sheets-container')}>
-              <div className='nav nav-tabs row nav-tabs-sheets' id='nav-tab'>
-                <button className='col nav-link btn-tab active' data-bs-toggle='tab' data-bs-target='#nav-player' type='button'>Player</button>
-                <button className='col nav-link btn-tab' data-bs-toggle='tab' data-bs-target='#nav-game' type='button'>Game Master</button>
-              </div>
-            </nav>
-
-            <div className={cx('d-flex', 'justify-content-center')}>
-              <div className={cx('col-8', 'text-center', 'div-text-sheets')}>Most Recent Sheets</div>
-            </div>
-
-            <div className='tab-content' id='nav-tabContent'>
-              <div className='tab-pane active' id='nav-player'>
-                {sheetsList.map((sheet) => (
-                  <Sheets key={sheet.id} sheet={sheet} userType='player' />
-                ))}
-              </div>
-              <div className='tab-pane fade' id='nav-game'>
-                {sheetsList.map((sheet) => (
-                  <Sheets key={sheet.id} sheet={sheet} userType='gameMaster' />
-                ))}
-              </div>
-            </div>
-
-          </section>
+          <SheetsContainer />
+          
         </aside>
       </section>
     </main>
