@@ -1,5 +1,5 @@
 import { Route } from 'react-router-dom'
-import Login from '../auth/Login'
+import Login from '../auth/pages/Login'
 
 export const AuthRoutes = (
   <Route>

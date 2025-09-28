@@ -1,8 +1,7 @@
-import Input from "./components/Input"
+import Input from "../components/Input"
 import styles from "./Login.module.scss"
-import login_art from "../assets/login_art.png"
+import login_art from "../../assets/login_art.png"
 import { useState } from "react"
-// import default_icon from "../assets/icons/social-media/default_icon.png"
 
 const Login = () => {
   const [username, setUsername] = useState('')

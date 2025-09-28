@@ -1,8 +1,8 @@
 import "./Footer.scss";
-import facebook from "../assets/icons/social-media/facebook.png";
-import instagram from "../assets/icons/social-media/instagram.png";
-import twitter from "../assets/icons/social-media/twitter.png";
-import github from "../assets/icons/social-media/github.png";
+import facebook from "../../assets/icons/social-media/facebook.png";
+import instagram from "../../assets/icons/social-media/instagram.png";
+import twitter from "../../assets/icons/social-media/twitter.png";
+import github from "../../assets/icons/social-media/github.png";
 
 const Footer = () => {
   return (
