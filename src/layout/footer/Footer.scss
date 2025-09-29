@@ -1,27 +1,27 @@
-.footer{
-    width: 100%;
-    font-family: $font-inter;
-    font-optical-sizing: auto;
-    font-style: normal;
-    padding-top: 40px;
-    padding-bottom: 18px;
+.footer-layout{
+  width: 100%;
+  font-family: $font-inter;
+  font-optical-sizing: auto;
+  font-style: normal;
+  padding-top: 40px;
+  padding-bottom: 18px;
 
-  .container-footer-top{
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 10px;
-    .logo-txt-decor{
-      font-size: 2rem;
-      margin-bottom: 0;
-      padding-bottom: 0;
+.container-footer-top{
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+  .logo-txt-decor{
+    font-size: 2rem;
+    margin-bottom: 0;
+    padding-bottom: 0;
 
-    }
-    .texts-area{
-      display: flex;
-      justify-content: space-between;
-      margin-top: 10px;
-    }
   }
+  .texts-area{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+}
 }
 
 .logo-texto{
@@ -34,88 +34,84 @@
   flex-direction: column;
   font-size: 0.9rem;
 
-  .ft-sp-text{
-    color: white;
-    margin-bottom: 5px;
-  }
-  .ft-a-text{
-    text-decoration: none;
-    color: white;
-    margin-bottom: 5px;
-  }
+.ft-sp-text{
+  color: white;
+  margin-bottom: 5px;
+}
+.ft-a-text{
+  text-decoration: none;
+  color: white;
+  margin-bottom: 5px;
+}
 }
 
 .input-group{
-  .form-control{
-    color: white;
-    border: 1px solid white;
-    background: none;
-  }
-  .form-control::placeholder{
-    color: rgb(139, 137, 142);
-  }
-  .button{
-    padding: 7px 15px;
-    background-color:#493c6b;
-    font-weight: bold;
-    color: white;
-    box-shadow: none;
-    border: 1px solid white;
-    border-radius: 0 8px 8px 0;
-  }
+.form-control{
+  color: white;
+  border: 1px solid white;
+  background: none;
+}
+.form-control::placeholder{
+  color: rgb(139, 137, 142);
+}
+.button{
+  padding: 7px 15px;
+  background-color:#493c6b;
+  font-weight: bold;
+  color: white;
+  box-shadow: none;
+  border: 1px solid white;
+  border-radius: 0 8px 8px 0;
+}
 }
 
 .description{
-  font-size: 0.9rem;
+font-size: 0.9rem;
 }
 
 .text-light-purple{
-    color: #9181c3;
-    font-weight: bold;
-    font-size: 1.1rem;
+  color: #9181c3;
+  font-weight: bold;
+  font-size: 1.1rem;
 }
 
 .text-ti-purple{
-    color: #9181c3;
-    font-weight: bold;
-    font-size: 1rem;
+  color: #9181c3;
+  font-weight: bold;
+  font-size: 1rem;
 }
 
 .purple-line{
-    width: auto;
-    height: 1.3px;
-    background-color: #534a70;
-    margin-top: 20px;
-    margin-bottom: 20px;
+  width: auto;
+  height: 1.3px;
+  background-color: #534a70;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .center-sp,
 .icons-area{
-    display: flex;
-    justify-content: center;
+  display: flex;
+  justify-content: center;
 }
 
 .icons-area{
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 .imgs{
-    display: flex;
-    width: 170px;
-    justify-content: space-evenly;
+  display: flex;
+  width: 170px;
+  justify-content: space-evenly;
 }
 
 @media screen and (max-width: 625px) {
-    .description{
-        display: none;
-    }
-
-    .mb-continue{
-        width: 50%;
-        justify-content: center;
-    }
-
-    .ft-sp-text{
-        font-size: small;
-    }
+  .footer-layout{
+    padding: 4rem 1rem 2rem 1rem;
+  }
+  .logo-texto{
+    display: flex;
+    height: 16vw;
+    justify-self: center;
+  }
 }
