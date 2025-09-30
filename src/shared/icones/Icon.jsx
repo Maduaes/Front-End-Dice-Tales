@@ -7,6 +7,8 @@ const icons = {
   search: LucideIcons.Search,
   phone: LucideIcons.Phone,
   mail: LucideIcons.Mail,
+  user: LucideIcons.User,
+  chevronDown: LucideIcons.ChevronDown,
   github: ({size = 20, props}) => (
     <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" 
     width={size} height={size} {...props} > 

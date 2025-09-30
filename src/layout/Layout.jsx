@@ -3,10 +3,11 @@ import Footer from "./footer/Footer";
 import Header from "./header/Header"
 
 const Layout = () => {
+
   return (
     <>
       <Header />
-      <main>
+      <main className="mt-5 pt-0 pt-md-2">
         <Outlet />
       </main>
       <Footer />

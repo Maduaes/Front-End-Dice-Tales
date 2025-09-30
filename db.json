@@ -70,5 +70,13 @@
             "name_sheet": "Azotho Embrulhado",
             "image_sheet_path": ""
         }
+    ],
+    "users": [
+        {
+            "id_user": 1,
+            "email": "madu3811@gmail.com",
+            "username": "maduaes",
+            "password": "123"
+        }
     ]
 }
