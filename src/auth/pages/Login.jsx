@@ -16,7 +16,7 @@ const Login = () => {
           <img src={login_art} alt="Login Art" className={styles.loginArt} />
         </div>
         <div className={styles.rightSide}>
-          <div className="me-auto ms-auto ps-1">
+          <div className={styles.iconContainer}>
             <ProfilePic justIcon='true' size='50px'/>
           </div>
           <h1>LOGIN</h1>
