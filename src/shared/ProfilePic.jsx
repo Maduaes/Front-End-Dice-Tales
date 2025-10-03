@@ -6,7 +6,7 @@ import styles from './ProfilePic.module.scss'
 
 const cx = classNames.bind(styles)
 
-export const ProfilePic = ({justIcon = false}) => {
+export const ProfilePic = ({ justIcon = false, size = '40px' }) => {
   const username = 'arthurd123'
 
   const [profilePic, setProfilePic] = useState()
@@ -22,9 +22,10 @@ export const ProfilePic = ({justIcon = false}) => {
 
   const getComponent = () => {
     return (
-      <div className={cx('user-box', 'me-2')}>
+      <div className={cx('user-box', 'me-2')} 
+      style={{height: size, width: size, minHeight: size, minWidth: size }}>
          { profilePic ? (
-          <img src={ profilePic } alt='User Profile Picture' />
+          <img className="img" src={ profilePic } alt='User Profile Picture' />
         ) : (
           <Icon name='user' size='25' />
         )}
