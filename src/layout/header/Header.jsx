@@ -89,7 +89,7 @@ const Header = () => {
               </div>
             </div>
             <div className="col-2 d-flex justify-content-center">
-              <ProfilePic justPic='true' />
+              <ProfilePic />
               <div className="mb-menu" onClick={expand}>
                 <div className="menu-icon"></div>
                 <div className="menu-icon"></div>

@@ -1,56 +1,43 @@
 import { useEffect, useState } from "react"
+import classNames from "classnames/bind"
 import api from "../services/api"
 import { Icon } from "./icones/Icon"
+import styles from './ProfilePic.module.scss'
 
-export const ProfilePic = ({justPic = false}) => {
+const cx = classNames.bind(styles)
+
+export const ProfilePic = ({justIcon = false}) => {
   const username = 'arthurd123'
 
-  const [component, setComponent] = useState()
+  const [profilePic, setProfilePic] = useState()
 
   useEffect(() => {
-    if(!justPic) {
+    if(!justIcon) {
       api
       .get('/profilePic')
-      .then((response) => {
-        if(response.data != null) {
-          setComponent(
-            <div className='user-box me-2'>
-              <img className="me-2"
-                src={response.data}
-                alt='User Profile Picture'
-              />
-            </div> 
-          )
-        }else{
-          setComponent(
-            <div className='user-box me-2'>
-              <Icon name='user' size='25' />
-            </div> 
-          )
-        }
-      })
-      .catch(() => {
-        setComponent(
-          <div className='user-box me-2'>
-            <Icon name='user' size='25' />
-          </div> 
-        )
-      })
-    }else{
-      setComponent(
-        <div className='user-box me-2'>
-          <Icon name='user' size='25' />
-        </div> 
-      )
+      .then((response) => { setProfilePic(response.data) })
+      .catch(() => { setProfilePic(null) })
     }
-  }, [])
+  }, [justIcon])
+
+  const getComponent = () => {
+    return (
+      <div className={cx('user-box', 'me-2')}>
+         { profilePic ? (
+          <img src={ profilePic } alt='User Profile Picture' />
+        ) : (
+          <Icon name='user' size='25' />
+        )}
+      </div>
+    )
+  }
 
   return (
     <>
-      { justPic ? component : 
-      <a className="navbar-brand menu-user-decor user-area" href="#">
-        {component}
-        {username}
+      { justIcon ? getComponent() : 
+      <a className={cx("navbar-brand", "menu-user-decor", "user-area")} href="#">
+        { getComponent() }
+        { username }
         <Icon name='chevronDown' />
       </a> }
     </>
