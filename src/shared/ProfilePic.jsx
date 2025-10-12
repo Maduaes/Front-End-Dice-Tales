@@ -14,7 +14,7 @@ export const ProfilePic = ({ justIcon = false, size = '40px' }) => {
   useEffect(() => {
     if(!justIcon) {
       api
-      .get('/profilePic')
+      .get('/users/profilePic')
       .then((response) => { setProfilePic(response.data) })
       .catch(() => { setProfilePic(null) })
     }

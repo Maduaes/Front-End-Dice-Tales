@@ -1,24 +1,26 @@
 import { useEffect, useState } from 'react';
 import AppRoutes from './routes/AppRoutes.jsx';
-import api, { setAccessToken } from './services/api.js';
+import { refresh } from './services/authService.js';
+import { useNavigate } from 'react-router-dom';
 
 const App = () => {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const { data } = await api.post("/auth/refresh")
-        setAccessToken(data.accessToken)
-      } catch (err) {
-        console.error("Usuário não logado ou refresh falhou:", err)
+        await refresh()
+      } catch (error) {
+        console.log('Usuário precisa fazer login: ' + error)
+        navigate('/login', {replace: true} )
       } finally {
         setLoading(false)
       }
     }
 
     initAuth()
-  }, [])
+  }, [navigate])
 
   if (loading) {
     return <div>Carregando...</div> // spinner ou algo assim depois faço

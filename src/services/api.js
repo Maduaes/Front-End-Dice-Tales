@@ -11,6 +11,11 @@ const api = axios.create({
   withCredentials: true
 })
 
+export const authApi = axios.create({
+  baseURL: '/api',
+  withCredentials: true
+})
+
 // antes da requisição
 api.interceptors.request.use((config) => { 
   if (accessToken) {
@@ -39,21 +44,21 @@ api.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const response = await api.post('/auth/refresh');
-        const { accessToken: newToken } = response.data;
+        const response = await api.patch('/auth/refresh')
+        const { accessToken: newToken } = response.data
 
         setAccessToken(newToken)
-        api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+        api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
 
-        processQueue(null, newToken);
-        return api(originalRequest);
+        processQueue(null, newToken)
+        return api(originalRequest)
 
       } catch (err) {
-        processQueue(err, null);
-        return Promise.reject(err);
+        processQueue(err, null)
+        return Promise.reject(err)
 
       } finally {
-        isRefreshing = false;
+        isRefreshing = false
       }
     }
 
