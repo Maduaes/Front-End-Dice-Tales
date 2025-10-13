@@ -13,12 +13,13 @@ const Input = ({
   value,
   handleChange,
   erro = false,
-  mensagemErro
+  mensagemErro,
+  margin
 }) => {
 
   return (
     <div className={styles.div}>
-        <label className={erro ? cx('label erro') : cx('label')}>{label}
+        <label style={{marginTop: margin}} className={erro ? cx('label erro') : cx('label')}>{label} 
           <input className={styles.input} type={type} 
             placeholder={placeholder} name={name} value={value} 
             onChange={(e) => handleChange(e.target.name, e.target.value)} />

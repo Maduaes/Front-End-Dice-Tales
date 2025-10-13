@@ -4,6 +4,7 @@ import login_art from "../../assets/login_art.png"
 import { useState } from "react"
 import { ProfilePic } from "../../shared/ProfilePic"
 import { login } from "../services/authService"
+import Redirection from "../components/Redirection"
 
 const Login = () => {
   const [form, setForm] = useState({ username: '', password: '' })
@@ -29,7 +30,7 @@ const Login = () => {
           <div className={styles.iconContainer}>
             <ProfilePic justIcon='true' size='50px'/>
           </div>
-          <h1>LOGIN</h1>
+          <h1 className={styles.h1}>LOGIN</h1>
           <form className={styles.form} onSubmit={validateLogin()} >
             <Input
               label="Username or Email" 
@@ -37,6 +38,7 @@ const Login = () => {
               name='username'
               value={form.username}
               handleChange={handleChange}
+              margin={0}
             />
             
             <Input
@@ -46,6 +48,7 @@ const Login = () => {
               name='password'
               value={form.password}
               handleChange={handleChange}
+              margin={10}
             />
 
             <div className={styles.forgot}>
@@ -57,7 +60,7 @@ const Login = () => {
             <b className={styles.divider}>OR</b>
 
             <p className={styles.p}>
-              Create a <strong>new account!</strong>
+              Create a <Redirection text='new account' route='register' />
             </p>
           </form>
         </div>

@@ -13,7 +13,7 @@ const App = () => {
         await refresh()
       } catch {
         setLoading(true)
-        navigate('/login', {replace: true} )
+        // navigate('/login', {replace: true} )
       } finally {
         setLoading(false)
       }
