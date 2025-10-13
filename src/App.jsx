@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import AppRoutes from './routes/AppRoutes.jsx';
-import { refresh } from './services/authService.js';
 import { useNavigate } from 'react-router-dom';
+import { refresh } from './auth/services/authService.js';
 
 const App = () => {
   const navigate = useNavigate()
@@ -11,8 +11,8 @@ const App = () => {
     const initAuth = async () => {
       try {
         await refresh()
-      } catch (error) {
-        console.log('Usuário precisa fazer login: ' + error)
+      } catch {
+        setLoading(true)
         navigate('/login', {replace: true} )
       } finally {
         setLoading(false)

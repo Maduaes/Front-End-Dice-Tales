@@ -1,4 +1,5 @@
 import axios from "axios"
+import { refresh } from "../auth/services/authService"
 
 let accessToken = null
 
@@ -6,7 +7,6 @@ let isRefreshing = false
 let failedRequestQueue  = []
 
 const api = axios.create({
-
   baseURL: '/api',
   withCredentials: true
 })
@@ -44,10 +44,7 @@ api.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const response = await api.patch('/auth/refresh')
-        const { accessToken: newToken } = response.data
-
-        setAccessToken(newToken)
+        const newToken = await refresh()
         api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
 
         processQueue(null, newToken)

@@ -1,4 +1,4 @@
-import { authApi,  setAccessToken } from './api'
+import { authApi,  setAccessToken } from '../../services/api'
 
 export const login = async (email, password) => {
   const response = await authApi.post('/auth/login', { email, password })
@@ -11,6 +11,7 @@ export const refresh = async () => {
   try {
     const { data } = await authApi.patch('/auth/refresh')
     setAccessToken(data.accessToken)
+    return data.acessToken
   } catch (error) {
     console.warn('Usuário não logado ou refresh falhou: ', error)
     throw error
