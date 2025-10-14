@@ -1,5 +1,5 @@
 {
-    "games_view": [
+    "games": [
         {
             "id_game": 1,
             "name_game": "Herança de Trevas", 
@@ -51,7 +51,7 @@
             "image_path": ""
         }
     ],
-    "recent_sheets": [
+    "sheets": [
         {
             "id_sheet": 1,
             "id_game_sheets": 1,
