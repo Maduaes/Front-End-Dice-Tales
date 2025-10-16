@@ -27,11 +27,11 @@ export const SheetsContainer = () => {
         <div className='nav nav-tabs row nav-tabs-sheets' id='nav-tab'>
           <button className='col nav-link btn-tab active' 
             data-bs-toggle='tab' data-bs-target='#nav-player' type='button'>
-              Player
+              Owner
           </button>
           <button className='col nav-link btn-tab' 
             data-bs-toggle='tab' data-bs-target='#nav-game' type='button'>
-              Game Master
+              Shared To Me
           </button>
         </div>
       </nav>
