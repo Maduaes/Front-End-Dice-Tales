@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
-import AppRoutes from './routes/AppRoutes.jsx';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useRoutes } from 'react-router-dom';
 import { refresh } from './auth/services/authService.js';
+import appRoutes from './routes/appRoutes';
 
 const App = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
 
+  const element = useRoutes(appRoutes)
+
   useEffect(() => {
     const initAuth = async () => {
       try {
-        await refresh()
+        // await refresh()
       } catch {
-        setLoading(true)
-        navigate('/login', {replace: true} )
+        // setLoading(true)
+        // navigate('/login', {replace: true} )
       } finally {
         setLoading(false)
       }
@@ -26,9 +28,7 @@ const App = () => {
     return <div>Carregando...</div> // spinner ou algo assim depois faço
   }
 
-  return (
-    <AppRoutes />
-  )
+  return element
 }
 
 export default App

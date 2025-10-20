@@ -17,14 +17,10 @@ function getRandomGradient() {
 }
 
 export const Game = ({game}) => {  
-  const style = {
-    background: getRandomGradient()
-  }
-
   return (
     <div className={cx("col-12 col-md-6 col-xl-4 mb-3")}>
       <div className={cx("card", "shadow")}>
-        <div className={cx("imgBox", "emptyImage")} style={style}>
+        <div className={cx("imgBox", "emptyImage")} style={{background: getRandomGradient()}}>
           <img
             className={cx("cardImgTop")}
             // src={game.image_path}

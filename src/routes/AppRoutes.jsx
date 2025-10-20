@@ -1,15 +1,9 @@
-import { Routes } from "react-router-dom";
-import { MainRoutes } from "./MainRoutes.jsx";
-import { AuthRoutes } from "./AuthRoutes.jsx";
+import mainRoutes from "./mainRoutes";
+import authRoutes from "./authRoutes";
 
+const appRoutes = [
+  ...mainRoutes,
+  ...authRoutes
+]
 
-const AppRoutes = () => {
-  return (
-    <Routes>
-      {MainRoutes}
-      {AuthRoutes}
-    </Routes>
-  )
-}
-
-export default AppRoutes;
+export default appRoutes;
