@@ -5,17 +5,24 @@ import { useState } from "react"
 import { ProfilePic } from "../../shared/ProfilePic"
 import { login } from "../services/authService"
 import Redirection from "../components/Redirection"
+import { useNavigate } from "react-router-dom"
 
 const Login = () => {
+  const navigate = useNavigate()
   const [form, setForm] = useState({ username: '', password: '' })
 
   const handleChange = (name, value) => {
     setForm({ ...form, [name]: value })
   }
 
-  function validateLogin() {
-    if(form.username != '' && form.password != '') {
-        login(form.username, form.password)
+  const handleSubmit = async () => {
+    try{
+      const token = await login(form.username, form.password)
+      if(token) {
+        navigate('/')
+      }
+    }catch {
+      alert('Dados Inválidos!')
     }
   }
 
@@ -31,7 +38,7 @@ const Login = () => {
             <ProfilePic justIcon='true' size='50px'/>
           </div>
           <h1 className={styles.h1}>LOGIN</h1>
-          <form className={styles.form} onSubmit={validateLogin()} >
+          <form className={styles.form} >
             <Input
               label="Username or Email" 
               placeholder="Who are you?"
@@ -55,7 +62,8 @@ const Login = () => {
               <a className={styles.a} href="#">Forgot Password?</a>
             </div>
 
-            <button type="submit" className={styles.loginButton}>Login</button>
+            <button type="button" onClick={handleSubmit}
+            className={styles.loginButton}>Login</button>
 
             <b className={styles.divider}>OR</b>
 
