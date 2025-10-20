@@ -3,9 +3,10 @@ import { useEffect, useState } from 'react'
 import { getGamesView } from '../../../services/gamesService';
 import classNames from 'classnames/bind';
 import styles from './Home.module.scss'
-import { BtnGames } from '../../../shared/buttons/Btn-games';
+import { BtnModalGame } from '../../games/components/buttons/BtnModalGame';
 import { Icon } from '../../../shared/icones/Icon';
 import { SheetsContainer } from '../../sheets/components/SheetsContainerHome';
+import { ModalGame } from '../../games/components/modais/modalGame';
 
 const cx = classNames.bind(styles)
 
@@ -70,8 +71,8 @@ const Home = () => {
         <aside className={cx('aside', 'col')}>
           <header className={cx('container')}>
             <div className={cx('row', 'd-flex', 'justify-content-around', 'btn-div', 'gap-3')}>
-              <BtnGames label='New Game' icon='dices' />
-              <BtnGames label='Join a Game' icon='swords' />
+              <BtnModalGame label='New Game' icon='dices' id='newGame' />
+              <BtnModalGame label='Join a Game' icon='swords' id='joinGame' />
             </div>
           </header>
 

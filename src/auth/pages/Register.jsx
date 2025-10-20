@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Input from "../components/Input";
+import Input from "../../shared/forms/Input";
 import classNames from "classnames/bind";
 import styles from "./Register.module.scss";
 import { createUser } from "../../services/usersService";
