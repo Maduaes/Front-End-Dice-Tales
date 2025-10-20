@@ -12,9 +12,10 @@ const App = () => {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        setLoading(true)
         await refresh()
       } catch {
-        setLoading(true)
+        setLoading(false)
         navigate('/login', {replace: true} )
       } finally {
         setLoading(false)

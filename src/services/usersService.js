@@ -11,3 +11,21 @@ export const createUser = async (
     throw error
   }
 }
+
+export const getUser = async () => {
+  try{
+    const response = await api.get('users')
+    return response.data
+  }catch(error) {
+    console.error(error)
+  }
+}
+
+export const getProfilePic = async () => {
+  try{
+    const response = await api.get('users/profilePic')
+    return response.data
+  }catch(error) {
+    console.log(error)
+  }
+}

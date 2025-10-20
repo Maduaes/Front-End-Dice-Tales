@@ -2,7 +2,6 @@ import { useState } from "react";
 import Input from "../components/Input";
 import classNames from "classnames/bind";
 import styles from "./Register.module.scss";
-import api from "../../services/api";
 import { createUser } from "../../services/usersService";
 
 const cx = classNames.bind(styles);
@@ -12,14 +11,11 @@ export const Register = () => {
     email: '',
     username: '',
     password: '',
-    confirmPassword: '',
+    confirmPassword: ''
   })
 
   const handleChange = (name, value) => {
-    setFormRegister((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+    setFormRegister({ ...formRegister, [name]: value })
   }
 
   const handleSubmit = async (e) => {

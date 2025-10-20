@@ -46,7 +46,7 @@ api.interceptors.response.use(
       try {
         const newToken = await refresh()
         api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
-
+        setAccessToken(newToken)
         processQueue(null, newToken)
         return api(originalRequest)
 
