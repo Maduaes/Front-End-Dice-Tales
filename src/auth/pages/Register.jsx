@@ -1,52 +1,53 @@
 import { useState } from "react";
-import axios from "axios";
 import Input from "../components/Input";
 import classNames from "classnames/bind";
 import styles from "./Register.module.scss";
+import api from "../../services/api";
+import { createUser } from "../../services/usersService";
 
 const cx = classNames.bind(styles);
 
 export const Register = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    username: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const [formRegister, setFormRegister] = useState({
+    email: '',
+    username: '',
+    password: '',
+    confirmPassword: '',
+  })
 
   const handleChange = (name, value) => {
-    setFormData((prev) => ({
+    setFormRegister((prev) => ({
       ...prev,
       [name]: value,
-    }));
-  };
+    }))
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
-      return;
+    if (formRegister.password !== formRegister.confirmPassword) {
+      alert('Passwords do not match!')
+      return
     }
 
     try {
-      const { data } = await axios.post("http://localhost:3000/api/users", {
-        email: formData.email,
-        username: formData.username,
-        password: formData.password,
-      });
+      const { data } = await createUser(
+        formRegister.email,
+        formRegister.username,
+        formRegister.password,
+      )
 
-      alert("User created successfully!");
-      console.log("Response:", data);
+      alert('User created successfully!')
+      console.log('Response:', data)
     } catch (err) {
       if (err.response) {
-        alert(`Error: ${err.response.data.error || err.response.data.message}`);
+        alert(`Error: ${err.response.data.error || err.response.data.message}`)
       } else {
-        alert("Something went wrong while connecting to the server.");
+        alert('Something went wrong while connecting to the server.')
       }
       console.error(err);
     }
-  };
+  }
 
   return (
     <main className={styles.main}>
@@ -63,7 +64,7 @@ export const Register = () => {
                 label="Email"
                 name="email"
                 placeholder="What is your email?"
-                value={formData.email}
+                value={formRegister.email}
                 handleChange={handleChange}
               />
 
@@ -72,7 +73,7 @@ export const Register = () => {
                 name="password"
                 type="password"
                 placeholder="For your security"
-                value={formData.password}
+                value={formRegister.password}
                 handleChange={handleChange}
               />
             </div>
@@ -82,7 +83,7 @@ export const Register = () => {
                 label="Username"
                 name="username"
                 placeholder="How are you called?"
-                value={formData.username}
+                value={formRegister.username}
                 handleChange={handleChange}
               />
 
@@ -91,7 +92,7 @@ export const Register = () => {
                 name="confirmPassword"
                 type="password"
                 placeholder="For more security!"
-                value={formData.confirmPassword}
+                value={formRegister.confirmPassword}
                 handleChange={handleChange}
               />
             </div>
@@ -109,5 +110,5 @@ export const Register = () => {
         </div>
       </div>
     </main>
-  );
-};
+  )
+}
