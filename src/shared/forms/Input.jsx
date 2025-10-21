@@ -1,9 +1,7 @@
-import './Input.module.scss'
 import className from 'classnames/bind'
-import styles from './Input.module.scss'
+import styles from './Inputs.module.scss'
 
 const cx = className.bind(styles)
-
 
 const Input = ({
   label, 
@@ -14,13 +12,14 @@ const Input = ({
   handleChange,
   erro = false,
   mensagemErro,
-  margin
+  margin,
+  style = 'ipt-primary'
 }) => {
 
   return (
     <div className={styles.div}>
         <label style={{marginTop: margin}} className={erro ? cx('label erro') : cx('label')}>{label} 
-          <input className={styles.input} type={type} 
+          <input className={cx('input', style)} type={type} 
             placeholder={placeholder} name={name} value={value} 
             onChange={(e) => handleChange(e.target.name, e.target.value)} />
         </label>

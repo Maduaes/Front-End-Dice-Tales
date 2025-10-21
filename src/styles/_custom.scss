@@ -1,0 +1,31 @@
+// classes personalizadas --------
+
+// inputs --
+.ipt-primary{
+  background: #2E2D3F !important;
+  color: white !important;
+}
+.ipt-primary::placeholder{
+  color: #6b6b76 !important;
+}
+.ipt-second{
+  background: #4e4d61 !important;
+  color: white !important;
+}
+.ipt-second::placeholder{
+  color: #9999a8 !important;
+}
+
+
+// fonte --
+.fs-responsive {
+  font-size: 1.2rem;
+
+  @media (min-width: 768px) {
+    font-size: 1.1rem;
+  }
+
+  @media (min-width: 1200px) {
+    font-size: 1rem;
+  }
+}
