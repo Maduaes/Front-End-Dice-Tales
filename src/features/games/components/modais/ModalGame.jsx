@@ -1,5 +1,5 @@
-import s from './ModalGame.module.scss'
 import cn from 'classnames/bind'
+import s from './ModalGame.module.scss'
 import Input from "@/shared/forms/Input"
 import { SelectOption } from '../../../../shared/forms/SelectOption'
 import { useState } from 'react'
@@ -38,7 +38,7 @@ export const ModalGame = ({type}) => {
   }
 
   return (
-    <div className="modal fade" id={id} tabindex="-1" aria-labelledby={id + 'Label'} 
+    <div className="modal fade" id={id} tabIndex="-1" aria-labelledby={id + 'Label'} 
       aria-hidden="true">
       <div className={cn("modal-dialog modal-dialog-centered", {'modal-lg': newGame})}>
         <div className={cn("modal-content", s.modalGame)}>

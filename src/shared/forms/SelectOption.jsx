@@ -3,18 +3,19 @@ import s from './Inputs.module.scss'
 import cn from 'classnames'
 
 export const SelectOption = ({
-  label, listaOpcoes = [], descricaoPadrao, theme = 'ipt-primary', className
+  label = '', listaOpcoes = [], descricaoPadrao, theme = 'ipt-primary', className
 }) => {
+  const id = `${label.replace(' ', '')}Select`
 
   return (
     <div className={cn('form-group', className)}>
-      <label for={label + 'Select'} className={s.label}>{label}</label>
+      <label htmlFor={id} className={s.label}>{label}</label>
       <div className={cn(s.input, theme)}>
         <select className='form-control'
-          id={label + 'Select'}>
+          id={id}>
           <option value='0' >{descricaoPadrao}</option>
           { listaOpcoes.map((item) => (
-            <option value={item.id}>{item.descricao}</option>
+            <option key={item.id}>{item.descricao}</option>
           ))}
         </select>
         <Icon name='chevronDown' />
