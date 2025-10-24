@@ -16,7 +16,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 0.14rem solid #61D9BA;
+    border: 0.14rem solid $primary-green;
     border-radius: 2rem;
     background-color: transparent;
     padding: 0 20px;
@@ -57,8 +57,8 @@
     font-weight: 700;
     border: 0;
     border-radius: 50px;
-    background-color: #61D9BA;
-    color: #363547;
+    background-color: $primary-green;
+    color: $bg-dark-primary;
     height: 50px;
 }
 .btn-more:hover{

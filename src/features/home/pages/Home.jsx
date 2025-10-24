@@ -71,8 +71,8 @@ const Home = () => {
         <aside className={cx('aside', 'col')}>
           <header className={cx('container')}>
             <div className={cx('row', 'd-flex', 'justify-content-around', 'btn-div', 'gap-3')}>
-              <BtnModalGame label='New Game' icon='dices' id='newGame' />
-              <BtnModalGame label='Join a Game' icon='swords' id='joinGame' />
+              <BtnModalGame label='New Game' icon='dices' type='1' />
+              <BtnModalGame label='Join a Game' icon='swords' type='2' />
             </div>
           </header>
 

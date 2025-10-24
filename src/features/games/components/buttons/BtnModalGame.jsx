@@ -1,20 +1,20 @@
-import classNames from "classnames/bind";
-import styles from "./BtnModalGame.module.scss"
+import cn from "classnames";
+import s from "./BtnModalGame.module.scss"
 import { Icon } from "../../../../shared/icones/Icon";
 import { ModalGame } from "../modais/modalGame";
 
-const cx = classNames.bind(styles)
 
-export const BtnModalGame = ({label, icon = '', id}) => {
+export const BtnModalGame = ({label, icon = '', type}) => {
+  const id = (type == 1) ? 'newGame' : 'joinGame'
 
   return (
     <>
-      <button className={cx("btn-game", "col fs-responsive")}
+      <button className={cn(s.btnGame, 'col fs-responsive')}
       data-bs-toggle="modal" data-bs-target={'#' + id} >
         {(icon != '') && <Icon name={icon} />}
-          {label}
+        {label}
       </button>
-      <ModalGame id={id}/>
+      <ModalGame type={type}/>
     </>
   )
 }

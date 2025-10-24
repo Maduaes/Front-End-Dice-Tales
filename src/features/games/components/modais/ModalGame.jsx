@@ -5,20 +5,23 @@ import { SelectOption } from '../../../../shared/forms/SelectOption'
 import { useState } from 'react'
 import { Icon } from '../../../../shared/icones/Icon'
 
-export const ModalGame = ({id}) => {
+export const ModalGame = ({type}) => {
   const [listaSistemas, setListaSistemas] = useState([
     { id: 1, descricao: 'D&D' },
     { id: 2, descricao: 'Tormenta' },
     { id: 3, descricao: 'Ordem Paranormal' }
   ])
 
+  const newGame = (type == 1)
+  const id = newGame ? 'newGame' : 'joinGame'
+
   const getBody = () => {
-    if(id == 'newGame') {
+    if(newGame) {
       return (
         <div className='modal-body container'>
           <div className='row'>
-            <Input label='Game Title' placeholder='Something awesome...' theme='ipt-second' 
-            hasIcon='true' nameIcon='feather' className='col'/>
+            <Input label='Game Title' placeholder='A tale waiting to be told...' 
+            theme='ipt-second' hasIcon='true' nameIcon='feather' className='col'/>
             <SelectOption label='RPG System' descricaoPadrao='Choose a System...' 
             listaOpcoes={listaSistemas} theme='ipt-second' className='col-5 ps-0'/>
           </div>
@@ -27,6 +30,8 @@ export const ModalGame = ({id}) => {
     }else {
       return (
         <div className="modal-body">
+          <Input label='Key Code' placeholder='Enter a key code...' 
+          theme='ipt-second' hasIcon='true' nameIcon='keyRound' />
         </div>
       )
     }
@@ -35,12 +40,12 @@ export const ModalGame = ({id}) => {
   return (
     <div className="modal fade" id={id} tabindex="-1" aria-labelledby={id + 'Label'} 
       aria-hidden="true">
-      <div className="modal-dialog modal-dialog-centered modal-lg">
+      <div className={cn("modal-dialog modal-dialog-centered", {'modal-lg': newGame})}>
         <div className={cn("modal-content", s.modalGame)}>
           <div className="modal-header">
-            <Icon name='dices' />
+            <Icon name={newGame ? 'dices' : 'swords'} />
             <h1 className="modal-title fs-5 ps-2" id={id + 'Label'}>
-              { (id == 'newGame') ? 'Create a New Game' : 'Join a Game' }
+              { newGame ? 'Create a New Game' : 'Join a Game' }
             </h1>
             <button type="button" className="btn-close" data-bs-dismiss="modal" 
               aria-label="Close"></button>
@@ -48,10 +53,10 @@ export const ModalGame = ({id}) => {
           { getBody() }
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
-              Close
+              Back
             </button>
-            <button type="button" className="btn btn-primary">
-              Save changes
+            <button type="button" className="btn btn-primary-green">
+              { newGame ? 'Create Game' : 'Enter the Game'}
             </button>
           </div>
         </div>

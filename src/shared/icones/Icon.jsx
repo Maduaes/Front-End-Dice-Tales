@@ -10,6 +10,7 @@ const icons = {
   user: LucideIcons.User,
   chevronDown: LucideIcons.ChevronDown,
   penTool: LucideIcons.PenTool,
+  keyRound: LucideIcons.KeyRound,
   github: ({size = 20, props}) => (
     <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" 
     width={size} height={size} {...props} > 
@@ -34,22 +35,6 @@ const icons = {
             fill="currentColor"/>
     </svg>
   ),
-  // feather: ({size = '1em', props}) => (
-  //   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" 
-  //         width={size} height={size} {...props} >
-  //     <title>Feather</title>
-  //     <path d="M3.581 27.855q-.326.888-.607 1.785c-.07.24-.31.4-.57.35c-.3-.05-.47-.36-.38-.66q.447-1.421 1-2.814V21.81A19.98 19.98 0 0 1 10.1 6.537A23.4 23.4 0 0 1 25.2 1h4.17a1.66 1.66 0 0 1 1.539 1.052c.08.206.118.427.111.648c-.003.436-.17.854-.466 1.174a55 55 0 0 0-5.954 8.282a1.75 1.75 0 0 1-1.5.844h-1.32l.668 1.1a1.78 1.78 0 0 1 .046 1.764a112 112 0 0 0-1.165 2.221a14.5 14.5 0 0 1-3.515 4.463a1.94 1.94 0 0 1-1.22.45h-1.33c.058.15.088.311.088.473a1.26 1.26 0 0 1-.729 1.15A14.5 14.5 0 0 1 8.3 26.06H4.6zm1.617-3.795H8.3a12.5 12.5 0 0 0 3.96-.635l-.628-.293a1.1 1.1 0 0 1-.679-1.185A1.11 1.11 0 0 1 12.064 21h4.53a13.1 13.1 0 0 0 2.95-3.814c.281-.564.806-1.552 1.129-2.156L19.38 12.9a1.26 1.26 0 0 1-.155-.9H14.19q-.609.562-1.197 1.15a40.3 40.3 0 0 0-7.796 10.91M25.558 7a58 58 0 0 1 3.105-4H25.2a21.4 21.4 0 0 0-6.196.92v3.07a41 41 0 0 1 5.63-3.08c.24-.11.53-.01.65.23a.5.5 0 0 1-.25.69A41 41 0 0 0 20.872 7zm-11.634-.78a21.4 21.4 0 0 0-2.534 1.843A17.99 17.99 0 0 0 5.024 21.81v.405a41.6 41.6 0 0 1 8.9-11.318z" 
-  //         fill="currentColor" />
-  //   </svg>
-  // ),
-  // feather: ({size = '1em', props}) => (
-  //   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" 
-  //   width={size} height={size} {...props}>
-  //     <title>Feather</title>
-  //     <path fill="none" stroke="currentColor" 
-  //     stroke-linecap="round" stroke-linejoin="round" 
-  //     stroke-width="2" d="M17.9 8H9.2m-4.1 4H14l8-8.2c-2.3-2.3-6.1-2.3-8.5 0L2 15m0 4h8m11-2v1c0 1 1 1.5 1 2.5c0 .8-.7 1.5-1.5 1.5h-5c-.8 0-1.5-.7-1.5-1.5c0-1 1-1.5 1-2.5v-1m-1 0h8"/></svg>
-  // ),
   feather: ({size = '1em', props}) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" 
       width={size} height={size} {...props}>
