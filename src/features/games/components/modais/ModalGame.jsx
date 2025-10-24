@@ -1,11 +1,9 @@
-import styles from './ModalGame.module.scss'
-import classNames from 'classnames/bind'
+import s from './ModalGame.module.scss'
+import cn from 'classnames/bind'
 import Input from "@/shared/forms/Input"
-import { Icon } from '../../../../shared/icones/Icon'
 import { SelectOption } from '../../../../shared/forms/SelectOption'
 import { useState } from 'react'
-
-const cx = classNames.bind(styles)
+import { Icon } from '../../../../shared/icones/Icon'
 
 export const ModalGame = ({id}) => {
   const [listaSistemas, setListaSistemas] = useState([
@@ -17,10 +15,13 @@ export const ModalGame = ({id}) => {
   const getBody = () => {
     if(id == 'newGame') {
       return (
-        <div className="modal-body">
-          <Input label='Game Title' placeholder='Something awesome...' style='ipt-second' />
-          <SelectOption label='RPG System' descricaoPadrao='Choose a System...' 
-          listaOpcoes={listaSistemas} style='ipt-second' />
+        <div className='modal-body container'>
+          <div className='row'>
+            <Input label='Game Title' placeholder='Something awesome...' theme='ipt-second' 
+            hasIcon='true' nameIcon='feather' className='col'/>
+            <SelectOption label='RPG System' descricaoPadrao='Choose a System...' 
+            listaOpcoes={listaSistemas} theme='ipt-second' className='col-5 ps-0'/>
+          </div>
         </div>
       )
     }else {
@@ -34,13 +35,13 @@ export const ModalGame = ({id}) => {
   return (
     <div className="modal fade" id={id} tabindex="-1" aria-labelledby={id + 'Label'} 
       aria-hidden="true">
-      <div className="modal-dialog modal-dialog-centered">
-        <div className={cx("modal-content", "modalGame")}>
+      <div className="modal-dialog modal-dialog-centered modal-lg">
+        <div className={cn("modal-content", s.modalGame)}>
           <div className="modal-header">
-            <h1 className="modal-title fs-5" id={id + 'Label'}>
+            <Icon name='dices' />
+            <h1 className="modal-title fs-5 ps-2" id={id + 'Label'}>
               { (id == 'newGame') ? 'Create a New Game' : 'Join a Game' }
             </h1>
-            <Icon name='feather' />
             <button type="button" className="btn-close" data-bs-dismiss="modal" 
               aria-label="Close"></button>
           </div>

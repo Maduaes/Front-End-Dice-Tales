@@ -2,18 +2,36 @@
 
 // inputs --
 .ipt-primary{
-  background: #2E2D3F !important;
-  color: white !important;
-}
-.ipt-primary::placeholder{
-  color: #6b6b76 !important;
+  background: hsl(243, 17%, 21%) !important;
+  input, select{
+    background: hsl(243, 17%, 21%) !important;
+    color: white;
+  }
+  input::placeholder, select::placeholder{
+    color: #6b6b76 !important;
+  }
 }
 .ipt-second{
-  background: #4e4d61 !important;
-  color: white !important;
-}
-.ipt-second::placeholder{
-  color: #9999a8 !important;
+  background: #49485b !important;
+  input, select{
+    color: white;
+    box-shadow: none;
+    outline: none;
+  }
+  select{
+    color: white !important;
+  }
+  input::placeholder{
+    color: #9999a8 !important;
+  }
+  select:focus{
+    background: #403e4f !important;
+    box-shadow: none;
+  }
+  &:focus-within{
+    outline: 0.15rem solid #282731;
+    background: #403e4f !important;
+  }
 }
 
 

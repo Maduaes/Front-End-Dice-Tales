@@ -9,16 +9,20 @@
 }
 
 .input {
-  width: 100%;
+  display: flex;
+  align-items: center;
   height: 3rem;
   margin-top: 0.25rem;
-  padding-left: 1rem;
-  border: none !important;
   border-radius: 5px;
   font-size: 1rem;
-  // box-sizing: border-box;
-}
+  padding-right: 1rem;
 
-.erro {
-  border: red;
+  input, select{
+    background: none;
+    border: none !important;
+    padding: 0 1rem;
+    border-radius: 5px;
+    height: 100%;
+    width: 100%;
+  }
 }

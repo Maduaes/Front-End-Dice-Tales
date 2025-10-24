@@ -1,7 +1,6 @@
-import className from 'classnames/bind'
-import styles from './Inputs.module.scss'
-
-const cx = className.bind(styles)
+import cn from 'classnames'
+import s from './Inputs.module.scss'
+import { Icon } from '../icones/Icon'
 
 const Input = ({
   label, 
@@ -10,20 +9,23 @@ const Input = ({
   name,
   value,
   handleChange,
-  erro = false,
-  mensagemErro,
   margin,
-  style = 'ipt-primary'
+  theme = 'ipt-primary',
+  className,
+  hasIcon = false,
+  nameIcon
 }) => {
 
   return (
-    <div className={styles.div}>
-        <label style={{marginTop: margin}} className={erro ? cx('label erro') : cx('label')}>{label} 
-          <input className={cx('input', style)} type={type} 
-            placeholder={placeholder} name={name} value={value} 
-            onChange={(e) => handleChange(e.target.name, e.target.value)} />
+    <div className={cn(s.div, className)}>
+        <label style={{marginTop: margin}} className={s.label}>{label} 
+          <div className={cn(s.input, 'd-flex flex-row', theme)}>
+            <input type={type} 
+              placeholder={placeholder} name={name} value={value} 
+              onChange={(e) => handleChange(e.target.name, e.target.value)} />
+              { hasIcon && <Icon name={nameIcon} className={s.icon} /> }
+          </div>
         </label>
-        { erro && <div> {mensagemErro} </div> }
     </div>
   )
 }

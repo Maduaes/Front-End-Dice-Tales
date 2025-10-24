@@ -1,4 +1,12 @@
 .modalGame{
   background-color: $bg-dark-primary !important;
   color: white !important;
+
+  :global(.modal-header) {
+    border-bottom: 1px solid #292934; // linha abaixo do título
+  }
+
+  :global(.modal-footer) {
+    border-top: 1px solid #292934; // linha acima dos botões
+  }
 }
