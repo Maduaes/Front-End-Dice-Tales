@@ -1,7 +1,8 @@
-import classNames from "classnames/bind";
-import styles from "./Game.module.scss"
-
-const cx = classNames.bind(styles)
+import cn from "classnames/bind";
+import s from "./Game.module.scss"
+import { Icon } from "../../../shared/icones/Icon";
+import { useMemo, useState } from "react";
+import { ModalGame } from "./modais/modalGame";
 
 const gradients = [
   "linear-gradient(45deg, #b83cceff 0%, #7687e6ff 50%, #3bd2d7ff 100%)",
@@ -16,19 +17,36 @@ function getRandomGradient() {
   return gradients[index]
 }
 
-export const Game = ({game}) => {  
+export const Game = ({game, atualizaGames}) => { 
+  const [hover, setHover] = useState(false) // usar pra validar se o usuario tem acesso a edição depois
+  const background = useMemo(() => getRandomGradient(), [])
+
   return (
-    <div className={cx("col-12 col-md-6 col-xl-4 mb-3")} >
-      <div className={cx("card", "shadow")}>
-        <div className={cx("imgBox", "emptyImage")} style={{background: getRandomGradient()}}>
-          { (game.imagePath !== '/public/images/imagem_padrao_jogo.png') && <img
-            className={cx("cardImgTop")}
-            src={game.imagePath}
-            aria-label="Imagem do Jogo"
-          />}
+    <div className={cn("col-12 col-md-6 col-xl-4 mb-3")} >
+      <div className={cn(s.card, "shadow")}>
+        <div className={cn(s.imgBox, s.emptyImage)} 
+             style={{ background }}
+             onMouseEnter={() => setHover(true)} 
+             onMouseLeave={() => setHover(false)}
+        >
+          { (game.imagePath !== null) && 
+            <img
+              className={cn(s.cardImgTop)}
+              src={game.imagePath}
+              alt="Imagem do Jogo"
+            />
+          }
+          <div className={cn(s.editIcon)}>
+            <button className={cn(s.btnEdit)}
+                    data-bs-toggle="modal" 
+                    data-bs-target={'#editGame'}>
+              <Icon name='squarePen' />
+            </button>
+            <ModalGame type='2' atualizaGames={atualizaGames}/>
+          </div> 
         </div>
-        <div className={cx("cardBody")}>
-          <h6 className={cx("text-truncate fs-responsive")}>{game.name}</h6>
+        <div className={cn(s.cardBody)}>
+          <h6 className={cn("text-truncate fs-responsive")}>{game.name}</h6>
         </div>
       </div>
     </div>  

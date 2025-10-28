@@ -7,53 +7,68 @@ import { Icon } from '../../../../shared/icones/Icon'
 import { createGame } from '../../../../services/gamesService'
 
 export const ModalGame = ({ type, atualizaGames }) => {
-  const [formCreate, setFormCreate] = useState({ name: '', system: 0 })
+  const [formGame, setFormGame] = useState({ name: '', system: 0 })
+  const [formJoin, setFormJoin] = useState({ key: '' })
 
-  const newGame = (type == 1)
-  const id = newGame ? 'newGame' : 'joinGame'
+  let newGame = (type == 1)
+  let editGame = (type == 2)
+  let joinGame = (type == 3)
+  
+  let id = ''
+  if(newGame) id = 'newGame'
+  if(editGame) id = 'editGame'
+  if(joinGame) id = 'joinGame'
 
   const [listaSistemas, setListaSistemas] = useState([
-    { id: 1, descricao: 'D&D' },
-    { id: 2, descricao: 'Tormenta' },
-    { id: 3, descricao: 'Ordem Paranormal' }
+    { id: 1, descricao: 'D&D' }
   ])
 
   const handleChange = (name, value) => {
-    if(newGame) {
-      setFormCreate({ ...formCreate, [name]: value })
+    if(newGame || editGame) {
+      setFormGame({ ...formGame, [name]: value })
+    }
+    if(joinGame){
+      setFormJoin({ ...formJoin, [name]: value })
     }
   }
 
   const handleSubmit = async () => {
-    if(newGame) {
-      const response = await createGame(formCreate.name)
+    if(newGame || editGame) {
+      const response = newGame 
+        ? await createGame(formGame.name) 
+        : await editGame(formGame.name)
       if(response) {
         document.getElementById('btn-game-modal')?.click()
         atualizaGames(response)
       }
     }
+    if(joinGame) {
+      // const response = await joinGame(formJoin.key)
+    }
   }
 
   const getBody = () => {
-    if(newGame) {
+    if(newGame || editGame) {
       return (
         <div className='modal-body container'>
           <div className='row'>
             <Input label='Game Title' placeholder='A tale waiting to be told...'
-              name='name' value={formCreate.name} handleChange={handleChange}
+              name='name' value={formGame.name} handleChange={handleChange}
               theme='ipt-second' hasIcon='true' nameIcon='feather' className='col'
             />
             <SelectOption label='RPG System' descricaoPadrao='Choose a System...'
-              name='system' value={formCreate.system} handleChange={handleChange} 
+              name='system' value={formGame.system} handleChange={handleChange} 
               listaOpcoes={listaSistemas} theme='ipt-second' className='col-5 ps-0'
             />
           </div>
         </div>
       )
-    }else {
+    }
+    if(joinGame) {
       return (
         <div className="modal-body">
           <Input label='Key Code' placeholder='Enter a key code...' 
+          name='key' value={formJoin.key} handleChange={handleChange}
           theme='ipt-second' hasIcon='true' nameIcon='keyRound' />
         </div>
       )
@@ -66,9 +81,9 @@ export const ModalGame = ({ type, atualizaGames }) => {
       <div className={cn("modal-dialog modal-dialog-centered", {'modal-lg': newGame})}>
         <div className={cn("modal-content", s.modalGame)}>
           <div className="modal-header">
-            <Icon name={newGame ? 'dices' : 'swords'} />
+            <Icon name={ (newGame || editGame) ? 'dices' : 'swords'} />
             <h1 className="modal-title fs-5 ps-2" id={id + 'Label'}>
-              { newGame ? 'Create a New Game' : 'Join a Game' }
+              { newGame ? 'Create a New Game' : joinGame ? 'Join a Game' : 'Edit your Game' }
             </h1>
             <button type="button" className="btn-close" data-bs-dismiss="modal" id='btn-game-modal'
               aria-label="Close"></button>
@@ -79,7 +94,7 @@ export const ModalGame = ({ type, atualizaGames }) => {
               Back
             </button>
             <button type="button" className="btn btn-primary-green" onClick={handleSubmit}>
-              { newGame ? 'Create Game' : 'Enter the Game'}
+              { newGame ? 'Create Game' : joinGame ? 'Enter the Game' : 'Edit Game' }
             </button>
           </div>
         </div>

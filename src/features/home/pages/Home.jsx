@@ -53,7 +53,7 @@ const Home = () => {
             { hasItems(gamesList) ? (
               <div className='row ps-3 pe-3'>
                 { gamesList.map((game) => ( 
-                  <Game key={game.code} game={game} /> )) 
+                  <Game key={game.code} game={game} atualizaGames={atualizaGames} /> )) 
                 }
               </div>
             ) : (
@@ -78,7 +78,7 @@ const Home = () => {
                 label='New Game' icon='dices' type='1' 
                 atualizaGames={atualizaGames} 
               />
-              <BtnModalGame label='Join a Game' icon='swords' type='2' />
+              <BtnModalGame label='Join a Game' icon='swords' type='3' />
             </div>
           </header>
 

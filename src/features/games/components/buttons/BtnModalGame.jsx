@@ -5,7 +5,7 @@ import { ModalGame } from "../modais/modalGame";
 
 
 export const BtnModalGame = ({label, icon = '', type, atualizaGames}) => {
-  const id = (type == 1) ? 'newGame' : 'joinGame'
+  const id = (type == 1) ? 'newGame' : (type == 2) ? 'editGame' : 'joinGame'
 
   return (
     <>
