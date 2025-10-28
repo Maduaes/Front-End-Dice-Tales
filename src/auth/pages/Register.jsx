@@ -3,10 +3,14 @@ import Input from "../../shared/forms/Input";
 import classNames from "classnames/bind";
 import styles from "./Register.module.scss";
 import { createUser } from "../../services/usersService";
+import { login } from "../services/authService";
+import { useNavigate } from "react-router-dom";
+import Redirection from "../components/Redirection";
 
 const cx = classNames.bind(styles);
 
 export const Register = () => {
+  const navigate = useNavigate()
   const [formRegister, setFormRegister] = useState({
     email: '',
     username: '',
@@ -30,11 +34,13 @@ export const Register = () => {
       const { data } = await createUser(
         formRegister.email,
         formRegister.username,
-        formRegister.password,
+        formRegister.password
       )
+      console.log(data)
+      await login(formRegister.email, formRegister.password).then(() => {
+        navigate('/')
+      })
 
-      alert('User created successfully!')
-      console.log('Response:', data)
     } catch (err) {
       if (err.response) {
         alert(`Error: ${err.response.data.error || err.response.data.message}`)
@@ -100,7 +106,7 @@ export const Register = () => {
             <b className={styles.divider}>OR</b>
 
             <p className={styles.p}>
-              <strong>login</strong>
+              <Redirection  text='login' route='login' />
             </p>
           </form>
         </div>

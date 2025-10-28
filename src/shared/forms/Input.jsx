@@ -18,12 +18,15 @@ const Input = ({
 
   return (
     <div className={cn(s.div, className)}>
-        <label style={{marginTop: margin}} className={s.label}>{label} 
+        <label style={{marginTop: margin}} className={s.label}> {label} 
           <div className={cn(s.input, 'd-flex flex-row', theme)}>
             <input type={type} 
-              placeholder={placeholder} name={name} value={value} 
-              onChange={(e) => handleChange(e.target.name, e.target.value)} />
-              { hasIcon && <Icon name={nameIcon} className={s.icon} /> }
+              placeholder={placeholder} 
+              name={name} 
+              value={value} 
+              onChange={(e) => handleChange(e.target.name, e.target.value)} 
+            />
+            { hasIcon && <Icon name={nameIcon} className={s.icon} /> }
           </div>
         </label>
     </div>

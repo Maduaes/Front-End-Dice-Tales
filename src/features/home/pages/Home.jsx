@@ -18,6 +18,7 @@ const Home = () => {
     const fetchData = async () => {
       try {
       const games = await getGamesView()
+      console.log(games)
       setGamesList(games)
       } catch (error) {
         console.error(error)

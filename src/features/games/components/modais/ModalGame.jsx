@@ -4,26 +4,46 @@ import Input from "@/shared/forms/Input"
 import { SelectOption } from '../../../../shared/forms/SelectOption'
 import { useState } from 'react'
 import { Icon } from '../../../../shared/icones/Icon'
+import { createGame } from '../../../../services/gamesService'
 
 export const ModalGame = ({type}) => {
+  const [formCreate, setFormCreate] = useState({ name: '', system: '' })
+
+  const newGame = (type == 1)
+  const id = newGame ? 'newGame' : 'joinGame'
+
   const [listaSistemas, setListaSistemas] = useState([
     { id: 1, descricao: 'D&D' },
     { id: 2, descricao: 'Tormenta' },
     { id: 3, descricao: 'Ordem Paranormal' }
   ])
 
-  const newGame = (type == 1)
-  const id = newGame ? 'newGame' : 'joinGame'
+  const handleChange = (name, value) => {
+    if(newGame) {
+      setFormCreate({ ...formCreate, [name]: value })
+    }
+  }
+
+  const handleClick = async () => {
+    if(newGame) {
+      const response = await createGame(formCreate.name)
+      console.log(response)
+    }
+  }
 
   const getBody = () => {
     if(newGame) {
       return (
         <div className='modal-body container'>
           <div className='row'>
-            <Input label='Game Title' placeholder='A tale waiting to be told...' 
-            theme='ipt-second' hasIcon='true' nameIcon='feather' className='col'/>
-            <SelectOption label='RPG System' descricaoPadrao='Choose a System...' 
-            listaOpcoes={listaSistemas} theme='ipt-second' className='col-5 ps-0'/>
+            <Input label='Game Title' placeholder='A tale waiting to be told...'
+              name='title' value={formCreate.title} handleChange={handleChange}
+              theme='ipt-second' hasIcon='true' nameIcon='feather' className='col'
+            />
+            <SelectOption label='RPG System' descricaoPadrao='Choose a System...'
+              name='system' value={formCreate.system} handleChange={handleChange} 
+              listaOpcoes={listaSistemas} theme='ipt-second' className='col-5 ps-0'
+            />
           </div>
         </div>
       )
@@ -55,7 +75,7 @@ export const ModalGame = ({type}) => {
             <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
               Back
             </button>
-            <button type="button" className="btn btn-primary-green">
+            <button type="button" className="btn btn-primary-green" onClick={handleClick}>
               { newGame ? 'Create Game' : 'Enter the Game'}
             </button>
           </div>
