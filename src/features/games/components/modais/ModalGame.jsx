@@ -13,11 +13,13 @@ export const ModalGame = ({ type, atualizaGames }) => {
   let newGame = (type == 1)
   let editGame = (type == 2)
   let joinGame = (type == 3)
+  let deleteGame = (type == 4)
   
-  let id = ''
+  let id
   if(newGame) id = 'newGame'
   if(editGame) id = 'editGame'
   if(joinGame) id = 'joinGame'
+  if(deleteGame) id = 'deleteGame'
 
   const [listaSistemas, setListaSistemas] = useState([
     { id: 1, descricao: 'D&D' }
@@ -56,10 +58,22 @@ export const ModalGame = ({ type, atualizaGames }) => {
               name='name' value={formGame.name} handleChange={handleChange}
               theme='ipt-second' hasIcon='true' nameIcon='feather' className='col'
             />
-            <SelectOption label='RPG System' descricaoPadrao='Choose a System...'
-              name='system' value={formGame.system} handleChange={handleChange} 
-              listaOpcoes={listaSistemas} theme='ipt-second' className='col-5 ps-0'
-            />
+            { newGame && 
+              <SelectOption label='RPG System' descricaoPadrao='Choose a System...'
+                name='system' value={formGame.system} handleChange={handleChange} 
+                listaOpcoes={listaSistemas} theme='ipt-second' className='col-5 ps-0'
+              />
+            }
+          </div>
+        </div>
+      )
+    }
+    if(deleteGame) {
+      return(
+        <div className='modal-body container'>
+          <div className='row'>
+            <p className='text-center'>This Action will delete your game and all sheets you had inside it!</p>
+            <p className='text-center'>Are you sure?</p>
           </div>
         </div>
       )
@@ -90,6 +104,11 @@ export const ModalGame = ({ type, atualizaGames }) => {
           </div>
           { getBody() }
           <div className="modal-footer">
+            { editGame && 
+              <div>
+                <Icon name='trash2' />
+              </div>
+            }
             <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
               Back
             </button>

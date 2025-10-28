@@ -22,33 +22,35 @@ export const Game = ({game, atualizaGames}) => {
   const background = useMemo(() => getRandomGradient(), [])
 
   return (
-    <div className={cn("col-12 col-md-6 col-xl-4 mb-3")} >
-      <div className={cn(s.card, "shadow")}>
-        <div className={cn(s.imgBox, s.emptyImage)} 
-             style={{ background }}
-             onMouseEnter={() => setHover(true)} 
-             onMouseLeave={() => setHover(false)}
-        >
-          { (game.imagePath !== null) && 
-            <img
-              className={cn(s.cardImgTop)}
-              src={game.imagePath}
-              alt="Imagem do Jogo"
-            />
-          }
-          <div className={cn(s.editIcon)}>
-            <button className={cn(s.btnEdit)}
-                    data-bs-toggle="modal" 
-                    data-bs-target={'#editGame'}>
-              <Icon name='squarePen' />
-            </button>
-            <ModalGame type='2' atualizaGames={atualizaGames}/>
-          </div> 
+    <>
+      <div className={cn("col-12 col-md-6 col-xl-4 mb-3")} >
+        <div className={cn(s.card, "shadow")}>
+          <div className={cn(s.imgBox, s.emptyImage)} 
+              style={{ background }}
+              onMouseEnter={() => setHover(true)} 
+              onMouseLeave={() => setHover(false)}
+          >
+            { (game.imagePath !== null) && 
+              <img
+                className={cn(s.cardImgTop)}
+                src={game.imagePath}
+                alt="Imagem do Jogo"
+              />
+            }
+            <div className={cn(s.editIcon)}>
+              <button className={cn(s.btnEdit)}
+                      data-bs-toggle="modal" 
+                      data-bs-target='#editGame'>
+                <Icon name='squarePen' />
+              </button>
+            </div> 
+          </div>
+          <div className={cn(s.cardBody)}>
+            <h6 className={cn("text-truncate fs-responsive")}>{game.name}</h6>
+          </div>
         </div>
-        <div className={cn(s.cardBody)}>
-          <h6 className={cn("text-truncate fs-responsive")}>{game.name}</h6>
-        </div>
-      </div>
-    </div>  
+      </div> 
+      <ModalGame type='2' atualizaGames={atualizaGames}/>
+    </> 
   )
 }

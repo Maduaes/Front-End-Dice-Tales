@@ -12,6 +12,7 @@ const icons = {
   penTool: LucideIcons.PenTool,
   keyRound: LucideIcons.KeyRound,
   squarePen: LucideIcons.SquarePen,
+  trash2: LucideIcons.Trash2,
   github: ({size = 20, props}) => (
     <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" 
     width={size} height={size} {...props} > 

@@ -18,3 +18,12 @@ export const createGame = async ( name ) => {
     console.log('deu erro')
   }
 }
+
+export const editGame = async ( name ) => {
+  try{
+    const response = await api.patch('/games', {name: name})
+    return response.data
+  }catch {
+    console.log('deu erro de novo')
+  }
+}
