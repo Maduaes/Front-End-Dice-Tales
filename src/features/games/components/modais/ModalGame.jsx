@@ -6,8 +6,8 @@ import { useState } from 'react'
 import { Icon } from '../../../../shared/icones/Icon'
 import { createGame } from '../../../../services/gamesService'
 
-export const ModalGame = ({type}) => {
-  const [formCreate, setFormCreate] = useState({ name: '', system: '' })
+export const ModalGame = ({ type, atualizaGames }) => {
+  const [formCreate, setFormCreate] = useState({ name: '', system: 0 })
 
   const newGame = (type == 1)
   const id = newGame ? 'newGame' : 'joinGame'
@@ -24,10 +24,13 @@ export const ModalGame = ({type}) => {
     }
   }
 
-  const handleClick = async () => {
+  const handleSubmit = async () => {
     if(newGame) {
       const response = await createGame(formCreate.name)
-      console.log(response)
+      if(response) {
+        document.getElementById('btn-game-modal')?.click()
+        atualizaGames(response)
+      }
     }
   }
 
@@ -37,7 +40,7 @@ export const ModalGame = ({type}) => {
         <div className='modal-body container'>
           <div className='row'>
             <Input label='Game Title' placeholder='A tale waiting to be told...'
-              name='title' value={formCreate.title} handleChange={handleChange}
+              name='name' value={formCreate.name} handleChange={handleChange}
               theme='ipt-second' hasIcon='true' nameIcon='feather' className='col'
             />
             <SelectOption label='RPG System' descricaoPadrao='Choose a System...'
@@ -67,7 +70,7 @@ export const ModalGame = ({type}) => {
             <h1 className="modal-title fs-5 ps-2" id={id + 'Label'}>
               { newGame ? 'Create a New Game' : 'Join a Game' }
             </h1>
-            <button type="button" className="btn-close" data-bs-dismiss="modal" 
+            <button type="button" className="btn-close" data-bs-dismiss="modal" id='btn-game-modal'
               aria-label="Close"></button>
           </div>
           { getBody() }
@@ -75,7 +78,7 @@ export const ModalGame = ({type}) => {
             <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
               Back
             </button>
-            <button type="button" className="btn btn-primary-green" onClick={handleClick}>
+            <button type="button" className="btn btn-primary-green" onClick={handleSubmit}>
               { newGame ? 'Create Game' : 'Enter the Game'}
             </button>
           </div>

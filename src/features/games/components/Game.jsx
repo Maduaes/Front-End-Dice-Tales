@@ -18,17 +18,17 @@ function getRandomGradient() {
 
 export const Game = ({game}) => {  
   return (
-    <div className={cx("col-12 col-md-6 col-xl-4 mb-3")}>
+    <div className={cx("col-12 col-md-6 col-xl-4 mb-3")} >
       <div className={cx("card", "shadow")}>
         <div className={cx("imgBox", "emptyImage")} style={{background: getRandomGradient()}}>
-          <img
+          { (game.imagePath !== '/public/images/imagem_padrao_jogo.png') && <img
             className={cx("cardImgTop")}
-            // src={game.image_path}
+            src={game.imagePath}
             aria-label="Imagem do Jogo"
-          />
+          />}
         </div>
         <div className={cx("cardBody")}>
-          <h6 className={cx("text-truncate fs-responsive")}>{game.name_game}</h6>
+          <h6 className={cx("text-truncate fs-responsive")}>{game.name}</h6>
         </div>
       </div>
     </div>  

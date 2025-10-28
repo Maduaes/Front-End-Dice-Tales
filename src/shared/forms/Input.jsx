@@ -23,7 +23,7 @@ const Input = ({
             <input type={type} 
               placeholder={placeholder} 
               name={name} 
-              value={value} 
+              value={value ?? ''} 
               onChange={(e) => handleChange(e.target.name, e.target.value)} 
             />
             { hasIcon && <Icon name={nameIcon} className={s.icon} /> }

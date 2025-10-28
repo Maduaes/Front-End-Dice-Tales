@@ -4,7 +4,7 @@ import { Icon } from "../../../../shared/icones/Icon";
 import { ModalGame } from "../modais/modalGame";
 
 
-export const BtnModalGame = ({label, icon = '', type}) => {
+export const BtnModalGame = ({label, icon = '', type, atualizaGames}) => {
   const id = (type == 1) ? 'newGame' : 'joinGame'
 
   return (
@@ -14,7 +14,7 @@ export const BtnModalGame = ({label, icon = '', type}) => {
         {(icon != '') && <Icon name={icon} />}
         {label}
       </button>
-      <ModalGame type={type}/>
+      <ModalGame type={type} atualizaGames={atualizaGames}/>
     </>
   )
 }

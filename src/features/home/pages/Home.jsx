@@ -1,30 +1,31 @@
 import { Game } from '../../games/components/Game';
 import { useEffect, useState } from 'react'
-import { getGamesView } from '../../../services/gamesService';
+import { getRecentGames } from '../../../services/gamesService';
 import classNames from 'classnames/bind';
 import styles from './Home.module.scss'
 import { BtnModalGame } from '../../games/components/buttons/BtnModalGame';
 import { Icon } from '../../../shared/icones/Icon';
 import { SheetsContainer } from '../../sheets/components/SheetsContainerHome';
-import { ModalGame } from '../../games/components/modais/modalGame';
 
 const cx = classNames.bind(styles)
 
 const Home = () => {
-
   const [gamesList, setGamesList] = useState([])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-      const games = await getGamesView()
-      console.log(games)
-      setGamesList(games)
-      } catch (error) {
-        console.error(error)
-      }
-    }
+  const atualizaGames = (response) => {
+    setGamesList(prev => [...prev, response.game])
+  }
 
+  const fetchData = async () => {
+    try {
+      const games = await getRecentGames()
+      setGamesList(games)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  useEffect(() => {
     fetchData()
   }, [])
 
@@ -52,11 +53,11 @@ const Home = () => {
           <main className={cx('container', 'pb-3')}>
             { hasItems(gamesList) ? (
               <div className='row ps-3 pe-3'>
-                { gamesList.map((game) => ( <Game key={game.id} game={game} /> )) }
+                { gamesList.map((game) => ( <Game key={game.code} game={game} /> )) }
               </div>
             ) : (
               <div className='p-4 container'>
-                <p>It looks like you don't have any games yet!</p>
+                <p className='text-center'>It looks like you don't have any games yet!</p>
                 <div></div>
               </div>
             )} 
@@ -72,7 +73,10 @@ const Home = () => {
         <aside className={cx('aside', 'col')}>
           <header className={cx('container')}>
             <div className={cx('row', 'd-flex', 'justify-content-around', 'btn-div', 'gap-3')}>
-              <BtnModalGame label='New Game' icon='dices' type='1' />
+              <BtnModalGame 
+                label='New Game' icon='dices' type='1' 
+                atualizaGames={atualizaGames} 
+              />
               <BtnModalGame label='Join a Game' icon='swords' type='2' />
             </div>
           </header>

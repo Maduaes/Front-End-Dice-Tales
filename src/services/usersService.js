@@ -17,7 +17,7 @@ export const getUser = async () => {
     const response = await api.get('users')
     return response.data
   }catch(error) {
-    console.error(error)
+    // console.error(error)
   }
 }
 
@@ -26,6 +26,6 @@ export const getProfilePic = async () => {
     const response = await api.get('users/profilePic')
     return response.data
   }catch(error) {
-    console.log(error)
+    // console.log(error)
   }
 }
