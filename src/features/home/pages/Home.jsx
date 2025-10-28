@@ -1,13 +1,12 @@
 import { Game } from '../../games/components/Game';
 import { useEffect, useState } from 'react'
 import { getRecentGames } from '../../../services/gamesService';
-import classNames from 'classnames/bind';
-import styles from './Home.module.scss'
+import cn from 'classnames/bind';
+import s from './Home.module.scss'
 import { BtnModalGame } from '../../games/components/buttons/BtnModalGame';
 import { Icon } from '../../../shared/icones/Icon';
 import { SheetsContainer } from '../../sheets/components/SheetsContainerHome';
 
-const cx = classNames.bind(styles)
 
 const Home = () => {
   const [gamesList, setGamesList] = useState([])
@@ -32,17 +31,17 @@ const Home = () => {
   const hasItems = (list) => list && list.length > 0
 
   return (
-    <main className='container main'>
-      <section className={cx('section-row', 'row', 'mt-3', 'gap-2')}>
+    <main className='container'>
+      <section className={cn(s.sectionRow, 'row mt-3 gap-2')}>
 
-        <section className={cx('game-container', 'shadow col-12 col-lg-8')}>
-          <header className={cx('container', 'header-games')}>
-            <div className={cx('container', 'group-title-games')}>
-              <div className={cx('row')}>
-                <h2 className={cx('col', 'ps-3')}>Your Games</h2>
+        <section className={cn(s.gameContainer, 'shadow col-12 col-lg-8')}>
+          <header className={cn('container', s.headerGames)}>
+            <div className={cn('container', s.groupTitleGames)}>
+              <div className={cn('row')}>
+                <h2 className={cn('col ps-3')}>Your Games</h2>
               </div>
             </div>
-            <div className={cx('col-7', 'search')}>
+            <div className={cn('col-7', s.search)}>
               <input 
               type='search' 
               placeholder='Search for your games' />
@@ -50,10 +49,12 @@ const Home = () => {
             </div>
           </header>
 
-          <main className={cx('container', 'pb-3')}>
+          <main className={cn('container pb-3')}>
             { hasItems(gamesList) ? (
               <div className='row ps-3 pe-3'>
-                { gamesList.map((game) => ( <Game key={game.code} game={game} /> )) }
+                { gamesList.map((game) => ( 
+                  <Game key={game.code} game={game} /> )) 
+                }
               </div>
             ) : (
               <div className='p-4 container'>
@@ -64,15 +65,15 @@ const Home = () => {
           </main>
 
           { gamesList.length > 9 && (
-            <footer className={cx('row', 'd-flex', 'justify-content-center')}>
-              <input className={cx('btn-more', 'col-4')} type='button' value='More' />
+            <footer className={cn('row d-flex justify-content-center')}>
+              <input className={cn(s.btnMore, 'col-4')} type='button' value='More' />
             </footer>
           )}
         </section>
 
-        <aside className={cx('aside', 'col')}>
-          <header className={cx('container')}>
-            <div className={cx('row', 'd-flex', 'justify-content-around', 'btn-div', 'gap-3')}>
+        <aside className={cn(s.aside, 'col')}>
+          <header className={cn('container')}>
+            <div className={cn('row d-flex justify-content-around gap-3', s.btnDiv)}>
               <BtnModalGame 
                 label='New Game' icon='dices' type='1' 
                 atualizaGames={atualizaGames} 
