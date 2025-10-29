@@ -27,3 +27,12 @@ export const editGame = async ( name ) => {
     console.log('deu erro de novo')
   }
 }
+
+export const joinGame = async ( code ) => {
+  try{
+    const response = await api.post(`/games/join/${code}`)
+    return response.data
+  }catch {
+    console.log('adivinha')
+  }
+}

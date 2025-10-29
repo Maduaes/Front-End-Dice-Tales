@@ -8,7 +8,7 @@ import { createGame } from '../../../../services/gamesService'
 
 export const ModalGame = ({ type, atualizaGames }) => {
   const [formGame, setFormGame] = useState({ name: '', system: 0 })
-  const [formJoin, setFormJoin] = useState({ key: '' })
+  const [formJoin, setFormJoin] = useState({ code: '' })
 
   let newGame = (type == 1)
   let editGame = (type == 2)
@@ -45,8 +45,19 @@ export const ModalGame = ({ type, atualizaGames }) => {
       }
     }
     if(joinGame) {
-      // const response = await joinGame(formJoin.key)
+      const response = await joinGame(formJoin.code)
+      closeModal()
+      atualizaGames(response)
     }
+  }
+
+  const openDeleteModal = () => {
+    closeModal()
+    document.getElementById('btn-delete-modal')?.click()
+  }
+
+  const closeModal = () => {
+    document.getElementById('btn-game-modal')?.click()
   }
 
   const getBody = () => {
@@ -82,7 +93,7 @@ export const ModalGame = ({ type, atualizaGames }) => {
       return (
         <div className="modal-body">
           <Input label='Key Code' placeholder='Enter a key code...' 
-          name='key' value={formJoin.key} handleChange={handleChange}
+          name='code' value={formJoin.code} handleChange={handleChange}
           theme='ipt-second' hasIcon='true' nameIcon='keyRound' />
         </div>
       )
@@ -103,18 +114,24 @@ export const ModalGame = ({ type, atualizaGames }) => {
               aria-label="Close"></button>
           </div>
           { getBody() }
-          <div className="modal-footer">
+          <div className={cn("modal-footer", {'justify-content-between': editGame})}>
             { editGame && 
-              <div>
+              <button className={cn(s.deleteGame)} 
+                      onClick={openDeleteModal} 
+                      data-bs-toggle="modal" 
+                      data-bs-target='#deleteGame'
+                      id="btn-delete-modal">
                 <Icon name='trash2' />
-              </div>
+              </button>
             }
-            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
-              Back
-            </button>
-            <button type="button" className="btn btn-primary-green" onClick={handleSubmit}>
-              { newGame ? 'Create Game' : joinGame ? 'Enter the Game' : 'Edit Game' }
-            </button>
+            <div className={cn("d-flex gap-2", s.divBotoes)}>
+              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+                Back
+              </button>
+              <button type="button" className="btn btn-primary-green" onClick={handleSubmit}>
+                { newGame ? 'Create Game' : joinGame ? 'Enter the Game' : 'Edit Game' }
+              </button>
+            </div>
           </div>
         </div>
       </div>
