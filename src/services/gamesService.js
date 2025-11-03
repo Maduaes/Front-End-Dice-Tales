@@ -19,9 +19,9 @@ export const createGame = async ( name ) => {
   }
 }
 
-export const editGame = async ( name ) => {
+export const editGame = async ( id, name ) => {
   try{
-    const response = await api.patch('/games', {name: name})
+    const response = await api.patch('/games', {id: id, name: name})
     return response.data
   }catch {
     console.log('deu erro de novo')
@@ -34,5 +34,13 @@ export const joinGame = async ( code ) => {
     return response.data
   }catch {
     console.log('adivinha')
+  }
+}
+
+export const deleteGame = async (id) => {
+  try{
+    await api.delete('/games', { data: { id: id } })
+  }catch {
+    console.log('deu erro')
   }
 }
