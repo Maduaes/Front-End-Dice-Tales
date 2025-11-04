@@ -1,5 +1,3 @@
-import { useState } from 'react';
-import { Icon } from '../../shared/icones/Icon';
 import { ProfilePic } from '../../shared/ProfilePic';
 import './Header.scss';
 import { NavLink } from 'react-router-dom';
@@ -7,9 +5,9 @@ import { NavLink } from 'react-router-dom';
 const Header = () => {
 
   const expand = () => {
-    let menu = document.getElementById("mb-nav");
-    menu.classList.toggle("expanded");
-  };
+    let menu = document.getElementById("mb-nav")
+    menu.classList.toggle("expanded")
+  }
 
   return (
     <header className='header-layout shadow'>

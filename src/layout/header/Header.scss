@@ -3,6 +3,12 @@
   top: 0;
   width: 100%;
   z-index: 1000;
+  right: 0;
+  left: 0;
+}
+
+body.modal-open .header-layout {
+  padding-right: var(--bs-scrollbar-width, 17px);
 }
 
 .bg-gray {
