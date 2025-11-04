@@ -44,3 +44,12 @@ export const deleteGame = async (id) => {
     console.log('deu erro')
   }
 }
+
+export const getGameByCode = async (code) => {
+  try{
+    const response = await api.get(`/games/${code}`)
+    return response.data
+  }catch{
+    console.log('deu erro')
+  }
+}

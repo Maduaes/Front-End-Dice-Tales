@@ -7,10 +7,16 @@ import { BtnModalGame } from '../../games/components/buttons/BtnModalGame'
 import { Icon } from '../../../shared/icones/Icon'
 import { SheetsContainer } from '../../sheets/components/SheetsContainerHome'
 import { ModalGame } from '../../games/components/modais/modalGame'
+import { useNavigate } from 'react-router-dom'
 
 const Home = () => {
+  const navigate = useNavigate()
   const [gamesList, setGamesList] = useState([])
   const [selectedGame, setSelectedGame] = useState(null)
+
+  const handleClickGame = (game) => {
+    navigate(`/tabletop/${game.code}`)
+  }
 
   const atualizaGames = (response, actionUpdate) => {
     switch (actionUpdate) {
@@ -68,6 +74,7 @@ const Home = () => {
                     key={game.id}
                     game={game}
                     setSelectedGame={setSelectedGame}
+                    onClick={handleClickGame}
                   />
                 ))}
               </div>

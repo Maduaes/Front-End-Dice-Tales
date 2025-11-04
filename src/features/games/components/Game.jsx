@@ -16,12 +16,13 @@ function getRandomGradient() {
   return gradients[index]
 }
 
-export const Game = ({ game, setSelectedGame }) => {
+export const Game = ({ game, setSelectedGame, onClick }) => {
   const [hover, setHover] = useState(false) 
   const background = useMemo(() => getRandomGradient(), [])
 
   return (
-    <div className={cn("col-12 col-md-6 col-xl-4 mb-3")}>
+    <div className={cn("col-12 col-md-6 col-xl-4 mb-3")}
+    onClick={() => onClick(game)}>
       <div className={cn(s.card, "shadow")}>
         <div
           className={cn(s.imgBox, s.emptyImage)}
