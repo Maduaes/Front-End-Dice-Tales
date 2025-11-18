@@ -1,5 +1,5 @@
-import mainRoutes from "./mainRoutes";
-import authRoutes from "./authRoutes";
+import mainRoutes from "./MainRoutes";
+import authRoutes from "./AuthRoutes";
 
 const appRoutes = [
   ...mainRoutes,
