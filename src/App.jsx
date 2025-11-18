@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useRoutes } from 'react-router-dom';
 import { refresh } from './auth/services/authService.js';
-import appRoutes from './routes/appRoutes';
+import appRoutes from './routes/AppRoutes';
 
 const App = () => {
   const navigate = useNavigate()
