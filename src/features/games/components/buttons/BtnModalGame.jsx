@@ -1,7 +1,7 @@
 import cn from "classnames";
 import s from "./BtnModalGame.module.scss"
 import { Icon } from "../../../../shared/icones/Icon";
-import { ModalGame } from "../modais/modalGame";
+import { ModalGame } from "../modais/ModalGame";
 
 
 export const BtnModalGame = ({label, icon = '', type, atualizaGames}) => {

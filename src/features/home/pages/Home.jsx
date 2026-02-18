@@ -6,7 +6,7 @@ import s from './Home.module.scss'
 import { BtnModalGame } from '../../games/components/buttons/BtnModalGame'
 import { Icon } from '../../../shared/icones/Icon'
 import { SheetsContainer } from '../../sheets/components/SheetsContainerHome'
-import { ModalGame } from '../../games/components/modais/modalGame'
+import { ModalGame } from '../../games/components/modais/ModalGame'
 
 const Home = () => {
   const [gamesList, setGamesList] = useState([])
