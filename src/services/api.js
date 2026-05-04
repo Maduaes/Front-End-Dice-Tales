@@ -5,14 +5,15 @@ let accessToken = null
 
 let isRefreshing = false
 let failedRequestQueue  = []
+const apiBaseUrl = import.meta.env.VITE_API_URL ?? "/api"
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: apiBaseUrl,
   withCredentials: true
 })
 
 export const authApi = axios.create({
-  baseURL: '/api',
+  baseURL: apiBaseUrl,
   withCredentials: true
 })
 
@@ -29,8 +30,9 @@ api.interceptors.response.use(
   (response) => response,
   async (erro) => {
     const originalRequest = erro.config
+    const status = erro.response?.status
 
-    if(erro.response.status === 401 && !originalRequest._retry) {
+    if(status === 401 && originalRequest && !originalRequest._retry) {
       if(isRefreshing) {
         return new Promise((resolve, reject) => {
           failedRequestQueue.push({ resolve, reject })
@@ -51,6 +53,7 @@ api.interceptors.response.use(
         return api(originalRequest)
 
       } catch (err) {
+        setAccessToken(null)
         processQueue(err, null)
         return Promise.reject(err)
 

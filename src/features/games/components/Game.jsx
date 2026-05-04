@@ -1,7 +1,7 @@
 import cn from "classnames/bind"
 import s from "./Game.module.scss"
 import { Icon } from "../../../shared/icones/Icon"
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 
 const gradients = [
   "linear-gradient(45deg, #b83cceff 0%, #7687e6ff 50%, #3bd2d7ff 100%)",
@@ -17,8 +17,9 @@ function getRandomGradient() {
 }
 
 export const Game = ({ game, setSelectedGame }) => {
-  const [hover, setHover] = useState(false) 
   const background = useMemo(() => getRandomGradient(), [])
+  const roomName = game.room_name ?? game.name
+  const isMaster = game.role === "master"
 
   return (
     <div className={cn("col-12 col-md-6 col-xl-4 mb-3")}>
@@ -26,29 +27,34 @@ export const Game = ({ game, setSelectedGame }) => {
         <div
           className={cn(s.imgBox, s.emptyImage)}
           style={{ background }}
-          onMouseEnter={() => setHover(true)}
-          onMouseLeave={() => setHover(false)}
         >
           {game.imagePath !== null && (
             <img
               className={cn(s.cardImgTop)}
               src={game.imagePath}
-              alt="Imagem do Jogo"
+              alt="Imagem da sala"
             />
           )}
-          <div className={cn(s.editIcon)}>
-            <button
-              className={cn(s.btnEdit)}
-              data-bs-toggle="modal"
-              data-bs-target="#editGame"
-              onClick={() => setSelectedGame(game)}
-            >
-              <Icon name="squarePen" />
-            </button>
+          {isMaster && (
+            <div className={cn(s.editIcon)}>
+              <button
+                className={cn(s.btnEdit)}
+                data-bs-toggle="modal"
+                data-bs-target="#editGame"
+                onClick={() => setSelectedGame(game)}
+              >
+                <Icon name="squarePen" />
+              </button>
+            </div>
+          )}
+          <div className={cn(s.roomCode)}>
+            <small>{`CODE: ${game.code}`}</small>
           </div>
         </div>
         <div className={cn(s.cardBody)}>
-          <h6 className={cn("text-truncate fs-responsive")}>{game.name}</h6>
+          <h6 className={cn("text-truncate fs-responsive", s.roomName)}>
+            {roomName}
+          </h6>
         </div>
       </div>
     </div>

@@ -5,7 +5,10 @@ export const getRecentSheets = async () => {
     const response = await api.get('/sheets/recent')
     return response.data
   }catch(error){
-    console.error(error || 'Erro ao encontrar Fichas Recentes!')
+    if (error.response?.status === 404) {
+      return []
+    }
+    console.error(error || 'Erro ao encontrar fichas recentes!')
     throw error
   }
 }

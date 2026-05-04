@@ -8,11 +8,17 @@ import { Icon } from '../../../shared/icones/Icon'
 import { SheetsContainer } from '../../sheets/components/SheetsContainerHome'
 import { ModalGame } from '../../games/components/modais/ModalGame'
 
+const RECENT_ROOMS_LIMIT = 9
+
 const Home = () => {
   const [gamesList, setGamesList] = useState([])
   const [selectedGame, setSelectedGame] = useState(null)
 
   const atualizaGames = (response, actionUpdate) => {
+    if (!response && actionUpdate !== 'delete') {
+      return
+    }
+
     switch (actionUpdate) {
       case 'edit':
         setGamesList(prev =>
@@ -25,14 +31,17 @@ const Home = () => {
         setGamesList(prev => prev.filter(game => game.id !== response.id))
         break
       default:
-        setGamesList(prev => [...prev, response.game])
+        setGamesList((prev) => {
+          const nextList = prev.filter((game) => game.id !== response.id)
+          return [response, ...nextList]
+        })
     }
   }
 
   const fetchData = async () => {
     try {
       const games = await getRecentGames()
-      setGamesList(games)
+      setGamesList(Array.isArray(games) ? games : [])
     } catch (error) {
       console.error(error)
     }
@@ -45,17 +54,17 @@ const Home = () => {
   const hasItems = list => list && list.length > 0
 
   return (
-    <main className="container">
+    <main className={cn("container", s.homePage)}>
       <section className={cn(s.sectionRow, 'row mt-3 gap-2')}>
         <section className={cn(s.gameContainer, 'shadow col-12 col-lg-8')}>
           <header className={cn('container', s.headerGames)}>
             <div className={cn('container', s.groupTitleGames)}>
               <div className={cn('row')}>
-                <h2 className={cn('col ps-3')}>Your Games</h2>
+                <h2 className={cn('col ps-3')}>Your Rooms</h2>
               </div>
             </div>
             <div className={cn('col-7', s.search)}>
-              <input type="search" placeholder="Search for your games" />
+              <input type="search" placeholder="Search for your rooms" />
               <Icon name="search" />
             </div>
           </header>
@@ -74,13 +83,13 @@ const Home = () => {
             ) : (
               <div className="p-4 container">
                 <p className="text-center">
-                  It looks like you don't have any games yet!
+                  It looks like you don&apos;t have any rooms yet!
                 </p>
               </div>
             )}
           </main>
 
-          {gamesList.length > 9 && (
+          {gamesList.length >= RECENT_ROOMS_LIMIT && (
             <footer className={cn('row d-flex justify-content-center')}>
               <input
                 className={cn(s.btnMore, 'col-4')}
@@ -95,12 +104,17 @@ const Home = () => {
           <header className={cn('container')}>
             <div className={cn('row d-flex justify-content-around gap-3', s.btnDiv)}>
               <BtnModalGame
-                label="New Game"
+                label="New Room"
                 icon="dices"
                 type="1"
                 atualizaGames={atualizaGames}
               />
-              <BtnModalGame label="Join a Game" icon="swords" type="3" />
+              <BtnModalGame
+                label="Join a Room"
+                icon="swords"
+                type="3"
+                atualizaGames={atualizaGames}
+              />
             </div>
           </header>
 

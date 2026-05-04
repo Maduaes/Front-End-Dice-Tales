@@ -1,10 +1,6 @@
 import './Redirection.module.scss'
-import className from 'classnames/bind'
 import styles from './Redirection.module.scss'
 import { useNavigate } from 'react-router-dom'
-const cx = className.bind(styles)
-
-
 
 const Redirection = ({
   text,

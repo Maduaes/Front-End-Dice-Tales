@@ -1,14 +1,25 @@
 import cn from 'classnames/bind'
 import s from './ModalGame.module.scss'
 import Input from "@/shared/forms/Input"
-import { SelectOption } from '../../../../shared/forms/SelectOption'
 import { useState, useEffect } from 'react'
+import pencilModalIcon from '@/assets/pencil_modal_icon.png'
 import { Icon } from '../../../../shared/icones/Icon'
-import { createGame, editGame, joinGame, deleteGame } from '../../../../services/gamesService'
+import {
+  createGame,
+  editGame,
+  joinGame,
+  deleteGame,
+  uploadGameCover,
+} from '../../../../services/gamesService'
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024
+const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"]
 
 export const ModalGame = ({ type, atualizaGames, dados }) => {
-  const [formGame, setFormGame] = useState({ id: null, name: '', system: 0 })
+  const [formGame, setFormGame] = useState({ id: null, name: '' })
   const [formJoin, setFormJoin] = useState({ code: '' })
+  const [coverFile, setCoverFile] = useState(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const isNewGame = type == 1
   const isEditGame = type == 2
@@ -21,34 +32,40 @@ export const ModalGame = ({ type, atualizaGames, dados }) => {
     isJoinGame ? 'joinGame' :
     isDeleteGame ? 'deleteGame' : ''
 
-  const [listaSistemas, setListaSistemas] = useState([
-    { id: 1, descricao: 'D&D' },
-  ])
+  const closeModal = () => {
+    const modal = document.getElementById(id)
+    const closeButton = modal?.querySelector('[aria-label="Close"]')
+    closeButton?.click()
+  }
+
+  const handleModalClose = () => {
+    setCoverFile(null)
+    setIsSubmitting(false)
+  }
 
   useEffect(() => {
      if(isEditGame && dados) {
       setFormGame({
         id: dados.id,
-        name: dados.name || '',
-        system: 0,
+        name: dados.room_name ?? dados.name ?? '',
       })
     }else {
-      setFormGame({ 
+      setFormGame({
         id: null,
         name: '',
-        system: 0 
       })
     }
+    setCoverFile(null)
   }, [dados, isEditGame])
 
   const handleDeleteClick = async () => {
-    await deleteGame(formGame.id)
-    .then(() => {
-      atualizaGames({ id: formGame.id }, 'delete')
-    })
-    .catch(() => {
-      alert('Erro!')
-    })
+    try {
+      await deleteGame(formGame.id)
+      atualizaGames?.({ id: formGame.id }, 'delete')
+      closeModal()
+    } catch {
+      alert('Erro ao remover a sala!')
+    }
   }
 
   const handleChange = (name, value) => {
@@ -56,24 +73,69 @@ export const ModalGame = ({ type, atualizaGames, dados }) => {
       setFormGame({ ...formGame, [name]: value })
     }
     if (isJoinGame) {
-      setFormJoin({ ...formJoin, [name]: value })
+      const nextValue = name === 'code'
+        ? value.toUpperCase().replace(/\s/g, '').slice(0, 6)
+        : value
+      setFormJoin({ ...formJoin, [name]: nextValue })
     }
   }
 
-  const handleSubmit = async () => {
-    if (isNewGame || isEditGame) {
-      const response = isNewGame
-        ? await createGame(formGame.name)
-        : await editGame(formGame.id, formGame.name)
-      if (response) {
-        atualizaGames(response, isEditGame ? 'edit' : '')
-      }
+  const handleCoverChange = (event) => {
+    const file = event.target.files?.[0] ?? null
+
+    if (!file) {
+      setCoverFile(null)
+      return
     }
-    if (isJoinGame) {
-      const response = await joinGame(formJoin.code)
-      if(response) {
-        atualizaGames(response, '')
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      event.target.value = ''
+      alert('Use apenas arquivos PNG, JPG ou WEBP.')
+      return
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      event.target.value = ''
+      alert('A imagem deve ter no maximo 10MB.')
+      return
+    }
+
+    setCoverFile(file)
+  }
+
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true)
+      let response = null
+
+      if (isNewGame || isEditGame) {
+        response = isNewGame
+          ? await createGame(formGame.name)
+          : await editGame(formGame.id, formGame.name)
+
+        if (isEditGame && coverFile) {
+          response = await uploadGameCover(formGame.id, coverFile)
+        }
+
+        if (response) {
+          atualizaGames?.(response, isEditGame ? 'edit' : '')
+        }
       }
+      if (isJoinGame) {
+        response = await joinGame(formJoin.code)
+        if(response) {
+          atualizaGames?.(response, '')
+        }
+      }
+
+      if (response) {
+        closeModal()
+      }
+    } catch (error) {
+      const detail = error.response?.data?.detail
+      alert(detail ?? 'Nao foi possivel concluir a acao.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -81,29 +143,56 @@ export const ModalGame = ({ type, atualizaGames, dados }) => {
     if (isNewGame || isEditGame) {
       return (
         <div className="modal-body container">
-          <div className="row">
+          <div className="row g-3">
             <Input
-              label="Game Title"
-              placeholder="A tale waiting to be told..."
+              label="Room Name"
+              placeholder="A room waiting for its story..."
               name="name"
               value={formGame.name}
               handleChange={handleChange}
               theme="ipt-second"
-              hasIcon="true"
+              hasIcon={true}
               nameIcon="feather"
-              className="col"
+              className="col-12"
             />
-            {isNewGame && (
-              <SelectOption
-                label="RPG System"
-                descricaoPadrao="Choose a System..."
-                name="system"
-                value={formGame.system}
-                handleChange={handleChange}
-                listaOpcoes={listaSistemas}
-                theme="ipt-second"
-                className="col-5 ps-0"
-              />
+            {isEditGame && (
+              <div className={cn("col-12", s.coverField)}>
+                <label className={s.coverLabel} htmlFor={`${id}CoverUpload`}>
+                  Cover Image
+                </label>
+                <div className={cn(s.coverInput, "ipt-second")}>
+                  <input
+                    id={`${id}CoverUpload`}
+                    type="file"
+                    accept=".png,.jpg,.jpeg,.webp"
+                    onChange={handleCoverChange}
+                    className={s.coverNativeInput}
+                  />
+                  <label className={s.coverButton} htmlFor={`${id}CoverUpload`}>
+                    Choose file
+                  </label>
+                  <span
+                    className={cn(s.coverValue, {
+                      [s.coverValuePlaceholder]: !coverFile && !dados?.imagePath,
+                    })}
+                  >
+                    {coverFile
+                      ? coverFile.name
+                      : dados?.imagePath
+                        ? 'Current cover already defined.'
+                        : 'No file selected'}
+                  </span>
+                  <img
+                    src={pencilModalIcon}
+                    alt=""
+                    aria-hidden="true"
+                    className={s.coverIcon}
+                  />
+                </div>
+                <small className={s.coverHint}>
+                  PNG, JPG or WEBP up to 10MB.
+                </small>
+              </div>
             )}
           </div>
         </div>
@@ -114,9 +203,9 @@ export const ModalGame = ({ type, atualizaGames, dados }) => {
       return (
         <div className="modal-body container">
           <div className="row">
-            <h3>{dados?.name}</h3>
+            <h3>{dados?.room_name ?? dados?.name}</h3>
             <p className="text-center">
-              This Action will delete your game and all sheets you had inside it!
+              This action will delete your room.
             </p>
             <p className="text-center">Are you sure?</p>
           </div>
@@ -128,13 +217,13 @@ export const ModalGame = ({ type, atualizaGames, dados }) => {
       return (
         <div className="modal-body">
           <Input
-            label="Key Code"
-            placeholder="Enter a key code..."
+            label="Room Code"
+            placeholder="Enter the 6-character code..."
             name="code"
             value={formJoin.code}
             handleChange={handleChange}
             theme="ipt-second"
-            hasIcon="true"
+            hasIcon={true}
             nameIcon="keyRound"
           />
         </div>
@@ -150,22 +239,23 @@ export const ModalGame = ({ type, atualizaGames, dados }) => {
       aria-labelledby={id + 'Label'}
       aria-hidden="true"
     >
-      <div className={cn("modal-dialog modal-dialog-centered", { 'modal-lg': isNewGame })}>
+      <div className={cn("modal-dialog modal-dialog-centered")}>
         <div className={cn("modal-content", s.modalGame)}>
           <div className="modal-header">
             <Icon name={(isNewGame || isEditGame) ? 'dices' : 'swords'} />
             <h1 className="modal-title fs-5 ps-2" id={id + 'Label'}>
               {isNewGame
-                ? 'Create a New Game'
+                ? 'Create a New Room'
                 : isJoinGame
-                ? 'Join a Game'
-                : 'Edit your Game'}
+                ? 'Join a Room'
+                : 'Edit your Room'}
             </h1>
             <button
               type="button"
               className="btn-close"
               data-bs-dismiss="modal"
               aria-label="Close"
+              onClick={handleModalClose}
             ></button>
           </div>
 
@@ -176,26 +266,34 @@ export const ModalGame = ({ type, atualizaGames, dados }) => {
               <button
                 className={cn(s.deleteGame)}
                 onClick={handleDeleteClick}
-                data-bs-dismiss="modal"
               >
                 <Icon name="trash2" />
               </button>
             )}
             <div className={cn("d-flex gap-2", s.divBotoes)}>
-              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                data-bs-dismiss="modal"
+                onClick={handleModalClose}
+              >
                 Back
               </button>
               <button
                 type="button"
-                className="btn btn-primary-green"
+                className={cn("btn", "btn-primary-green", {
+                  [s.savingButton]: isEditGame,
+                })}
                 onClick={handleSubmit}
-                data-bs-dismiss="modal"
+                disabled={isSubmitting}
               >
-                {isNewGame
-                  ? 'Create Game'
-                  : isJoinGame
-                  ? 'Enter the Game'
-                  : 'Edit Game'}
+                {isEditGame && isSubmitting
+                  ? 'Saving...'
+                  : isNewGame
+                    ? 'Create Room'
+                    : isJoinGame
+                      ? 'Enter Room'
+                      : 'Save Room'}
               </button>
             </div>
           </div>

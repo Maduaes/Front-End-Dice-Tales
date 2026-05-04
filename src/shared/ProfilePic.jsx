@@ -2,41 +2,45 @@ import { useEffect, useState } from "react"
 import cn from "classnames/bind"
 import { Icon } from "./icones/Icon"
 import s from './ProfilePic.module.scss'
-import { getProfilePic, getUser } from "../services/usersService"
+import { getUser } from "../services/usersService"
 
+const getInitials = (username = "") => {
+  return username
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("")
+}
 
 export const ProfilePic = ({ justIcon = false, size = '40px' }) => {
-  const [dataUser, setDataUser] = useState({
-    username: '',
-    profilePic: {
-      name: '',
-      path: null
-    }
-  })
+  const [username, setUsername] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
       if(!justIcon) {
-        const user = await getUser()
-        const profile = await getProfilePic()
-        setDataUser({
-          username: user.username,
-          profilePic: profile ? { 
-            name: profile.profilePicName,
-            path: profile.profilePicPath ? '/api' + profile.profilePicPath : null
-          } : { name: '', path: null } 
-        })
+        try {
+          const user = await getUser()
+          setUsername(user.username ?? '')
+        } catch {
+          setUsername('')
+        }
       }
     }
+
     fetchData()
   }, [justIcon])
 
+  const initials = getInitials(username)
+
   const getComponent = () => {
     return (
-      <div className={cn(s.userBox, 'me-2')} 
-      style={{height: size, width: size, minHeight: size, minWidth: size }}>
-         { (!justIcon && dataUser.profilePic.path !== null) ? (
-          <img className={cn(s.img)} src={ dataUser.profilePic.path } alt={ dataUser.profilePic.name } />
+      <div
+        className={cn(s.userBox, 'me-2')}
+        style={{height: size, width: size, minHeight: size, minWidth: size }}
+      >
+        {(!justIcon && initials) ? (
+          <span>{initials}</span>
         ) : (
           <Icon name='user' size='25' />
         )}
@@ -49,7 +53,7 @@ export const ProfilePic = ({ justIcon = false, size = '40px' }) => {
       { justIcon ? getComponent() : 
       <a className={cn("navbar-brand", "menu-user-decor", s.userArea)} href="#">
         { getComponent() }
-        { dataUser.username }
+        { username }
         <Icon name='chevronDown' />
       </a> }
     </>
