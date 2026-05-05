@@ -61,7 +61,7 @@ export const uploadGameCover = async (id, file) => {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await api.patch(`/rooms/upload/${id}`, formData)
+    const response = await api.patch(`/rooms/upload/thumb/${id}`, formData)
     return normalizeRoom(response.data)
   }catch (error) {
     console.error(error || 'Erro ao atualizar a capa da sala!')

@@ -1,4 +1,4 @@
-import { ProfilePic } from '../../shared/ProfilePic';
+import { ProfileMenu } from './ProfileMenu';
 import './Header.scss';
 import { NavLink } from 'react-router-dom';
 
@@ -86,8 +86,8 @@ const Header = () => {
                 </ul>
               </div>
             </div>
-            <div className="col-2 d-flex justify-content-center">
-              <ProfilePic />
+            <div className="col-2 d-flex justify-content-end align-items-center gap-3 header-actions">
+              <ProfileMenu />
               <div className="mb-menu" onClick={expand}>
                 <div className="menu-icon"></div>
                 <div className="menu-icon"></div>
