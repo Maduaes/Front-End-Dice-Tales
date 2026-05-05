@@ -5,6 +5,8 @@
   border-radius: 13px;
   .imgBox{
     position: relative;
+    width: 100%;
+    height: 19vh;
     min-height: 19vh;
     max-height: 19vh;
     overflow: hidden;
@@ -17,6 +19,8 @@
 }
 
 .cardImgTop{
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;

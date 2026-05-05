@@ -1,7 +1,7 @@
 import cn from "classnames/bind"
 import s from "./Game.module.scss"
 import { Icon } from "../../../shared/icones/Icon"
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 const gradients = [
   "linear-gradient(45deg, #b83cceff 0%, #7687e6ff 50%, #3bd2d7ff 100%)",
@@ -20,6 +20,11 @@ export const Game = ({ game, setSelectedGame }) => {
   const background = useMemo(() => getRandomGradient(), [])
   const roomName = game.room_name ?? game.name
   const isMaster = game.role === "master"
+  const [hasValidImage, setHasValidImage] = useState(Boolean(game.imagePath))
+
+  useEffect(() => {
+    setHasValidImage(Boolean(game.imagePath))
+  }, [game.imagePath])
 
   return (
     <div className={cn("col-12 col-md-6 col-xl-4 mb-3")}>
@@ -28,11 +33,13 @@ export const Game = ({ game, setSelectedGame }) => {
           className={cn(s.imgBox, s.emptyImage)}
           style={{ background }}
         >
-          {game.imagePath !== null && (
+          {hasValidImage && (
             <img
               className={cn(s.cardImgTop)}
               src={game.imagePath}
-              alt="Imagem da sala"
+              alt=""
+              aria-hidden="true"
+              onError={() => setHasValidImage(false)}
             />
           )}
           {isMaster && (
