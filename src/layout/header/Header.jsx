@@ -98,10 +98,10 @@ const Header = () => {
         </div>
       </nav>
       <div className="expanded-menu" id="mb-nav">
-        <div className="menu-mb-text bg-gray atual">Home</div>
-        <div className="menu-mb-text bg-gray">Games</div>
-        <div className="menu-mb-text bg-gray">Sheets</div>
-        <div className="menu-mb-text bg-gray">Community</div>
+        <NavLink to="/" className="menu-mb-text bg-gray">Home</NavLink>
+        <NavLink to="/teste" className="menu-mb-text bg-gray">Games</NavLink>
+        <NavLink to="/sheets" className="menu-mb-text bg-gray">Sheets</NavLink>
+        <NavLink to="/community" className="menu-mb-text bg-gray">Community</NavLink>
       </div>
     </header>
   );

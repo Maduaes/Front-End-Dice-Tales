@@ -17,8 +17,8 @@ const Login = () => {
 
   const handleSubmit = async () => {
     try{
-      const token = await login(form.email, form.password)
-      if(token) {
+      const response = await login(form.email, form.password)
+      if(response) {
         navigate('/')
       }
     }catch {
