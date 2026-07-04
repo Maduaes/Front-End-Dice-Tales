@@ -83,6 +83,7 @@ const SheetsPage = () => {
       <section className={cx("shadow", s.panel)}>
         <header className={cx(s.panelHeader)}>
           <div className={cx(s.titleRibbon)}>
+            <span className={cx(s.ribbonExtension)}></span>
             <h1>Your Sheets</h1>
           </div>
 
@@ -91,6 +92,7 @@ const SheetsPage = () => {
               type="search"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search sheet by name"
             />
             <Icon name="search" size={27} color="#61D9BA" />
           </label>
@@ -112,7 +114,7 @@ const SheetsPage = () => {
               data-bs-toggle="modal"
               data-bs-target="#createAiSheetModal"
             >
-              <span className={cx(s.plusIcon)}>+</span>
+              {/* <span className={cx(s.plusIcon)}>+</span> */}
               Create Character With AI
             </button>
           </div>
