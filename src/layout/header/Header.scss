@@ -17,16 +17,16 @@ body.modal-open .header-layout {
 
 .menu-user-decor,
 .menu-txt-decor {
-  font-size: 2.5vh;
+  font-size: 18.24px;
   font-optical-sizing: auto;
-  font-weight: normal;
+  font-weight: 518;
   font-style: normal;
   color: #FFFFFF !important;
 }
 
-.menu-user-decor {
-  font-weight: bold;
-}
+// .menu-user-decor {
+//   font-weight: bold;
+// }
 
 .menu-box {
   display: flex;
@@ -44,6 +44,10 @@ body.modal-open .header-layout {
 
 .logo-fonte{
   padding-bottom: 5px;
+}
+
+.header-actions{
+  min-width: max-content;
 }
 
 

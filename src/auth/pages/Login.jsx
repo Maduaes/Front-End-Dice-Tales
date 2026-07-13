@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom"
 
 const Login = () => {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ username: '', password: '' })
+  const [form, setForm] = useState({ email: '', password: '' })
 
   const handleChange = (name, value) => {
     setForm({ ...form, [name]: value })
@@ -17,12 +17,12 @@ const Login = () => {
 
   const handleSubmit = async () => {
     try{
-      const token = await login(form.username, form.password)
-      if(token) {
+      const response = await login(form.email, form.password)
+      if(response) {
         navigate('/')
       }
     }catch {
-      alert('Dados Inválidos!')
+      alert('Dados inválidos!')
     }
   }
 
@@ -35,15 +35,15 @@ const Login = () => {
         </div>
         <div className={styles.rightSide}>
           <div className={styles.iconContainer}>
-            <ProfilePic justIcon='true' size='50px'/>
+            <ProfilePic justIcon={true} size='50px'/>
           </div>
           <h1 className={styles.h1}>LOGIN</h1>
           <form className={styles.form} >
             <Input
-              label="Username or Email" 
-              placeholder="Who are you?"
-              name='username'
-              value={form.username}
+              label="Email"
+              placeholder="What is your email?"
+              name='email'
+              value={form.email}
               handleChange={handleChange}
               margin={0}
             />

@@ -12,13 +12,14 @@ const Input = ({
   margin,
   theme = 'ipt-primary',
   className,
+  labelClassName,
   hasIcon = false,
   nameIcon
 }) => {
 
   return (
     <div className={cn(s.div, className)}>
-        <label style={{marginTop: margin}} className={s.label}> {label} 
+        <label style={{marginTop: margin}} className={cn(s.label, labelClassName)}> {label} 
           <div className={cn(s.input, 'd-flex flex-row', theme)}>
             <input type={type} 
               placeholder={placeholder} 

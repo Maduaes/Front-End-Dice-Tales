@@ -3,6 +3,8 @@ import { useLocation, useNavigate, useRoutes } from 'react-router-dom';
 import { refresh } from './auth/services/authService.js';
 import appRoutes from './routes/AppRoutes.jsx';
 
+const AUTH_ROUTES = ['/login', '/register']
+
 const App = () => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -15,9 +17,12 @@ const App = () => {
       try {
         setLoading(true)
         await refresh()
+
+        if (AUTH_ROUTES.includes(location.pathname)) {
+          navigate('/', { replace: true })
+        }
       } catch {
-        setLoading(false)
-        if(location.pathname !== '/login' && location.pathname !== '/register') {
+        if(!AUTH_ROUTES.includes(location.pathname)) {
           navigate('/login', {replace: true} )
         }
       } finally {
@@ -26,10 +31,10 @@ const App = () => {
     }
 
     initAuth()
-  }, [navigate])
+  }, [location.pathname, navigate])
 
   if (loading) {
-    return <div>Carregando...</div> // spinner ou algo assim depois faço
+    return <div>Carregando...</div>
   }
 
   return element

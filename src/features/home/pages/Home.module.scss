@@ -1,4 +1,8 @@
 /* GAME CONTENT */
+.homePage{
+    padding-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+
 .gameContainer{
     background-color: $bg-dark-primary;
     border-radius: 16px;

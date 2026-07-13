@@ -1,22 +1,26 @@
 import cn from 'classnames/bind'
-import s from './ModalGame.module.scss'
+import s from '../../games/components/modais/ModalGame.module.scss'
 import Input from "@/shared/forms/Input"
 import { useState, useEffect } from 'react'
 import pencilModalIcon from '@/assets/pencil_modal_icon.png'
-import { Icon } from '../../../../shared/icones/Icon'
-import {
-  createGame,
-  editGame,
-  joinGame,
-  deleteGame,
-  uploadGameCover,
-} from '../../../../services/gamesService'
+import { Icon } from '../../../shared/icones/Icon'
+// import {
+//   createGame,
+//   editGame,
+//   joinGame,
+//   deleteGame,
+//   uploadGameCover,
+// } from '../../../../services/gamesService'
+import { SelectOption } from "@/shared/forms/SelectOption"
+import ais from "./AiSheetModal.module.scss"
 
+const gameOptions = [{ id: 1, descricao: "D&D 5e" }]
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"]
 
-export const ModalGame = ({ type, atualizaGames, dados }) => {
+export const CreateSheetModal = ({ type, atualizaGames, dados }) => {
   const [formGame, setFormGame] = useState({ id: null, name: '' })
+  const [formSheet, setSheetName] = useState({ name: '' })
   const [formJoin, setFormJoin] = useState({ code: '' })
   const [coverFile, setCoverFile] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -69,15 +73,7 @@ export const ModalGame = ({ type, atualizaGames, dados }) => {
   }
 
   const handleChange = (name, value) => {
-    if (isNewGame || isEditGame) {
-      setFormGame({ ...formGame, [name]: value })
-    }
-    if (isJoinGame) {
-      const nextValue = name === 'code'
-        ? value.toUpperCase().replace(/\s/g, '').slice(0, 6)
-        : value
-      setFormJoin({ ...formJoin, [name]: nextValue })
-    }
+    setSheetName({ [name]: value })
   }
 
   const handleCoverChange = (event) => {
@@ -140,115 +136,50 @@ export const ModalGame = ({ type, atualizaGames, dados }) => {
   }
 
   const getBody = () => {
-    if (isNewGame || isEditGame) {
+
       return (
         <div className="modal-body container">
           <div className="row g-3">
             <Input
-              label="Room Name"
-              placeholder="A room waiting for its story..."
+              label="Character Name"
+              placeholder="Who is your character?"
               name="name"
-              value={formGame.name}
+              value={formSheet.name}
               handleChange={handleChange}
               theme="ipt-second"
               hasIcon={true}
               nameIcon="feather"
               className="col-12"
             />
-            {isEditGame && (
-              <div className={cn("col-12", s.coverField)}>
-                <label className={s.coverLabel} htmlFor={`${id}CoverUpload`}>
-                  Cover Image
-                </label>
-                <div className={cn(s.coverInput, "ipt-second")}>
-                  <input
-                    id={`${id}CoverUpload`}
-                    type="file"
-                    accept=".png,.jpg,.jpeg,.webp"
-                    onChange={handleCoverChange}
-                    className={s.coverNativeInput}
-                  />
-                  <label className={s.coverButton} htmlFor={`${id}CoverUpload`}>
-                    Choose file
-                  </label>
-                  <span
-                    className={cn(s.coverValue, {
-                      [s.coverValuePlaceholder]: !coverFile && !dados?.imagePath,
-                    })}
-                  >
-                    {coverFile
-                      ? coverFile.name
-                      : dados?.imagePath
-                        ? 'Current cover already defined.'
-                        : 'No file selected'}
-                  </span>
-                  <img
-                    src={pencilModalIcon}
-                    alt=""
-                    aria-hidden="true"
-                    className={s.coverIcon}
-                  />
-                </div>
-                <small className={s.coverHint}>
-                  PNG, JPG or WEBP up to 10MB.
-                </small>
-              </div>
-            )}
+            <SelectOption
+                label="Game"
+                name="game"
+                value="teste"
+                handleChange={handleChange}
+                listaOpcoes={gameOptions}
+                theme="ipt-second"
+                className="col-12"
+            />
           </div>
         </div>
       )
-    }
-
-    if (isDeleteGame) {
-      return (
-        <div className="modal-body container">
-          <div className="row">
-            <h3>{dados?.room_name ?? dados?.name}</h3>
-            <p className="text-center">
-              This action will delete your room.
-            </p>
-            <p className="text-center">Are you sure?</p>
-          </div>
-        </div>
-      )
-    }
-
-    if (isJoinGame) {
-      return (
-        <div className="modal-body">
-          <Input
-            label="Room Code"
-            placeholder="Enter the 6-character code..."
-            name="code"
-            value={formJoin.code}
-            handleChange={handleChange}
-            theme="ipt-second"
-            hasIcon={true}
-            nameIcon="keyRound"
-          />
-        </div>
-      )
-    }
+    
   }
 
   return (
     <div
       className="modal fade"
-      id={id}
+      id="createSheetModal"
       tabIndex="-1"
-      aria-labelledby={id + 'Label'}
+      aria-labelledby="newSheet"
       aria-hidden="true"
     >
       <div className={cn("modal-dialog modal-dialog-centered")}>
         <div className={cn("modal-content", s.modalGame)}>
           <div className="modal-header">
-            <Icon name={(isNewGame || isEditGame) ? 'dices' : 'swords'} />
-            <h1 className="modal-title fs-5 ps-2" id={id + 'Label'}>
-              {isNewGame
-                ? 'Create a New Room'
-                : isJoinGame
-                ? 'Join a Room'
-                : 'Edit your Room'}
+            <Icon name="dices" />
+            <h1 className="modal-title fs-5 ps-2" id="newSheet">
+              Create new sheet
             </h1>
             <button
               type="button"
@@ -287,13 +218,7 @@ export const ModalGame = ({ type, atualizaGames, dados }) => {
                 onClick={handleSubmit}
                 disabled={isSubmitting}
               >
-                {isEditGame && isSubmitting
-                  ? 'Saving...'
-                  : isNewGame
-                    ? 'Create Room'
-                    : isJoinGame
-                      ? 'Enter Room'
-                      : 'Save Room'}
+                Create
               </button>
             </div>
           </div>

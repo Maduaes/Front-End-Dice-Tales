@@ -31,22 +31,17 @@ export const Register = () => {
     }
 
     try {
-      const { data } = await createUser(
+      await createUser(
         formRegister.email,
         formRegister.username,
         formRegister.password
       )
-      console.log(data)
-      await login(formRegister.email, formRegister.password).then(() => {
-        navigate('/')
-      })
 
+      await login(formRegister.email, formRegister.password)
+      navigate('/')
     } catch (err) {
-      if (err.response) {
-        alert(`Error: ${err.response.data.error || err.response.data.message}`)
-      } else {
-        alert('Something went wrong while connecting to the server.')
-      }
+      const detail = err.response?.data?.detail
+      alert(detail ? `Error: ${detail}` : 'Something went wrong while connecting to the server.')
       console.error(err);
     }
   }
