@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import cn from "classnames/bind"
 import { AiSheetModal } from "../components/AiSheetModal"
+import { CreateSheetModal } from "../components/CreateSheetModal"
 import { Icon } from "../../../shared/icones/Icon"
 import { getAllSheets } from "../../../services/sheetsService"
 import defaultCharacterArt from "../../../assets/default_character_art.webp"
@@ -103,6 +104,8 @@ const SheetsPage = () => {
             <button
               type="button"
               className={cx(s.createButton)}
+              data-bs-toggle="modal"
+              data-bs-target="#createSheetModal"
             >
               <span className={cx(s.plusIcon)}>+</span>
               Create New Sheet
@@ -233,6 +236,7 @@ const SheetsPage = () => {
       </section>
 
       <AiSheetModal />
+      <CreateSheetModal />
     </main>
   )
 }
