@@ -1,5 +1,31 @@
 import api from './api'
 
+export const createSheet = async ({
+  game_system,
+  sheet_type,
+  name,
+  content
+}) => {
+  try {
+    const response = await api.post('/sheets/', {
+      game_system,
+      sheet_type,
+      name,
+      content
+    })
+
+    return response.data
+  } catch (error) {
+    console.error(error)
+
+    if (error.response) {
+      throw error.response.data
+    }
+
+    throw error
+  }
+}
+
 export const getRecentSheets = async () => {
   try{
     const response = await api.get('/sheets/recent')
