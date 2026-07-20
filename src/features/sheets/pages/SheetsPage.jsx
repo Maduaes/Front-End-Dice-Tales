@@ -79,6 +79,20 @@ const SheetsPage = () => {
     })
   }, [sheets, searchTerm, selectedRoom, selectedSystem, showOwner, showViewer])
 
+  const handleSheetCreated = (newSheet) => {
+    const { content, ...sheet } = newSheet
+
+    setSheets((currentSheets) => [
+      {
+        ...sheet,
+        owner: true,
+        user_profilepics: [""],
+        room: null,
+      },
+      ...currentSheets,
+    ])
+  }
+
   return (
     <main className={cx("container", s.sheetsPage)}>
       <section className={cx("shadow", s.panel)}>
@@ -236,7 +250,9 @@ const SheetsPage = () => {
       </section>
 
       <AiSheetModal />
-      <CreateSheetModal />
+      <CreateSheetModal 
+        onSheetCreated={handleSheetCreated}
+      />
     </main>
   )
 }
