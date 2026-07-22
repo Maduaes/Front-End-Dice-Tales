@@ -4,127 +4,50 @@ import Input from "@/shared/forms/Input"
 import { useState, useEffect } from 'react'
 import pencilModalIcon from '@/assets/pencil_modal_icon.png'
 import { Icon } from '../../../shared/icones/Icon'
-// import {
-//   createGame,
-//   editGame,
-//   joinGame,
-//   deleteGame,
-//   uploadGameCover,
-// } from '../../../../services/gamesService'
 import { SelectOption } from "@/shared/forms/SelectOption"
-import ais from "./AiSheetModal.module.scss"
+import { createSheet } from "../../../services/sheetsService"
 
-const gameOptions = [{ id: 1, descricao: "D&D 5e" }]
+const gameOptions = [{ id: 1, descricao: "D&D5e"}, { id: 2, descricao: "T20"}]
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"]
 
-export const CreateSheetModal = ({ type, atualizaGames, dados }) => {
-  const [formGame, setFormGame] = useState({ id: null, name: '' })
-  const [formSheet, setSheetName] = useState({ name: '' })
-  const [formJoin, setFormJoin] = useState({ code: '' })
-  const [coverFile, setCoverFile] = useState(null)
+export const CreateSheetModal = ({ onSheetCreated }) => {
+  const [formSheet, setSheetData] = useState({ name: ''})
+  const [formSystem, setGameData] = useState({ game: 'D&D5e' })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const isNewGame = type == 1
-  const isEditGame = type == 2
-  const isJoinGame = type == 3
-  const isDeleteGame = type == 4
-
-  const id =
-    isNewGame ? 'newGame' :
-    isEditGame ? 'editGame' :
-    isJoinGame ? 'joinGame' :
-    isDeleteGame ? 'deleteGame' : ''
-
   const closeModal = () => {
-    const modal = document.getElementById(id)
+    const modal = document.getElementById("createSheetModal")
     const closeButton = modal?.querySelector('[aria-label="Close"]')
     closeButton?.click()
   }
 
   const handleModalClose = () => {
-    setCoverFile(null)
     setIsSubmitting(false)
   }
 
-  useEffect(() => {
-     if(isEditGame && dados) {
-      setFormGame({
-        id: dados.id,
-        name: dados.room_name ?? dados.name ?? '',
-      })
-    }else {
-      setFormGame({
-        id: null,
-        name: '',
-      })
-    }
-    setCoverFile(null)
-  }, [dados, isEditGame])
-
-  const handleDeleteClick = async () => {
-    try {
-      await deleteGame(formGame.id)
-      atualizaGames?.({ id: formGame.id }, 'delete')
-      closeModal()
-    } catch {
-      alert('Erro ao remover a sala!')
-    }
-  }
-
   const handleChange = (name, value) => {
-    setSheetName({ [name]: value })
+    setSheetData({ [name]: value })
   }
 
-  const handleCoverChange = (event) => {
-    const file = event.target.files?.[0] ?? null
-
-    if (!file) {
-      setCoverFile(null)
-      return
-    }
-
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      event.target.value = ''
-      alert('Use apenas arquivos PNG, JPG ou WEBP.')
-      return
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      event.target.value = ''
-      alert('A imagem deve ter no maximo 10MB.')
-      return
-    }
-
-    setCoverFile(file)
+  const handleChangeOption = (name, value) => {
+    setGameData({ [name]: value })
   }
 
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true)
-      let response = null
 
-      if (isNewGame || isEditGame) {
-        response = isNewGame
-          ? await createGame(formGame.name)
-          : await editGame(formGame.id, formGame.name)
-
-        if (isEditGame && coverFile) {
-          response = await uploadGameCover(formGame.id, coverFile)
+      let response = await createSheet(
+        {
+          game_system: formSystem.game,
+          sheet_type: "player",
+          name: formSheet.name
         }
-
-        if (response) {
-          atualizaGames?.(response, isEditGame ? 'edit' : '')
-        }
-      }
-      if (isJoinGame) {
-        response = await joinGame(formJoin.code)
-        if(response) {
-          atualizaGames?.(response, '')
-        }
-      }
+      )
 
       if (response) {
+        onSheetCreated?.(response)
         closeModal()
       }
     } catch (error) {
@@ -154,8 +77,8 @@ export const CreateSheetModal = ({ type, atualizaGames, dados }) => {
             <SelectOption
                 label="Game"
                 name="game"
-                value="teste"
-                handleChange={handleChange}
+                value={formSystem.game}
+                handleChange={handleChangeOption}
                 listaOpcoes={gameOptions}
                 theme="ipt-second"
                 className="col-12"
@@ -192,15 +115,7 @@ export const CreateSheetModal = ({ type, atualizaGames, dados }) => {
 
           {getBody()}
 
-          <div className={cn("modal-footer", { 'justify-content-between': isEditGame })}>
-            {isEditGame && (
-              <button
-                className={cn(s.deleteGame)}
-                onClick={handleDeleteClick}
-              >
-                <Icon name="trash2" />
-              </button>
-            )}
+          <div className={cn("modal-footer")}>
             <div className={cn("d-flex gap-2", s.divBotoes)}>
               <button
                 type="button"
@@ -212,9 +127,7 @@ export const CreateSheetModal = ({ type, atualizaGames, dados }) => {
               </button>
               <button
                 type="button"
-                className={cn("btn", "btn-primary-green", {
-                  [s.savingButton]: isEditGame,
-                })}
+                className={cn("btn", "btn-primary-green")}
                 onClick={handleSubmit}
                 disabled={isSubmitting}
               >
