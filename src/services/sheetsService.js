@@ -26,7 +26,7 @@ export const createSheet = async ({
 
 export const getRecentSheets = async () => {
   try{
-    const response = await api.get('/sheets/recent')
+    const response = await api.get('/sheets/recent/')
     return response.data
   }catch(error){
     if (error.response?.status === 404) {

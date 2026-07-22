@@ -8,19 +8,20 @@ const cx = classNames.bind(styles)
 
 export const SheetsContainer = () => {
   const [sheetsList, setSheetsList] = useState([])
+  const [sheetsListShared, setSheetsListShared] = useState([])
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const sheets = await getRecentSheets()
-        setSheetsList(Array.isArray(sheets) ? sheets : [])
+        setSheetsList(Array.isArray(sheets.owned) ? sheets.owned : [])
+        setSheetsListShared(Array.isArray(sheets.shared) ? sheets.shared : [])
       } catch (error) {
         console.error(error)
       }
     }
     fetchData()
   }, [])
-
   return (
     <section className={cx('sheets-container')}>
       <nav className={cx('container', 'nav-sheets-container')}>
@@ -44,7 +45,7 @@ export const SheetsContainer = () => {
 
       {sheetsList.length === 0 ? (
         <div className='p-3 text-center'>
-          Sheets will appear here as soon as the backend exposes these routes.
+          It looks like you don't have any sheets yet.
         </div>
       ) : (
         <main className='tab-content' id='nav-tabContent'>
@@ -57,7 +58,11 @@ export const SheetsContainer = () => {
           </div>
           <div className='tab-pane fade' id='nav-game'>
             <div className="sheets-group list-group" >
-              {sheetsList.map((sheet) => (
+              {sheetsListShared.length === 0 ? (
+                <div className='p-3 text-center'>
+                  It looks like you don't have any shared sheets yet.
+                </div>
+              ) : sheetsListShared.map((sheet) => (
                 <Sheets key={sheet.id} sheet={sheet} userType='gameMaster' />
               ))}
             </div>

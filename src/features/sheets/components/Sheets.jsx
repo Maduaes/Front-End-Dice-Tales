@@ -11,8 +11,16 @@ export const Sheets = ({sheet, userType}) => {
 
   return (
     <div className={cx('sheets-group', 'list-group')}>
-      <a className={cx('sheets', 'list-group-item', 'mb-2')}>
-        {sheet.name_sheet}
+      <a className={cx('sheets', 'mb-2')}>
+        <div className={cx('sheetAsset')}>
+          <img src={sheet.asset_image_url} alt="" />
+        </div>
+        <div className={cx('sheetName')}>
+          {sheet.name}
+        </div>
+        <div className={cx('sheetSystem')}>
+          {sheet.game_system}
+        </div>
       </a>
     </div>
   )
