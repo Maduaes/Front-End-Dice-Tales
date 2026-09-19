@@ -26,6 +26,12 @@ export default defineConfig({
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, "")
       },
+      "/ws": {
+        target: "ws://backend:8000",
+        ws: true,
+        changeOrigin: true,
+        secure: false,
+      },
     },
   }
 })

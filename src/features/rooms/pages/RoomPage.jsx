@@ -1,5 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import cn from 'classnames/bind'
+import { useParams } from 'react-router-dom'
+import { getGameById } from '../../../services/gamesService'
+import { getUser } from '../../../services/usersService'
 import s from './RoomPage.module.scss'
 
 const cx = cn.bind(s)
@@ -7,6 +10,24 @@ const cx = cn.bind(s)
 const zoomStep = 10
 const minZoom = 1
 const maxZoom = 200
+const chatMinWidth = 280
+const chatMinHeight = 360
+const chatMenuSafeArea = 88
+
+const buildWebSocketUrl = (roomCode) => {
+  const apiUrl = import.meta.env.VITE_API_URL
+
+  if (apiUrl && /^https?:\/\//i.test(apiUrl)) {
+    const url = new URL(apiUrl)
+    url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+    url.pathname = `/ws/tabletop/${roomCode}`
+    url.search = ''
+    return url.toString()
+  }
+
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${window.location.host}/ws/tabletop/${roomCode}`
+}
 
 const icons = {
   chat: (
@@ -71,18 +92,47 @@ const icons = {
       <path d="M14.1035 6.03172C14.1838 5.18639 14.5765 4.40137 15.2047 3.83005C15.8329 3.25873 16.6515 2.94214 17.5007 2.94214C18.3498 2.94214 19.1685 3.25873 19.7967 3.83005C20.4249 4.40137 20.8175 5.18639 20.8979 6.03172C20.9462 6.5778 21.1253 7.10421 21.4202 7.56639C21.715 8.02856 22.1168 8.4129 22.5917 8.68688C23.0665 8.96085 23.6004 9.11639 24.1481 9.14034C24.6957 9.16428 25.2411 9.05592 25.7381 8.82443C26.5097 8.47411 27.3841 8.42342 28.191 8.68223C28.9979 8.94103 29.6797 9.49082 30.1036 10.2246C30.5275 10.9584 30.6633 11.8236 30.4844 12.6519C30.3056 13.4803 29.8249 14.2124 29.136 14.7059C28.6874 15.0207 28.3212 15.4389 28.0684 15.9251C27.8156 16.4113 27.6836 16.9513 27.6836 17.4993C27.6836 18.0474 27.8156 18.5873 28.0684 19.0736C28.3212 19.5598 28.6874 19.978 29.136 20.2928C29.8249 20.7862 30.3056 21.5184 30.4844 22.3467C30.6633 23.1751 30.5275 24.0403 30.1036 24.7741C29.6797 25.5078 28.9979 26.0576 28.191 26.3164C27.3841 26.5752 26.5097 26.5245 25.7381 26.1742C25.2411 25.9427 24.6957 25.8344 24.1481 25.8583C23.6004 25.8823 23.0665 26.0378 22.5917 26.3118C22.1168 26.5858 21.715 26.9701 21.4202 27.4323C21.1253 27.8944 20.9462 28.4209 20.8979 28.9669C20.8175 29.8123 20.4249 30.5973 19.7967 31.1686C19.1685 31.7399 18.3498 32.0565 17.5007 32.0565C16.6515 32.0565 15.8329 31.7399 15.2047 31.1686C14.5765 30.5973 14.1838 29.8123 14.1035 28.9669C14.0553 28.4207 13.8761 27.8941 13.5812 27.4317C13.2863 26.9694 12.8843 26.5849 12.4093 26.3109C11.9342 26.0369 11.4001 25.8814 10.8523 25.8576C10.3044 25.8338 9.75883 25.9424 9.26183 26.1742C8.49021 26.5245 7.61585 26.5752 6.80891 26.3164C6.00198 26.0576 5.32021 25.5078 4.89629 24.7741C4.47236 24.0403 4.33662 23.1751 4.51548 22.3467C4.69434 21.5184 5.175 20.7862 5.86391 20.2928C6.31253 19.978 6.67873 19.5598 6.93154 19.0736C7.18436 18.5873 7.31635 18.0474 7.31635 17.4993C7.31635 16.9513 7.18436 16.4113 6.93154 15.9251C6.67873 15.4389 6.31253 15.0207 5.86391 14.7059C5.17597 14.2122 4.69615 13.4803 4.51773 12.6525C4.3393 11.8248 4.47501 10.9602 4.89847 10.2269C5.32194 9.49364 6.00291 8.94398 6.80905 8.68478C7.61518 8.42558 8.48889 8.47536 9.26037 8.82443C9.75731 9.05592 10.3027 9.16428 10.8504 9.14034C11.3981 9.11639 11.9319 8.96085 12.4068 8.68688C12.8816 8.4129 13.2835 8.02856 13.5783 7.56639C13.8731 7.10421 14.0523 6.5778 14.1006 6.03172M21.875 17.5001C21.875 19.9163 19.9162 21.8751 17.5 21.8751C15.0837 21.8751 13.125 19.9163 13.125 17.5001C13.125 15.0838 15.0837 13.1251 17.5 13.1251C19.9162 13.1251 21.875 15.0838 21.875 17.5001Z" stroke="white" strokeWidth="2.1875" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   ),
+  quit: (
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M22.5 7.5L7.5 22.5M7.5 7.5L22.5 22.5" stroke="#9290B2" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
 }
 
-const IconButton = ({ label, icon, className = '' }) => (
-  <button className={cx('iconButton', className)} type="button" aria-label={label} title={label}>
+const IconButton = ({ label, icon, className = '', onClick, pressed }) => (
+  <button
+    className={cx('iconButton', className)}
+    type="button"
+    aria-label={label}
+    aria-pressed={pressed}
+    title={label}
+    onClick={onClick}
+  >
     {icons[icon]}
   </button>
 )
 
 const RoomPage = () => {
+  const { roomId } = useParams()
+  const websocketRef = useRef(null)
+  const messagesEndRef = useRef(null)
+  const chatDragRef = useRef(null)
+  const chatResizeRef = useRef(null)
+  const [room, setRoom] = useState(null)
+  const [currentUser, setCurrentUser] = useState(null)
   const [zoom, setZoom] = useState(100)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [drag, setDrag] = useState(null)
+  const [isChatOpen, setIsChatOpen] = useState(false)
+  const [chatDraft, setChatDraft] = useState('')
+  const [chatStatus, setChatStatus] = useState('idle')
+  const [chatMessages, setChatMessages] = useState([])
+  const [chatBox, setChatBox] = useState({
+    x: 22,
+    y: 22,
+    width: 398,
+    height: 625,
+  })
 
   const gridStyle = useMemo(() => ({
     '--tabletop-scale': zoom / 100,
@@ -93,6 +143,113 @@ const RoomPage = () => {
   const changeZoom = (direction) => {
     setZoom((current) => Math.min(maxZoom, Math.max(minZoom, current + direction * zoomStep)))
   }
+
+  const keepChatInsideScreen = useCallback((nextBox) => {
+    const maxWidth = Math.max(chatMinWidth, window.innerWidth - chatMenuSafeArea)
+    const maxHeight = Math.max(chatMinHeight, window.innerHeight - chatMenuSafeArea)
+    const width = Math.min(Math.max(nextBox.width, chatMinWidth), maxWidth)
+    const height = Math.min(Math.max(nextBox.height, chatMinHeight), maxHeight)
+    const x = Math.min(
+      Math.max(nextBox.x, 0),
+      Math.max(0, window.innerWidth - width - chatMenuSafeArea)
+    )
+    const y = Math.min(
+      Math.max(nextBox.y, 0),
+      Math.max(0, window.innerHeight - height - chatMenuSafeArea)
+    )
+
+    return { x, y, width, height }
+  }, [])
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadRoomContext = async () => {
+      try {
+        const [roomData, userData] = await Promise.all([
+          getGameById(roomId),
+          getUser(),
+        ])
+
+        if (!isMounted) {
+          return
+        }
+
+        setRoom(roomData)
+        setCurrentUser(userData)
+      } catch (error) {
+        console.error(error)
+      }
+    }
+
+    loadRoomContext()
+
+    return () => {
+      isMounted = false
+    }
+  }, [roomId])
+
+  useEffect(() => {
+    if (!room?.code) {
+      return undefined
+    }
+
+    const socket = new WebSocket(buildWebSocketUrl(room.code))
+    websocketRef.current = socket
+    setChatStatus('connecting')
+
+    socket.addEventListener('open', () => {
+      setChatStatus('connected')
+    })
+
+    socket.addEventListener('message', (event) => {
+      try {
+        const data = JSON.parse(event.data)
+
+        if (data.event !== 'message' || data.payload?.type !== 'chat.message') {
+          return
+        }
+
+        setChatMessages((current) => [
+          ...current,
+          {
+            id: crypto.randomUUID(),
+            text: data.payload.message,
+            userId: data.user_id,
+            isOwn: data.user_id === currentUser?.id,
+          },
+        ])
+      } catch (error) {
+        console.error(error)
+      }
+    })
+
+    socket.addEventListener('close', () => {
+      setChatStatus('disconnected')
+    })
+
+    socket.addEventListener('error', () => {
+      setChatStatus('disconnected')
+    })
+
+    return () => {
+      socket.close()
+      websocketRef.current = null
+    }
+  }, [currentUser?.id, room?.code])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ block: 'end' })
+  }, [chatMessages, isChatOpen])
+
+  useEffect(() => {
+    const handleWindowResize = () => {
+      setChatBox((current) => keepChatInsideScreen(current))
+    }
+
+    window.addEventListener('resize', handleWindowResize)
+    return () => window.removeEventListener('resize', handleWindowResize)
+  }, [keepChatInsideScreen])
 
   const handleWheel = (event) => {
     event.preventDefault()
@@ -135,9 +292,150 @@ const RoomPage = () => {
     setDrag(null)
   }
 
+  const startChatDrag = (event) => {
+    if (event.button !== 0) {
+      return
+    }
+
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    chatDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: chatBox.x,
+      originY: chatBox.y,
+    }
+  }
+
+  const moveChatDrag = (event) => {
+    const dragState = chatDragRef.current
+
+    if (!dragState || event.pointerId !== dragState.pointerId) {
+      return
+    }
+
+    setChatBox((current) => keepChatInsideScreen({
+      ...current,
+      x: dragState.originX + event.clientX - dragState.startX,
+      y: dragState.originY + event.clientY - dragState.startY,
+    }))
+  }
+
+  const stopChatDrag = (event) => {
+    const dragState = chatDragRef.current
+
+    if (!dragState || event.pointerId !== dragState.pointerId) {
+      return
+    }
+
+    event.currentTarget.releasePointerCapture(event.pointerId)
+    chatDragRef.current = null
+  }
+
+  const startChatResize = (event, direction) => {
+    if (event.button !== 0) {
+      return
+    }
+
+    event.preventDefault()
+    event.stopPropagation()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    chatResizeRef.current = {
+      pointerId: event.pointerId,
+      direction,
+      startX: event.clientX,
+      startY: event.clientY,
+      origin: chatBox,
+    }
+  }
+
+  const moveChatResize = (event) => {
+    const resizeState = chatResizeRef.current
+
+    if (!resizeState || event.pointerId !== resizeState.pointerId) {
+      return
+    }
+
+    const deltaX = event.clientX - resizeState.startX
+    const deltaY = event.clientY - resizeState.startY
+    const nextBox = { ...resizeState.origin }
+
+    if (resizeState.direction.includes('e')) {
+      nextBox.width = resizeState.origin.width + deltaX
+    }
+
+    if (resizeState.direction.includes('s')) {
+      nextBox.height = resizeState.origin.height + deltaY
+    }
+
+    if (resizeState.direction.includes('w')) {
+      nextBox.width = resizeState.origin.width - deltaX
+      nextBox.x = resizeState.origin.x + deltaX
+    }
+
+    if (resizeState.direction.includes('n')) {
+      nextBox.height = resizeState.origin.height - deltaY
+      nextBox.y = resizeState.origin.y + deltaY
+    }
+
+    setChatBox(keepChatInsideScreen(nextBox))
+  }
+
+  const stopChatResize = (event) => {
+    const resizeState = chatResizeRef.current
+
+    if (!resizeState || event.pointerId !== resizeState.pointerId) {
+      return
+    }
+
+    event.currentTarget.releasePointerCapture(event.pointerId)
+    chatResizeRef.current = null
+  }
+
+  const sendChatMessage = () => {
+    const text = chatDraft.trim()
+    const socket = websocketRef.current
+
+    if (!text || socket?.readyState !== WebSocket.OPEN) {
+      return
+    }
+
+    socket.send(JSON.stringify({
+      type: 'chat.message',
+      message: text,
+    }))
+    setChatDraft('')
+  }
+
+  const handleChatKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      sendChatMessage()
+    }
+  }
+
+  const renderResizeHandle = (direction) => (
+    <span
+      key={direction}
+      className={cx('chatResizeHandle', `chatResizeHandle-${direction}`)}
+      aria-hidden="true"
+      onPointerDown={(event) => startChatResize(event, direction)}
+      onPointerMove={moveChatResize}
+      onPointerUp={stopChatResize}
+      onPointerCancel={stopChatResize}
+    />
+  )
+
   return (
     <main className={s.roomPage} onContextMenu={(event) => event.preventDefault()}>
-      <IconButton className={s.chatButton} label="Chat" icon="chat" />
+      <IconButton
+        className={s.chatButton}
+        label="Chat"
+        icon="chat"
+        pressed={isChatOpen}
+        onClick={() => setIsChatOpen((current) => !current)}
+      />
 
       <section
         className={cx('tabletopFrame', { isPanning: Boolean(drag) })}
@@ -156,6 +454,85 @@ const RoomPage = () => {
         <span>{zoom}%</span>
         <button type="button" aria-label="Zoom in" onClick={() => changeZoom(1)}>+</button>
       </aside>
+
+      {isChatOpen && (
+        <section
+          className={s.chatPanel}
+          aria-label="Room chat"
+          style={{
+            transform: `translate(${chatBox.x}px, ${chatBox.y}px)`,
+            width: `${chatBox.width}px`,
+            height: `${chatBox.height}px`,
+          }}
+        >
+          <header
+            className={s.chatHeader}
+            onPointerDown={startChatDrag}
+            onPointerMove={moveChatDrag}
+            onPointerUp={stopChatDrag}
+            onPointerCancel={stopChatDrag}
+          >
+            <span className={s.chatHeaderIcon}>{icons.chat}</span>
+            <strong>Chat</strong>
+            <button
+              className={s.chatCloseButton}
+              type="button"
+              aria-label="Fechar chat"
+              title="Fechar chat"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={() => setIsChatOpen(false)}
+            >
+              {icons.quit}
+            </button>
+          </header>
+
+          <div className={s.chatMessages} role="log" aria-live="polite">
+            {chatMessages.map((message) => (
+              <article
+                key={message.id}
+                className={cx('chatMessageRow', {
+                  chatMessageOwn: message.isOwn,
+                  chatMessageOther: !message.isOwn,
+                })}
+              >
+                {!message.isOwn && <span className={s.chatAvatar} aria-hidden="true" />}
+                <p className={cx('chatBubble', {
+                  chatBubbleOwn: message.isOwn,
+                  chatBubbleOther: !message.isOwn,
+                })}>
+                  {message.text}
+                </p>
+              </article>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <footer className={s.chatComposer}>
+            <textarea
+              aria-label="Mensagem"
+              placeholder={chatStatus === 'connected' ? 'Mensagem...' : 'Conectando...'}
+              value={chatDraft}
+              rows={1}
+              disabled={chatStatus !== 'connected'}
+              onChange={(event) => setChatDraft(event.target.value)}
+              onKeyDown={handleChatKeyDown}
+            />
+            <button
+              type="button"
+              aria-label="Enviar mensagem"
+              title="Enviar mensagem"
+              disabled={chatStatus !== 'connected' || !chatDraft.trim()}
+              onClick={sendChatMessage}
+            >
+              <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M28.884 5.525 5.978 14.764c-1.32.532-1.296 2.413.037 2.91l8.269 3.083 3.083 8.268c.497 1.334 2.378 1.357 2.91.038l9.239-22.906c.399-.99-.642-2.03-1.632-1.632Z" fill="currentColor"/>
+              </svg>
+            </button>
+          </footer>
+
+          {['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'].map(renderResizeHandle)}
+        </section>
+      )}
 
       <nav className={s.bottomMenu} aria-label="Tabletop tools">
         <IconButton label="Select" icon="cursor" />
