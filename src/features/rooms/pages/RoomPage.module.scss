@@ -277,6 +277,7 @@
   font-size: clamp(13px, 3.2cqw, 15px);
   line-height: 1.35;
   word-break: break-word;
+  white-space: pre-line;
 }
 
 .chatBubbleOther {
@@ -458,6 +459,365 @@
   cursor: nesw-resize;
 }
 
+// .diceMenuPanel {
+//   position: absolute;
+//   top: 0;
+//   left: 0;
+//   z-index: 9;
+//   width: 660px;
+//   height: 272px;
+//   display: grid;
+//   grid-template-rows: 65px 101px 1fr;
+//   overflow: hidden;
+//   border-radius: 16px;
+//   background: #363547;
+//   box-shadow: 0 18px 28px rgba(0, 0, 0, 0.26);
+//   color: #EFE5D5;
+// }
+
+.diceMenuPanel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 9;
+  width: 670px;
+  height: 270px;
+
+  display: grid;
+  grid-template-rows: 65px 101px 1fr;
+
+  overflow: hidden;
+  border-radius: 16px;
+  background: #363547;
+  box-shadow: 0 18px 28px rgba(0, 0, 0, 0.26);
+  color: #EFE5D5;
+}
+//
+.diceQuickRolls {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 5px;
+  padding: 14px 0 8px;
+}
+.diceQuickRolls,
+.advancedRoll {
+  width: calc(100% - 62px);
+  margin-inline: auto;
+}
+//
+.advancedRoll {
+  padding: 3px 0 24px;
+}
+
+.diceMenuHeader {
+  display: grid;
+  grid-template-columns: 56px 1fr 56px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 31px;
+  border-bottom: 2px solid rgba(26, 25, 39, 0.34);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.diceMenuHeader:active {
+  cursor: grabbing;
+}
+
+.diceMenuHeader strong {
+  text-align: center;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 700;
+  color: #EFE5D5;
+}
+
+.diceMenuHeaderIcon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: #9290B2;
+}
+
+.diceMenuHeaderIcon svg {
+  width: 34px;
+  height: 34px;
+}
+
+.diceMenuHeaderIcon path {
+  stroke: currentColor;
+}
+
+.diceMenuCloseButton {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  justify-self: end;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #9290B2;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.diceMenuCloseButton svg {
+  width: 42px;
+  height: 42px;
+}
+
+// .diceQuickRolls {
+//   display: grid;
+//   grid-template-columns: repeat(7, minmax(0, 1fr));
+//   align-items: stretch;
+//   gap: 5px;
+//   padding: 14px 28px 8px 28px;
+// }
+
+.diceQuickButton {
+  height: 78px;
+  display: grid;
+  grid-template-rows: 48px 22px;
+  justify-items: center;
+  align-items: center;
+  border: 0;
+  border-radius: 8px;
+  padding: 4px 2px 2px;
+  background: transparent;
+  color: #EFE5D5;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.diceQuickButton:hover:not(:disabled),
+.diceQuickButton:focus-visible:not(:disabled) {
+  // background: rgba(82, 150, 146, 0.24);
+  background: rgba(31, 30, 43, 0.4);
+  // background: #1F1E2B;
+}
+
+.diceQuickButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.diceQuickButton:disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+
+.diceQuickButton img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.diceQuickButton span {
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+// .advancedRoll {
+//   padding: 3px 31px 24px;
+// }
+
+.advancedRoll h2 {
+  margin: 0 0 12px;
+  color: #EFE5D5;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.advancedRollControls {
+  display: grid;
+  grid-template-columns: 90px 112px 34px 90px 1fr 150px;
+  align-items: center;
+  gap: 10px;
+}
+
+.advancedRollControls input,
+.advancedRollControls select {
+  width: 100%;
+  height: 38px;
+  border: 2px solid #529692;
+  border-radius: 8px;
+  outline: 0;
+  background: #363547;
+  color: #EFE5D5;
+  font: inherit;
+  font-size: 17px;
+  line-height: 1;
+}
+
+input[type='number'] {
+  /* Chrome, Safari, Edge, Opera */
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.numberInput {
+  position: relative;
+  width: 100%;
+  height: 38px;
+
+  input {
+    width: 100%;
+    height: 100%;
+    padding: 0 32px 0 12px !important;
+  }
+}
+
+.numberInputButtons {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+
+  width: 28px;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+  border-radius: 0 6px 6px 0;
+}
+
+.numberInputButtons button {
+  flex: 1;
+
+  display: grid;
+  place-items: center;
+
+  border: 0;
+  padding: 0;
+
+  background: #529692;
+  color: #EFE5D5;
+
+  cursor: pointer;
+}
+
+.numberInputButtons button:hover {
+  background: #63a9a5;
+}
+
+.numberInputButtons button:active {
+  background: #478582;
+}
+
+.advancedRollControls input {
+  padding: 0 12px;
+  text-align: center;
+}
+
+.advancedRollControls select {
+  padding: 0 35px 0 14px;
+  appearance: none;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #EFE5D5 50%),
+    linear-gradient(135deg, #EFE5D5 50%, transparent 50%),
+    linear-gradient(#529692, #529692);
+  background-position:
+    calc(100% - 18px) 15px,
+    calc(100% - 10px) 15px,
+    right top;
+  background-size:
+    8px 8px,
+    8px 8px,
+    37px 100%;
+  background-repeat: no-repeat;
+}
+
+.advancedRollControls input:focus,
+.advancedRollControls select:focus {
+  box-shadow: 0 0 0 2px rgba(82, 150, 146, 0.25);
+}
+
+.advancedRollPlus {
+  color: #EFE5D5;
+  font-size: 31px;
+  line-height: 1;
+  text-align: center;
+}
+
+.dmToggle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  color: #EFE5D5;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.dmToggle > span:last-child {
+  position: relative;
+  width: 44px;
+  height: 22px;
+  border-radius: 999px;
+  background: #92908d;
+}
+
+.dmToggle > span:last-child::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #EFE5D5;
+}
+
+.rollButton {
+  width: 100%;
+  height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: #529692;
+  color: #EFE5D5;
+  font: inherit;
+  font-size: 21px;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    filter 150ms ease,
+    transform 150ms ease;
+}
+
+.rollButton:hover:not(:disabled),
+.rollButton:focus-visible:not(:disabled) {
+  filter: brightness(1.07);
+}
+
+.rollButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.rollButton:disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+
 @media screen and (max-width: 900px) {
   .bottomMenu {
     max-width: calc(100vw - 190px);
@@ -467,6 +827,15 @@
   .zoomControl {
     left: 24px;
     width: 150px;
+  }
+
+  .diceMenuPanel {
+    width: min(592px, calc(100vw - 88px));
+  }
+
+  .advancedRollControls {
+    grid-template-columns: 78px 102px 24px 78px 1fr 112px;
+    gap: 8px;
   }
 }
 
@@ -492,5 +861,41 @@
     top: 14px;
     right: 14px;
     bottom: 14px;
+  }
+
+  .diceMenuPanel {
+    width: calc(100vw - 28px);
+    height: auto;
+    grid-template-rows: 62px auto auto;
+    border-radius: 18px;
+  }
+
+  .diceMenuHeader {
+    padding: 0 18px;
+  }
+
+  .diceMenuHeader strong {
+    font-size: 24px;
+  }
+
+  .diceQuickRolls {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 12px 16px 8px;
+  }
+
+  .advancedRoll {
+    padding: 5px 16px 18px;
+  }
+
+  .advancedRollControls {
+    grid-template-columns: 1fr 1fr 24px 1fr;
+  }
+
+  .dmToggle {
+    justify-content: flex-start;
+  }
+
+  .rollButton {
+    grid-column: span 2;
   }
 }

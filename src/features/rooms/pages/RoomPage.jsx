@@ -3,6 +3,13 @@ import cn from 'classnames/bind'
 import { useParams } from 'react-router-dom'
 import { getGameById } from '../../../services/gamesService'
 import { getUser } from '../../../services/usersService'
+import diceD4 from '../../../assets/dice-d4.png'
+import diceD6 from '../../../assets/dice-d6.png'
+import diceD8 from '../../../assets/dice-d8.png'
+import diceD10 from '../../../assets/dice-d10.png'
+import diceD12 from '../../../assets/dice-d12.png'
+import diceD20 from '../../../assets/dice-d20.png'
+import diceD100 from '../../../assets/dice-d100.png'
 import s from './RoomPage.module.scss'
 
 const cx = cn.bind(s)
@@ -13,6 +20,18 @@ const maxZoom = 200
 const chatMinWidth = 280
 const chatMinHeight = 360
 const chatMenuSafeArea = 88
+const diceMenuWidth = 592
+const diceMenuHeight = 292
+const diceMenuSafeArea = 76
+const diceOptions = [
+  { sides: 4, label: 'D4', image: diceD4 },
+  { sides: 6, label: 'D6', image: diceD6 },
+  { sides: 8, label: 'D8', image: diceD8 },
+  { sides: 10, label: 'D10', image: diceD10 },
+  { sides: 12, label: 'D12', image: diceD12 },
+  { sides: 20, label: 'D20', image: diceD20 },
+  { sides: 100, label: 'D100', image: diceD100 },
+]
 
 const buildWebSocketUrl = (roomCode) => {
   const apiUrl = import.meta.env.VITE_API_URL
@@ -96,6 +115,23 @@ const icons = {
     <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M22.5 7.5L7.5 22.5M7.5 7.5L22.5 22.5" stroke="#9290B2" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
+  ),
+  dice_menu: (
+    <svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20.7116 18.9645C21.6409 18.4289 22.2135 17.438 22.2135 16.3654V8.63443C22.2135 7.56187 21.6409 6.57091 20.7116 6.03529L13.9981 2.16555C13.0708 1.63107 11.929 1.63107 11.0018 2.16555L4.28821 6.03529C3.35897 6.57091 2.78638 7.56187 2.78638 8.63443V16.3654C2.78638 17.438 3.35898 18.4289 4.28822 18.9645L11.0018 22.8343C11.929 23.3688 13.0708 23.3688 13.9981 22.8343L20.7116 18.9645Z" stroke="#9290B2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M18.454 17.3859C18.7552 17.0666 18.9827 16.685 19.1204 16.2681L21.0893 10.3054C21.6752 8.5311 20.514 6.65866 18.6642 6.39482L12.9235 5.57604C12.6425 5.53597 12.3573 5.53597 12.0763 5.57604L6.33565 6.39482C4.48581 6.65866 3.32464 8.53111 3.91053 10.3054L5.87945 16.2681C6.01711 16.685 6.2446 17.0666 6.54586 17.3859L10.3176 21.3844C11.5017 22.6397 13.4981 22.6397 14.6822 21.3844L18.454 17.3859Z" stroke="#9290B2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M18.9115 16.901H6.08857M18.9115 16.901L12.5 5.51561M18.9115 16.901L21.5625 17.8125M6.08857 16.901L12.5 5.51561M6.08857 16.901L3.4375 18.125M12.5 5.51561V1.875" stroke="#9290B2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
+  up: (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M7.5 6.25L5 3.75L2.5 6.25" stroke="#EFE5D5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  ),
+  down: (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2.5 3.75L5 6.25L7.5 3.75" stroke="#EFE5D5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
   )
 }
 
@@ -118,12 +154,14 @@ const RoomPage = () => {
   const messagesEndRef = useRef(null)
   const chatDragRef = useRef(null)
   const chatResizeRef = useRef(null)
+  const diceDragRef = useRef(null)
   const [room, setRoom] = useState(null)
   const [currentUser, setCurrentUser] = useState(null)
   const [zoom, setZoom] = useState(100)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [drag, setDrag] = useState(null)
   const [isChatOpen, setIsChatOpen] = useState(false)
+  const [isDiceMenuOpen, setIsDiceMenuOpen] = useState(false)
   const [chatDraft, setChatDraft] = useState('')
   const [chatStatus, setChatStatus] = useState('idle')
   const [chatMessages, setChatMessages] = useState([])
@@ -132,6 +170,15 @@ const RoomPage = () => {
     y: 22,
     width: 398,
     height: 625,
+  })
+  const [diceMenuPosition, setDiceMenuPosition] = useState({
+    x: 132,
+    y: 22,
+  })
+  const [advancedRoll, setAdvancedRoll] = useState({
+    quantity: 1,
+    sides: 20,
+    bonus: 0,
   })
 
   const gridStyle = useMemo(() => ({
@@ -160,6 +207,29 @@ const RoomPage = () => {
 
     return { x, y, width, height }
   }, [])
+
+  const keepDiceMenuInsideScreen = useCallback((nextPosition) => {
+    const x = Math.min(
+      Math.max(nextPosition.x, 0),
+      Math.max(0, window.innerWidth - diceMenuWidth - diceMenuSafeArea)
+    )
+    const y = Math.min(
+      Math.max(nextPosition.y, 0),
+      Math.max(0, window.innerHeight - diceMenuHeight - diceMenuSafeArea)
+    )
+
+    return { x, y }
+  }, [])
+
+  const formatDiceRoll = (payload) => {
+    const dices = payload.result?.dices ?? []
+    const total = payload.result?.total ?? dices.reduce((sum, dice) => sum + dice, 0) + payload.bonus
+    const bonusLabel = payload.bonus ? `${payload.bonus > 0 ? '+' : ''}${payload.bonus}` : ''
+    const expression = `${payload.quantity}d${payload.sides}${bonusLabel}`
+    const details = [...dices, ...(payload.bonus ? [payload.bonus] : [])].join('+')
+
+    return `Roll: ${expression} = ${total}\n(${details})`
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -206,7 +276,14 @@ const RoomPage = () => {
       try {
         const data = JSON.parse(event.data)
 
-        if (data.event !== 'message' || data.payload?.type !== 'chat.message') {
+        if (data.event !== 'message') {
+          return
+        }
+
+        const isChatMessage = data.payload?.type === 'chat.message'
+        const isDiceRoll = data.payload?.type === 'dice.roll'
+
+        if (!isChatMessage && !isDiceRoll) {
           return
         }
 
@@ -214,7 +291,7 @@ const RoomPage = () => {
           ...current,
           {
             id: crypto.randomUUID(),
-            text: data.payload.message,
+            text: isDiceRoll ? formatDiceRoll(data.payload) : data.payload.message,
             userId: data.user_id,
             isOwn: data.user_id === currentUser?.id,
           },
@@ -245,11 +322,12 @@ const RoomPage = () => {
   useEffect(() => {
     const handleWindowResize = () => {
       setChatBox((current) => keepChatInsideScreen(current))
+      setDiceMenuPosition((current) => keepDiceMenuInsideScreen(current))
     }
 
     window.addEventListener('resize', handleWindowResize)
     return () => window.removeEventListener('resize', handleWindowResize)
-  }, [keepChatInsideScreen])
+  }, [keepChatInsideScreen, keepDiceMenuInsideScreen])
 
   const handleWheel = (event) => {
     event.preventDefault()
@@ -393,6 +471,46 @@ const RoomPage = () => {
     chatResizeRef.current = null
   }
 
+  const startDiceMenuDrag = (event) => {
+    if (event.button !== 0) {
+      return
+    }
+
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    diceDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: diceMenuPosition.x,
+      originY: diceMenuPosition.y,
+    }
+  }
+
+  const moveDiceMenuDrag = (event) => {
+    const dragState = diceDragRef.current
+
+    if (!dragState || event.pointerId !== dragState.pointerId) {
+      return
+    }
+
+    setDiceMenuPosition(keepDiceMenuInsideScreen({
+      x: dragState.originX + event.clientX - dragState.startX,
+      y: dragState.originY + event.clientY - dragState.startY,
+    }))
+  }
+
+  const stopDiceMenuDrag = (event) => {
+    const dragState = diceDragRef.current
+
+    if (!dragState || event.pointerId !== dragState.pointerId) {
+      return
+    }
+
+    event.currentTarget.releasePointerCapture(event.pointerId)
+    diceDragRef.current = null
+  }
+
   const sendChatMessage = () => {
     const text = chatDraft.trim()
     const socket = websocketRef.current
@@ -406,6 +524,32 @@ const RoomPage = () => {
       message: text,
     }))
     setChatDraft('')
+  }
+
+  const sendDiceRoll = ({ quantity, sides, bonus = 0 }) => {
+    const socket = websocketRef.current
+    const result = {}
+
+    if (socket?.readyState !== WebSocket.OPEN) {
+      return
+    }
+
+    socket.send(JSON.stringify({
+      type: 'dice.roll',
+      quantity,
+      sides,
+      bonus,
+      result,
+    }))
+  }
+
+  const handleAdvancedRollChange = (field, value) => {
+    setAdvancedRoll((current) => ({
+      ...current,
+      [field]: field === 'sides'
+        ? Number(value)
+        : Math.max(0, Number(value) || 0),
+    }))
   }
 
   const handleChatKeyDown = (event) => {
@@ -534,6 +678,157 @@ const RoomPage = () => {
         </section>
       )}
 
+      {isDiceMenuOpen && (
+        <section
+          className={s.diceMenuPanel}
+          aria-label="Dice roll"
+          style={{
+            transform: `translate(${diceMenuPosition.x}px, ${diceMenuPosition.y}px)`,
+          }}
+        >
+          <header
+            className={s.diceMenuHeader}
+            onPointerDown={startDiceMenuDrag}
+            onPointerMove={moveDiceMenuDrag}
+            onPointerUp={stopDiceMenuDrag}
+            onPointerCancel={stopDiceMenuDrag}
+          >
+            <span className={s.diceMenuHeaderIcon}>{icons.dice_menu}</span>
+            <strong>Dice Roll</strong>
+            <button
+              className={s.diceMenuCloseButton}
+              type="button"
+              aria-label="Fechar dice roll"
+              title="Fechar dice roll"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={() => setIsDiceMenuOpen(false)}
+            >
+              {icons.quit}
+            </button>
+          </header>
+
+          <div className={s.diceQuickRolls}>
+            {diceOptions.map((dice) => (
+              <button
+                key={dice.sides}
+                type="button"
+                className={s.diceQuickButton}
+                onClick={() => sendDiceRoll({ quantity: 1, sides: dice.sides })}
+                disabled={chatStatus !== 'connected'}
+              >
+                <img src={dice.image} alt="" aria-hidden="true" />
+                <span>{dice.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className={s.advancedRoll}>
+            <h2>Advanced roll</h2>
+            <div className={s.advancedRollControls}>
+              <div className={s.numberInput}>
+                <input
+                  type="number"
+                  min="1"
+                  aria-label="Quantidade de dados"
+                  value={advancedRoll.quantity}
+                  onChange={(event) =>
+                    handleAdvancedRollChange('quantity', event.target.value)
+                  }
+                />
+
+                <div className={s.numberInputButtons}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleAdvancedRollChange(
+                        'quantity',
+                        Number(advancedRoll.quantity) + 1
+                      )
+                    }
+                    aria-label="Aumentar quantidade"
+                  >
+                    {icons.up}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleAdvancedRollChange(
+                        'quantity',
+                        Math.max(1, Number(advancedRoll.quantity) - 1)
+                      )
+                    }
+                    aria-label="Diminuir quantidade"
+                  >
+                    {icons.down}
+                  </button>
+                </div>
+              </div>
+
+              <select
+                aria-label="Tipo de dado"
+                value={advancedRoll.sides}
+                onChange={(event) => handleAdvancedRollChange('sides', event.target.value)}
+              >
+                {diceOptions.map((dice) => (
+                  <option key={dice.sides} value={dice.sides}>{dice.label}</option>
+                ))}
+              </select>
+              <span className={s.advancedRollPlus}>+</span>
+              <div className={s.numberInput}>
+                <input
+                  type="number"
+                  min="0"
+                  aria-label="Bonus da rolagem"
+                  value={advancedRoll.bonus}
+                  onChange={(event) => handleAdvancedRollChange('bonus', event.target.value)}
+                />
+
+                <div className={s.numberInputButtons}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleAdvancedRollChange(
+                        'bonus',
+                        Number(advancedRoll.bonus) + 1
+                      )
+                    }
+                    aria-label="Aumentar quantidade"
+                  >
+                    {icons.up}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleAdvancedRollChange(
+                        'bonus',
+                        Math.max(0, Number(advancedRoll.bonus) - 1)
+                      )
+                    }
+                    aria-label="Diminuir quantidade"
+                  >
+                    {icons.down}
+                  </button>
+                </div>
+              </div>
+              <div className={s.dmToggle} aria-hidden="true">
+                <span>DM</span>
+                <span />
+              </div>
+              <button
+                type="button"
+                className={s.rollButton}
+                disabled={chatStatus !== 'connected' || advancedRoll.quantity < 1}
+                onClick={() => sendDiceRoll(advancedRoll)}
+              >
+                Roll
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
       <nav className={s.bottomMenu} aria-label="Tabletop tools">
         <IconButton label="Select" icon="cursor" />
         <IconButton label="Move" icon="hand" />
@@ -541,7 +836,12 @@ const RoomPage = () => {
         <IconButton label="Text" icon="text" />
         <IconButton label="Measure" icon="ruler" />
         <span className={s.separator} aria-hidden="true" />
-        <IconButton label="Dice" icon="dice" />
+        <IconButton
+          label="Dice"
+          icon="dice"
+          pressed={isDiceMenuOpen}
+          onClick={() => setIsDiceMenuOpen((current) => !current)}
+        />
       </nav>
 
       <nav className={s.sideMenu} aria-label="Room panels">
