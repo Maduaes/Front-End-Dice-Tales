@@ -1,0 +1,965 @@
+.roomPage {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow: hidden;
+  background: #949494;
+  color: #fff;
+}
+
+.tabletopFrame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.15));
+}
+
+.isPanning {
+  cursor: grabbing;
+}
+
+.isPanning .tabletop {
+  transition: none;
+}
+
+.tabletop {
+  width: 1000px;
+  height: 1000px;
+  flex: 0 0 auto;
+  transform: translate(var(--tabletop-x), var(--tabletop-y)) scale(var(--tabletop-scale));
+  transform-origin: center;
+  transition: transform 140ms ease;
+  // background-color: rgba(0, 0, 0, 0.32);
+  background-color: rgb(255, 255, 255, 0.30);
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.5) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: -1px -1px;
+}
+
+.iconButton,
+.zoomControl,
+.bottomMenu,
+.sideMenu {
+  background: #363547;
+}
+
+.iconButton {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  color: #fff;
+  cursor: default;
+  line-height: 0;
+}
+
+.iconButton svg {
+  display: block;
+  margin: auto;
+}
+
+.chatButton {
+  position: absolute;
+  top: 21px;
+  left: 23px;
+  width: 53px;
+  height: 53px;
+  border-radius: 10px;
+  z-index: 12;
+}
+
+.zoomControl {
+  position: absolute;
+  z-index: 12;
+  opacity: 0.85;
+  left: 23px;
+  bottom: 12px;
+  width: 178px;
+  height: 45px;
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
+  align-items: center;
+  border-radius: 8px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 18px;
+}
+
+.zoomControl button {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: #d8d8e3;
+  font-size: 30px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.zoomControl span {
+  text-align: center;
+  font-weight: 400;
+}
+
+.bottomMenu {
+  position: absolute;
+  z-index: 12;
+  left: 50%;
+  bottom: 12px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  transform: translateX(-50%);
+  overflow: hidden;
+}
+
+.separator {
+  width: 1px;
+  height: 30px;
+  margin: 0 10px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.sideMenu {
+  position: absolute;
+  z-index: 12;
+  top: 21px;
+  right: 13px;
+  bottom: 12px;
+  width: 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 10px;
+  padding: 11px 0;
+}
+
+.sideMenuTop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+
+.chatPanel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 8;
+  min-width: 280px;
+  min-height: 360px;
+  display: grid;
+  grid-template-rows: 74px minmax(0, 1fr) 83px;
+  overflow: visible;
+  border-radius: 16px;
+  // background: #343346;
+  background: #363547;
+  box-shadow: 0 18px 28px rgba(0, 0, 0, 0.26);
+  color: #f1e8d9;
+}
+
+.chatHeader {
+  display: grid;
+  grid-template-columns: 58px 1fr 58px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(16, 16, 26, 0.34);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.chatHeader:active {
+  cursor: grabbing;
+}
+
+.chatHeader strong {
+  text-align: center;
+  font-size: clamp(20px, 6.2cqw, 25px);
+  line-height: 1;
+  font-weight: 700;
+  color: #f2e6d4;
+}
+
+.chatHeaderIcon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  color: #adabc9;
+}
+
+.chatHeaderIcon svg {
+  width: 34px;
+  height: 34px;
+}
+
+.chatHeaderIcon path {
+  stroke: currentColor;
+}
+
+.chatCloseButton {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #9290b2;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.chatCloseButton svg {
+  width: 34px;
+  height: 34px;
+}
+
+.chatMessages {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 4.5cqh, 27px);
+  overflow-y: auto;
+  padding: 118px 22px 20px 22px;
+  scrollbar-width: thin;
+  scrollbar-color: #8d89b9 transparent;
+}
+
+.chatMessageRow {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.chatMessageOther {
+  justify-content: flex-start;
+  gap: 17px;
+}
+
+.chatMessageOwn {
+  justify-content: flex-end;
+}
+
+.chatAvatar {
+  width: 39px;
+  height: 39px;
+  flex: 0 0 39px;
+  border: 4px solid #ffffff;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.chatBubble {
+  position: relative;
+  min-height: 47px;
+  max-width: min(75%, 278px);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  padding: 13px 22px;
+  color: #11111a;
+  font-size: clamp(13px, 3.2cqw, 15px);
+  line-height: 1.35;
+  word-break: break-word;
+  white-space: pre-line;
+}
+
+.chatBubbleOther {
+  background: #94C6EF;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 7px;
+  border-bottom-right-radius: 7px;
+  border-bottom-left-radius: 7px;
+}
+
+.chatBubbleOther::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -12px;
+  width: 0;
+  height: 0;
+  // border-top: 20px solid #91c7ed;
+  border-top: 20px solid #94C6EF;
+  border-left: 14px solid transparent;
+}
+
+.chatBubbleOwn {
+  // background: #aaa6d8;
+  background: #A7A5D3;
+  border-top-left-radius: 7px;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 7px;
+  border-bottom-left-radius: 7px;
+}
+
+.chatBubbleOwn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -13px;
+  width: 0;
+  height: 0;
+  border-top: 20px solid #A7A5D3;
+  border-right: 14px solid transparent;
+}
+
+.chatComposer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 49px;
+  align-items: center;
+  gap: 8px;
+  margin: 0 17px 15px 17px;
+  padding: 5px 8px 5px 27px;
+  border: 2px solid #56536f;
+  border-radius: 17px;
+  background: #3d3b53;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.chatComposer:focus-within {
+  border-color: #777396;
+  box-shadow: 0 0 0 2px rgba(182, 178, 226, 0.14);
+}
+
+.chatComposer textarea {
+  width: 100%;
+  min-width: 0;
+  max-height: 78px;
+  border: 0;
+  outline: 0;
+  resize: none;
+  overflow-y: auto;
+  background: transparent;
+  color: #f5f1ff;
+  font: inherit;
+  font-size: clamp(15px, 4.3cqw, 19px);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.chatComposer textarea::placeholder {
+  color: #9a96c0;
+  opacity: 1;
+}
+
+.chatComposer button {
+  width: 49px;
+  height: 49px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: #615f7b;
+  color: #bdb9ee;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.chatComposer:focus-within button {
+  border-color: rgba(213, 209, 255, 0.52);
+  box-shadow: 0 0 0 2px rgba(182, 178, 226, 0.13);
+}
+
+.chatComposer button:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.chatComposer button:not(:disabled) {
+  cursor: pointer;
+}
+
+.chatResizeHandle {
+  position: absolute;
+  z-index: 2;
+  touch-action: none;
+}
+
+.chatResizeHandle-n,
+.chatResizeHandle-s {
+  right: 18px;
+  left: 18px;
+  height: 12px;
+  cursor: ns-resize;
+}
+
+.chatResizeHandle-n {
+  top: -6px;
+}
+
+.chatResizeHandle-s {
+  bottom: -6px;
+}
+
+.chatResizeHandle-e,
+.chatResizeHandle-w {
+  top: 18px;
+  bottom: 18px;
+  width: 12px;
+  cursor: ew-resize;
+}
+
+.chatResizeHandle-e {
+  right: -6px;
+}
+
+.chatResizeHandle-w {
+  left: -6px;
+}
+
+.chatResizeHandle-ne,
+.chatResizeHandle-nw,
+.chatResizeHandle-se,
+.chatResizeHandle-sw {
+  width: 22px;
+  height: 22px;
+}
+
+.chatResizeHandle-ne {
+  top: -7px;
+  right: -7px;
+  cursor: nesw-resize;
+}
+
+.chatResizeHandle-nw {
+  top: -7px;
+  left: -7px;
+  cursor: nwse-resize;
+}
+
+.chatResizeHandle-se {
+  right: -7px;
+  bottom: -7px;
+  cursor: nwse-resize;
+}
+
+.chatResizeHandle-sw {
+  bottom: -7px;
+  left: -7px;
+  cursor: nesw-resize;
+}
+
+// .diceMenuPanel {
+//   position: absolute;
+//   top: 0;
+//   left: 0;
+//   z-index: 9;
+//   width: 660px;
+//   height: 272px;
+//   display: grid;
+//   grid-template-rows: 65px 101px 1fr;
+//   overflow: hidden;
+//   border-radius: 16px;
+//   background: #363547;
+//   box-shadow: 0 18px 28px rgba(0, 0, 0, 0.26);
+//   color: #EFE5D5;
+// }
+
+.chatRollResult {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 1px solid #363547;
+  padding: 10px;
+  border-radius: 7px;
+  margin-top: 9px;
+  margin-bottom: 9px;
+
+  width: 200px;
+  
+  p{
+    margin-block-end: 0;
+  };
+
+  header{
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+}
+
+.headerRollResult {
+  position: absolute;
+  left: 0;
+}
+
+.rollLine {
+  width: 100%;
+  height: 0.5px;
+  background-color: #363547;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.rollNumberContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90px;
+  height: 90px;
+}
+
+.rollDiceBackground {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.rollNumberResult {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: clamp(18px, 9cqw, 50px);
+}
+
+.diceMenuPanel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 9;
+  width: 670px;
+  height: 270px;
+
+  display: grid;
+  grid-template-rows: 65px 101px 1fr;
+
+  overflow: hidden;
+  border-radius: 16px;
+  background: #363547;
+  box-shadow: 0 18px 28px rgba(0, 0, 0, 0.26);
+  color: #EFE5D5;
+}
+//
+.diceQuickRolls {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 5px;
+  padding: 14px 0 8px;
+}
+.diceQuickRolls,
+.advancedRoll {
+  width: calc(100% - 62px);
+  margin-inline: auto;
+}
+//
+.advancedRoll {
+  padding: 3px 0 24px;
+}
+
+.diceMenuHeader {
+  display: grid;
+  grid-template-columns: 56px 1fr 56px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 31px;
+  border-bottom: 2px solid rgba(26, 25, 39, 0.34);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.diceMenuHeader:active {
+  cursor: grabbing;
+}
+
+.diceMenuHeader strong {
+  text-align: center;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 700;
+  color: #EFE5D5;
+}
+
+.diceMenuHeaderIcon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: #9290B2;
+}
+
+.diceMenuHeaderIcon svg {
+  width: 34px;
+  height: 34px;
+}
+
+.diceMenuHeaderIcon path {
+  stroke: currentColor;
+}
+
+.diceMenuCloseButton {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  justify-self: end;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #9290B2;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.diceMenuCloseButton svg {
+  width: 42px;
+  height: 42px;
+}
+
+// .diceQuickRolls {
+//   display: grid;
+//   grid-template-columns: repeat(7, minmax(0, 1fr));
+//   align-items: stretch;
+//   gap: 5px;
+//   padding: 14px 28px 8px 28px;
+// }
+
+.diceQuickButton {
+  height: 78px;
+  display: grid;
+  grid-template-rows: 48px 22px;
+  justify-items: center;
+  align-items: center;
+  border: 0;
+  border-radius: 8px;
+  padding: 4px 2px 2px;
+  background: transparent;
+  color: #EFE5D5;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.diceQuickButton:hover:not(:disabled),
+.diceQuickButton:focus-visible:not(:disabled) {
+  // background: rgba(82, 150, 146, 0.24);
+  background: rgba(31, 30, 43, 0.4);
+  // background: #1F1E2B;
+}
+
+.diceQuickButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.diceQuickButton:disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+
+.diceQuickButton img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.diceQuickButton span {
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+// .advancedRoll {
+//   padding: 3px 31px 24px;
+// }
+
+.advancedRoll h2 {
+  margin: 0 0 12px;
+  color: #EFE5D5;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.advancedRollControls {
+  display: grid;
+  grid-template-columns: 90px 112px 34px 90px 1fr 150px;
+  align-items: center;
+  gap: 10px;
+}
+
+.advancedRollControls input,
+.advancedRollControls select {
+  width: 100%;
+  height: 38px;
+  border: 2px solid #529692;
+  border-radius: 8px;
+  outline: 0;
+  background: #363547;
+  color: #EFE5D5;
+  font: inherit;
+  font-size: 17px;
+  line-height: 1;
+}
+
+input[type='number'] {
+  /* Chrome, Safari, Edge, Opera */
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.numberInput {
+  position: relative;
+  width: 100%;
+  height: 38px;
+
+  input {
+    width: 100%;
+    height: 100%;
+    padding: 0 32px 0 12px !important;
+  }
+}
+
+.numberInputButtons {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+
+  width: 28px;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+  border-radius: 0 6px 6px 0;
+}
+
+.numberInputButtons button {
+  flex: 1;
+
+  display: grid;
+  place-items: center;
+
+  border: 0;
+  padding: 0;
+
+  background: #529692;
+  color: #EFE5D5;
+
+  cursor: pointer;
+}
+
+.numberInputButtons button:hover {
+  background: #63a9a5;
+}
+
+.numberInputButtons button:active {
+  background: #478582;
+}
+
+.advancedRollControls input {
+  padding: 0 12px;
+  text-align: center;
+}
+
+.advancedRollControls select {
+  padding: 0 35px 0 14px;
+  appearance: none;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #EFE5D5 50%),
+    linear-gradient(135deg, #EFE5D5 50%, transparent 50%),
+    linear-gradient(#529692, #529692);
+  background-position:
+    calc(100% - 18px) 15px,
+    calc(100% - 10px) 15px,
+    right top;
+  background-size:
+    8px 8px,
+    8px 8px,
+    37px 100%;
+  background-repeat: no-repeat;
+}
+
+.advancedRollControls input:focus,
+.advancedRollControls select:focus {
+  box-shadow: 0 0 0 2px rgba(82, 150, 146, 0.25);
+}
+
+.advancedRollPlus {
+  color: #EFE5D5;
+  font-size: 31px;
+  line-height: 1;
+  text-align: center;
+}
+
+.dmToggle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  color: #EFE5D5;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.dmToggle > span:last-child {
+  position: relative;
+  width: 44px;
+  height: 22px;
+  border-radius: 999px;
+  background: #92908d;
+}
+
+.dmToggle > span:last-child::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #EFE5D5;
+}
+
+.rollButton {
+  width: 100%;
+  height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: #529692;
+  color: #EFE5D5;
+  font: inherit;
+  font-size: 21px;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    filter 150ms ease,
+    transform 150ms ease;
+}
+
+.rollButton:hover:not(:disabled),
+.rollButton:focus-visible:not(:disabled) {
+  filter: brightness(1.07);
+}
+
+.rollButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.rollButton:disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+
+@media screen and (max-width: 900px) {
+  .bottomMenu {
+    max-width: calc(100vw - 190px);
+    overflow-x: auto;
+  }
+
+  .zoomControl {
+    left: 24px;
+    width: 150px;
+  }
+
+  .diceMenuPanel {
+    width: min(592px, calc(100vw - 88px));
+  }
+
+  .advancedRollControls {
+    grid-template-columns: 78px 102px 24px 78px 1fr 112px;
+    gap: 8px;
+  }
+}
+
+@media screen and (max-width: 620px) {
+  .chatButton {
+    top: 14px;
+    left: 14px;
+  }
+
+  .bottomMenu {
+    right: 76px;
+    left: 14px;
+    max-width: none;
+    transform: none;
+  }
+
+  .zoomControl {
+    bottom: 68px;
+    left: 14px;
+  }
+
+  .sideMenu {
+    top: 14px;
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .diceMenuPanel {
+    width: calc(100vw - 28px);
+    height: auto;
+    grid-template-rows: 62px auto auto;
+    border-radius: 18px;
+  }
+
+  .diceMenuHeader {
+    padding: 0 18px;
+  }
+
+  .diceMenuHeader strong {
+    font-size: 24px;
+  }
+
+  .diceQuickRolls {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 12px 16px 8px;
+  }
+
+  .advancedRoll {
+    padding: 5px 16px 18px;
+  }
+
+  .advancedRollControls {
+    grid-template-columns: 1fr 1fr 24px 1fr;
+  }
+
+  .dmToggle {
+    justify-content: flex-start;
+  }
+
+  .rollButton {
+    grid-column: span 2;
+  }
+}

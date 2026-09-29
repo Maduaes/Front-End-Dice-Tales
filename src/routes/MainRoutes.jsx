@@ -2,8 +2,10 @@ import Layout from "../layout/Layout";
 import Home from "../features/home/pages/Home";
 import Teste from "../features/home/Teste";
 import SheetsPage from "../features/sheets/pages/SheetsPage";
+import RoomPage from "../features/rooms/pages/RoomPage";
 
 const mainRoutes = [
+  { path: '/rooms/:roomId', element: <RoomPage /> },
   {
     path: '/',
     element: <Layout />,

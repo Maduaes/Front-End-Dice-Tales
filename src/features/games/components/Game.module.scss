@@ -27,11 +27,21 @@
   display: block;
 }
 
-.roomCode {
+.roomCodeGroup {
+  --room-code-height: 1.65rem;
   position: absolute;
   right: 0.8rem;
   bottom: 0.8rem;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.roomCode {
+  display: flex;
+  align-items: center;
+  min-height: var(--room-code-height);
   border-radius: 999px;
   background: rgba(17, 24, 39, 0.82);
   color: #fff;
@@ -40,6 +50,54 @@
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+.copyCodeButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--room-code-height);
+  height: var(--room-code-height);
+  border: none;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.82);
+  padding: 0;
+  color: #fff;
+  transition: background-color 0.2s ease;
+
+  svg {
+    width: 1rem;
+    height: 1.35rem;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(255, 255, 255, 0.22);
+    cursor: pointer;
+  }
+}
+
+.copyCodeButtonCopied {
+  background: rgba(33, 150, 83, 0.9);
+}
+
+.copyTooltip {
+  position: absolute;
+  right: 50%;
+  bottom: calc(100% + 0.45rem);
+  transform: translateX(50%);
+  border-radius: 0.35rem;
+  background: rgba(17, 24, 39, 0.92);
+  color: #fff;
+  padding: 0.25rem 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .roomName {
