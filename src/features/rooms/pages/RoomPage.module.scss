@@ -475,6 +475,70 @@
 //   color: #EFE5D5;
 // }
 
+.chatRollResult {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 1px solid #363547;
+  padding: 10px;
+  border-radius: 7px;
+  margin-top: 9px;
+  margin-bottom: 9px;
+
+  width: 200px;
+  
+  p{
+    margin-block-end: 0;
+  };
+
+  header{
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+}
+
+.headerRollResult {
+  position: absolute;
+  left: 0;
+}
+
+.rollLine {
+  width: 100%;
+  height: 0.5px;
+  background-color: #363547;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.rollNumberContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90px;
+  height: 90px;
+}
+
+.rollDiceBackground {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.rollNumberResult {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: clamp(18px, 9cqw, 50px);
+}
+
 .diceMenuPanel {
   position: absolute;
   top: 0;

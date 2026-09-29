@@ -3,12 +3,14 @@ import cn from 'classnames/bind'
 import { useParams } from 'react-router-dom'
 import { getGameById } from '../../../services/gamesService'
 import { getUser } from '../../../services/usersService'
+import { Icon } from '../../../shared/icones/Icon'
 import diceD4 from '../../../assets/dice-d4.png'
 import diceD6 from '../../../assets/dice-d6.png'
 import diceD8 from '../../../assets/dice-d8.png'
 import diceD10 from '../../../assets/dice-d10.png'
 import diceD12 from '../../../assets/dice-d12.png'
 import diceD20 from '../../../assets/dice-d20.png'
+import diceD20Chat from '../../../assets/dice-d20-chat.png'
 import diceD100 from '../../../assets/dice-d100.png'
 import s from './RoomPage.module.scss'
 
@@ -228,7 +230,45 @@ const RoomPage = () => {
     const expression = `${payload.quantity}d${payload.sides}${bonusLabel}`
     const details = [...dices, ...(payload.bonus ? [payload.bonus] : [])].join('+')
 
-    return `Roll: ${expression} = ${total}\n(${details})`
+    let txtColor = '#11111a'
+
+    if (dices.length == 1){
+      if (payload.sides == dices[0]){
+        txtColor = '#1DAB04'
+      } else if (1 == dices[0]){
+        txtColor = '#AB0404'
+      }
+      
+    }
+
+    // return `Roll: ${expression} = ${total}\n(${details})`
+    return (
+      <div className={s.chatRollResult}>
+        <header>
+          <Icon
+            name='dices'
+            color='#363547'
+            className={s.headerRollResult}
+          ></Icon>
+          <p>{`Roll: ${expression}`}</p>
+        </header>
+        <span className={s.rollLine}></span>
+
+        <div className={s.rollNumberContainer}>
+          <img
+            className={s.rollDiceBackground}
+            src={diceD20Chat}
+            alt=""
+            aria-hidden="true"
+          />
+
+          <p 
+            className={s.rollNumberResult}
+            style={{ color: txtColor }}
+          >{total}</p>
+        </div>
+      </div>
+    )
   }
 
   useEffect(() => {
