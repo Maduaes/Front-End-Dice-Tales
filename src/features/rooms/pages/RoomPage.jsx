@@ -330,7 +330,7 @@ const RoomPage = () => {
         setChatMessages((current) => [
           ...current,
           {
-            id: crypto.randomUUID(),
+            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
             text: isDiceRoll ? formatDiceRoll(data.payload) : data.payload.message,
             userId: data.user_id,
             isOwn: data.user_id === currentUser?.id,
