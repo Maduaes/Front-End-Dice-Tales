@@ -49,7 +49,7 @@ jobs:
           key: ${{ secrets.ORACLE_SSH_KEY }}
 
           script: |
-            sudo cd ~/dicetales
+            cd ~/dicetales
 
             sudo docker compose pull nginx
 
