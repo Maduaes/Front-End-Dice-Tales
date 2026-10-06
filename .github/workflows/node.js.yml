@@ -11,15 +11,12 @@ permissions:
   contents: read
 
 jobs:
-
   build-and-push:
-
     runs-on: ubuntu-latest
 
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -37,18 +34,15 @@ jobs:
           tags: |
             guilhermerikaczewski/dice-tales-frontend:latest
             guilhermerikaczewski/dice-tales-frontend:${{ github.sha }}
-  
-  deploy:
 
+  deploy:
     needs: build-and-push
 
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Deploy to Oracle
         uses: appleboy/ssh-action@v1.2.0
-
         with:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USERNAME }}
