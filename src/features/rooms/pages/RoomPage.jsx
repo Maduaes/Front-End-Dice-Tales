@@ -234,7 +234,7 @@ const RoomPage = () => {
 
     if (dices.length == 1){
       if (payload.sides == dices[0]){
-        txtColor = '#1DAB04'
+        txtColor = '#158801'
       } else if (1 == dices[0]){
         txtColor = '#AB0404'
       }
