@@ -47,10 +47,5 @@ jobs:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USERNAME }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
-
           script: |
-            cd ~/dicetales
-
-            sudo docker compose pull nginx
-
-            sudo docker compose up -d nginx
+            echo "SSH OK"
