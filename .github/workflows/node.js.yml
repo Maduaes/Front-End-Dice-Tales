@@ -47,10 +47,10 @@ jobs:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USERNAME }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
-
           script: |
             cd /home/ubuntu/dicetales
-
+            echo "CD OK 1"
             sudo docker compose pull nginx
-
+            echo "CD OK 2"
             sudo docker compose up -d nginx
+            echo "CD OK 3"
