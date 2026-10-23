@@ -3,6 +3,7 @@ import cn from 'classnames/bind'
 import { useParams } from 'react-router-dom'
 import { getGameById } from '../../../services/gamesService'
 import { getUser } from '../../../services/usersService'
+import { getRoomAssets, getRoomTabletop, uploadRoomAsset } from '../../../services/roomAssetsService'
 import { Icon } from '../../../shared/icones/Icon'
 import diceD4 from '../../../assets/dice-d4.png'
 import diceD6 from '../../../assets/dice-d6.png'
@@ -154,6 +155,9 @@ const RoomPage = () => {
   const { roomId } = useParams()
   const websocketRef = useRef(null)
   const messagesEndRef = useRef(null)
+  const tabletopFrameRef = useRef(null)
+  const tabletopRef = useRef(null)
+  const assetDragRef = useRef(null)
   const chatDragRef = useRef(null)
   const chatResizeRef = useRef(null)
   const diceDragRef = useRef(null)
@@ -164,6 +168,15 @@ const RoomPage = () => {
   const [drag, setDrag] = useState(null)
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isDiceMenuOpen, setIsDiceMenuOpen] = useState(false)
+  const [activeSidePanel, setActiveSidePanel] = useState(null)
+  const [tokens, setTokens] = useState([])
+  const [tabletopAssets, setTabletopAssets] = useState([])
+  const [draggingAssetId, setDraggingAssetId] = useState(null)
+  const [tokenSearch, setTokenSearch] = useState('')
+  const [tokensLoading, setTokensLoading] = useState(false)
+  const [tokenUploadLoading, setTokenUploadLoading] = useState(false)
+  const [tokensError, setTokensError] = useState('')
+  const tokenFileInputRef = useRef(null)
   const [chatDraft, setChatDraft] = useState('')
   const [chatStatus, setChatStatus] = useState('idle')
   const [chatMessages, setChatMessages] = useState([])
@@ -182,6 +195,54 @@ const RoomPage = () => {
     sides: 20,
     bonus: 0,
   })
+
+  useEffect(() => {
+    if (activeSidePanel !== 'Tokens' || !roomId) return
+    let cancelled = false
+    setTokensLoading(true)
+    setTokensError('')
+    getRoomAssets(roomId)
+      .then((assets) => { if (!cancelled) setTokens(assets) })
+      .catch(() => { if (!cancelled) setTokensError('Não foi possível carregar os tokens.') })
+      .finally(() => { if (!cancelled) setTokensLoading(false) })
+    return () => { cancelled = true }
+  }, [activeSidePanel, roomId])
+
+  const handleTokenUpload = async (event) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setTokensError('Escolha uma imagem PNG, JPEG ou WEBP.')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setTokensError('A imagem deve ter no máximo 10 MB.')
+      return
+    }
+    setTokenUploadLoading(true)
+    setTokensError('')
+    try {
+      const asset = await uploadRoomAsset(roomId, file)
+      setTokens((current) => [asset, ...current])
+    } catch (error) {
+      setTokensError(error.response?.data?.detail || 'Não foi possível enviar a imagem.')
+    } finally {
+      setTokenUploadLoading(false)
+    }
+  }
+
+  const filteredTokens = tokens.filter((token) =>
+    (token.asset_image_file_name || '').toLowerCase().includes(tokenSearch.trim().toLowerCase())
+  )
+
+  useEffect(() => {
+    let cancelled = false
+    getRoomTabletop(roomId)
+      .then((content) => { if (!cancelled) setTabletopAssets(content.assets || []) })
+      .catch((error) => console.error('Não foi possível carregar os assets da sala.', error))
+    return () => { cancelled = true }
+  }, [roomId])
 
   const gridStyle = useMemo(() => ({
     '--tabletop-scale': zoom / 100,
@@ -316,12 +377,37 @@ const RoomPage = () => {
       try {
         const data = JSON.parse(event.data)
 
+        if (data.event === 'error') {
+          setTokensError(data.payload?.message || 'O servidor não conseguiu atualizar o token.')
+          return
+        }
+
         if (data.event !== 'message') {
           return
         }
 
-        const isChatMessage = data.payload?.type === 'chat.message'
-        const isDiceRoll = data.payload?.type === 'dice.roll'
+        const payload = data.payload
+        const isChatMessage = payload?.type === 'chat.message'
+        const isDiceRoll = payload?.type === 'dice.roll'
+
+        if (payload?.type === 'asset.insert') {
+          setTabletopAssets((current) => current.map((asset) => asset.id === payload.asset_id
+            ? { ...asset, ...payload.asset_data }
+            : asset))
+          // The insert broadcast carries the asset ID and coordinates, but not its image URL.
+          // Refresh the room content so other clients can render newly uploaded assets.
+          getRoomTabletop(roomId)
+            .then((content) => setTabletopAssets(content.assets || []))
+            .catch((error) => console.error('Não foi possível atualizar os assets da sala.', error))
+          return
+        }
+
+        if (payload?.type === 'asset.move') {
+          setTabletopAssets((current) => current.map((asset) => asset.id === payload.asset_id
+            ? { ...asset, position_x: payload.x, position_y: payload.y }
+            : asset))
+          return
+        }
 
         if (!isChatMessage && !isDiceRoll) {
           return
@@ -583,6 +669,111 @@ const RoomPage = () => {
     }))
   }
 
+  const getTabletopPoint = (clientX, clientY) => {
+    const frame = tabletopFrameRef.current
+    if (!frame) return null
+    const bounds = frame.getBoundingClientRect()
+    const scale = zoom / 100
+    return {
+      x: (clientX - (bounds.left + bounds.width / 2 + pan.x)) / scale + 500,
+      y: (clientY - (bounds.top + bounds.height / 2 + pan.y)) / scale + 500,
+    }
+  }
+
+  const handleTokenDragStart = (event, asset) => {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('application/x-room-asset-id', String(asset.id))
+  }
+
+  const handleTabletopDragOver = (event) => {
+    if (event.dataTransfer.types.includes('application/x-room-asset-id')) {
+      event.preventDefault()
+      event.dataTransfer.dropEffect = 'move'
+    }
+  }
+
+  const handleTabletopDrop = (event) => {
+    event.preventDefault()
+    const assetId = Number(event.dataTransfer.getData('application/x-room-asset-id'))
+    const asset = tokens.find((token) => token.id === assetId)
+    const point = getTabletopPoint(event.clientX, event.clientY)
+    const tabletopBounds = tabletopRef.current?.getBoundingClientRect()
+    if (!asset || !point || !tabletopBounds) return
+    if (event.clientX < tabletopBounds.left || event.clientX > tabletopBounds.right || event.clientY < tabletopBounds.top || event.clientY > tabletopBounds.bottom) return
+
+    const socket = websocketRef.current
+    if (socket?.readyState !== WebSocket.OPEN) {
+      setTokensError('A conexão com a sala não está disponível. Tente novamente em instantes.')
+      return
+    }
+
+    const positionX = Math.max(0, Math.min(936, point.x - 32))
+    const positionY = Math.max(0, Math.min(936, point.y - 32))
+    const assetData = {
+      position_x: String(positionX),
+      position_y: String(positionY),
+      layer: 'players',
+    }
+    setTabletopAssets((current) => {
+      const alreadyOnTable = current.some((item) => item.id === asset.id)
+      return alreadyOnTable
+        ? current.map((item) => item.id === asset.id ? { ...item, ...assetData } : item)
+        : [...current, { ...asset, ...assetData }]
+    })
+
+    socket.send(JSON.stringify({ type: 'asset.insert', asset_id: asset.id, asset_data: assetData }))
+  }
+
+  const startAssetDrag = (event, asset) => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    event.stopPropagation()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    setDraggingAssetId(asset.id)
+    assetDragRef.current = {
+      pointerId: event.pointerId,
+      assetId: asset.id,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: Number(asset.position_x) || 0,
+      originY: Number(asset.position_y) || 0,
+    }
+  }
+
+  const moveAssetDrag = (event) => {
+    const activeDrag = assetDragRef.current
+    if (!activeDrag || activeDrag.pointerId !== event.pointerId) return
+    const scale = zoom / 100
+    const positionX = Math.max(0, Math.min(936, activeDrag.originX + (event.clientX - activeDrag.startX) / scale))
+    const positionY = Math.max(0, Math.min(936, activeDrag.originY + (event.clientY - activeDrag.startY) / scale))
+    setTabletopAssets((current) => current.map((asset) => asset.id === activeDrag.assetId
+      ? { ...asset, position_x: String(positionX), position_y: String(positionY) }
+      : asset))
+  }
+
+  const stopAssetDrag = (event) => {
+    const activeDrag = assetDragRef.current
+    if (!activeDrag || activeDrag.pointerId !== event.pointerId) return
+    event.currentTarget.releasePointerCapture(event.pointerId)
+    assetDragRef.current = null
+    setDraggingAssetId(null)
+    const scale = zoom / 100
+    const x = Math.max(0, Math.min(936, activeDrag.originX + (event.clientX - activeDrag.startX) / scale))
+    const y = Math.max(0, Math.min(936, activeDrag.originY + (event.clientY - activeDrag.startY) / scale))
+    const socket = websocketRef.current
+    if (socket?.readyState === WebSocket.OPEN) {
+      setTabletopAssets((current) => current.map((asset) => asset.id === activeDrag.assetId
+        ? { ...asset, position_x: String(x), position_y: String(y) }
+        : asset))
+      socket.send(JSON.stringify({ type: 'asset.move', asset_id: activeDrag.assetId, x: String(x), y: String(y) }))
+    } else {
+      setTabletopAssets((current) => current.map((asset) => asset.id === activeDrag.assetId
+        ? { ...asset, position_x: String(activeDrag.originX), position_y: String(activeDrag.originY) }
+        : asset))
+      setTokensError('A conexão com a sala caiu. A movimentação não foi salva.')
+    }
+  }
+
   const handleAdvancedRollChange = (field, value) => {
     setAdvancedRoll((current) => ({
       ...current,
@@ -622,6 +813,7 @@ const RoomPage = () => {
       />
 
       <section
+        ref={tabletopFrameRef}
         className={cx('tabletopFrame', { isPanning: Boolean(drag) })}
         aria-label="Tabletop"
         onWheel={handleWheel}
@@ -629,8 +821,25 @@ const RoomPage = () => {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onDragOver={handleTabletopDragOver}
+        onDrop={handleTabletopDrop}
       >
-        <div className={s.tabletop} style={gridStyle} />
+        <div ref={tabletopRef} className={s.tabletop} style={gridStyle}>
+          {tabletopAssets.filter((asset) => asset.position_x != null && asset.position_y != null).map((asset) => (
+            <img
+              key={asset.id}
+              className={cx('tabletopAsset', { assetDragging: draggingAssetId === asset.id })}
+              src={asset.asset_image_url}
+              alt={asset.asset_image_file_name || 'Token'}
+              draggable="false"
+              style={{ left: `${asset.position_x}px`, top: `${asset.position_y}px` }}
+              onPointerDown={(event) => startAssetDrag(event, asset)}
+              onPointerMove={moveAssetDrag}
+              onPointerUp={stopAssetDrag}
+              onPointerCancel={stopAssetDrag}
+            />
+          ))}
+        </div>
       </section>
 
       <aside className={s.zoomControl} aria-label="Zoom controls">
@@ -886,13 +1095,44 @@ const RoomPage = () => {
 
       <nav className={s.sideMenu} aria-label="Room panels">
         <div className={s.sideMenuTop}>
-          <IconButton label="Journal" icon="scroll" />
-          <IconButton label="Tokens" icon="pawn" />
-          <IconButton label="Maps" icon="map" />
-          <IconButton label="Notes" icon="notes" />
+          {['Tokens', 'Journal', 'Maps', 'Notes'].map((panel, index) => (
+            <IconButton
+              key={panel}
+              label={panel}
+              icon={['scroll', 'pawn', 'map', 'notes'][index]}
+              pressed={activeSidePanel === panel}
+              onClick={() => setActiveSidePanel((current) => current === panel ? null : panel)}
+            />
+          ))}
         </div>
-        <IconButton label="Settings" icon="settings" />
+        <IconButton label="Settings" icon="settings" pressed={activeSidePanel === 'Settings'} onClick={() => setActiveSidePanel((current) => current === 'Settings' ? null : 'Settings')} />
       </nav>
+
+      <aside className={cx('sidePanel', { sidePanelOpen: Boolean(activeSidePanel) })} aria-hidden={!activeSidePanel}>
+        {activeSidePanel && <div className={s.sidePanelContent}>
+          <h2>{activeSidePanel}</h2>
+          {activeSidePanel === 'Tokens' ? <>
+            <div className={s.tokenSearchRow}>
+              <label className={s.tokenSearch}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
+                <input type="search" placeholder="Search..." aria-label="Pesquisar tokens" value={tokenSearch} onChange={(event) => setTokenSearch(event.target.value)} />
+              </label>
+              <button className={s.tokenUploadButton} type="button" aria-label="Enviar token" title="Enviar token" disabled={tokenUploadLoading} onClick={() => tokenFileInputRef.current?.click()}>
+                {tokenUploadLoading ? <span className={s.uploadSpinner} /> : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v2a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3ZM7 11h10l1.5 8h-13L7 11ZM5 21h14"/></svg>}
+              </button>
+              <input ref={tokenFileInputRef} className={s.visuallyHidden} type="file" accept="image/png,image/jpeg,image/webp" onChange={handleTokenUpload} />
+            </div>
+            <h3 className={s.tokenSectionTitle}>My Tokens</h3>
+            {tokensError && <p className={s.tokenMessage} role="alert">{tokensError}</p>}
+            {tokensLoading ? <p className={s.tokenMessage}>Carregando tokens...</p> : filteredTokens.length ? <ul className={s.tokenList}>
+              {filteredTokens.map((token) => <li className={s.tokenItem} key={token.id} draggable="true" onDragStart={(event) => handleTokenDragStart(event, token)}>
+                <div className={s.tokenThumbnail}>{token.asset_image_url && <img src={token.asset_image_url} alt="" />}</div>
+                <span title={token.asset_image_file_name}>{token.asset_image_file_name || 'Token sem nome'}</span>
+              </li>)}
+            </ul> : <p className={s.tokenMessage}>{tokenSearch ? 'Nenhum token encontrado.' : 'Você ainda não tem tokens.'}</p>}
+          </> : <p className={s.tokenMessage}>Conteúdo de {activeSidePanel}.</p>}
+        </div>}
+      </aside>
     </main>
   )
 }
