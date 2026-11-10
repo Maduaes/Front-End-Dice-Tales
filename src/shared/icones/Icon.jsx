@@ -2,6 +2,7 @@ import * as LucideIcons from "lucide-react";
 
 const icons = {
   circlePlus: LucideIcons.CirclePlus,
+  copyPlus: LucideIcons.CopyPlus,
   swords: LucideIcons.Swords,
   dices: LucideIcons.Dices,
   search: LucideIcons.Search,
@@ -13,6 +14,7 @@ const icons = {
   keyRound: LucideIcons.KeyRound,
   squarePen: LucideIcons.SquarePen,
   trash2: LucideIcons.Trash2,
+  maximize2: LucideIcons.Maximize2,
   github: ({size = 20, props}) => (
     <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" 
     width={size} height={size} {...props} > 

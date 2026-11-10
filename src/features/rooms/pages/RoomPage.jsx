@@ -26,6 +26,8 @@ const chatMenuSafeArea = 88
 const diceMenuWidth = 592
 const diceMenuHeight = 292
 const diceMenuSafeArea = 76
+const gridCellSize = 70
+const defaultTokenSize = 70
 const diceOptions = [
   { sides: 4, label: 'D4', image: diceD4 },
   { sides: 6, label: 'D6', image: diceD6 },
@@ -35,6 +37,40 @@ const diceOptions = [
   { sides: 20, label: 'D20', image: diceD20 },
   { sides: 100, label: 'D100', image: diceD100 },
 ]
+const tabletopLayers = [
+  { value: 'players', label: 'Visible for Players' },
+  { value: 'map', label: 'Map' },
+  { value: 'master', label: 'Only Master' },
+]
+const mapScaleUnits = [
+  { label: 'Meters', value: 'meters' },
+  { label: 'Feet', value: 'feet' },
+  { label: 'Kilometers', value: 'kilometers' },
+  { label: 'Miles', value: 'miles' },
+]
+const getLayerAssets = (assets, layer) => assets
+  .filter((asset) => asset.layer === layer)
+  .sort((first, second) => (Number(first.layer_order) - Number(second.layer_order)) || (Number(first.id) - Number(second.id)))
+const tabletopAssetFields = (asset) => ({
+  id: asset.id,
+  layer: asset.layer,
+  layer_order: Number(asset.layer_order) || 0,
+  position_x: asset.position_x,
+  position_y: asset.position_y,
+  width: asset.width,
+  height: asset.height,
+  visible: asset.visible,
+})
+const clearTabletopFields = (asset) => ({
+  ...asset,
+  layer: null,
+  layer_order: 0,
+  position_x: null,
+  position_y: null,
+  width: null,
+  height: null,
+  visible: null,
+})
 
 const buildWebSocketUrl = (roomCode) => {
   const apiUrl = import.meta.env.VITE_API_URL
@@ -158,6 +194,9 @@ const RoomPage = () => {
   const tabletopFrameRef = useRef(null)
   const tabletopRef = useRef(null)
   const assetDragRef = useRef(null)
+  const assetResizeRef = useRef(null)
+  const marqueeRef = useRef(null)
+  const marqueeCompletedRef = useRef(false)
   const chatDragRef = useRef(null)
   const chatResizeRef = useRef(null)
   const diceDragRef = useRef(null)
@@ -172,11 +211,37 @@ const RoomPage = () => {
   const [tokens, setTokens] = useState([])
   const [tabletopAssets, setTabletopAssets] = useState([])
   const [draggingAssetId, setDraggingAssetId] = useState(null)
+  const [resizingAssetId, setResizingAssetId] = useState(null)
+  const [selectedAssetId, setSelectedAssetId] = useState(null)
+  const [selectedAssetIds, setSelectedAssetIds] = useState([])
+  const [selectionMarquee, setSelectionMarquee] = useState(null)
+  const [mapContextMenu, setMapContextMenu] = useState(null)
+  const [workOnLayer, setWorkOnLayer] = useState('players')
+  const [expandedLayers, setExpandedLayers] = useState({ players: true, map: true, master: true })
+  const [backgroundSettings, setBackgroundSettings] = useState({
+    visibleGrid: true,
+    backgroundColor: '#949494',
+    gridColor: '#ffffff',
+    gridOpacity: 25,
+    pageSizeX: 1920,
+    pageSizeY: 1080,
+    mapScaleValue: 0,
+    mapScaleUnity: 'meters',
+    movementAdaptableToGrid: false,
+  })
+  const [backgroundColorDraft, setBackgroundColorDraft] = useState('#949494')
+  const [gridColorDraft, setGridColorDraft] = useState('#ffffff')
+  const [roomSyncError, setRoomSyncError] = useState('')
   const [tokenSearch, setTokenSearch] = useState('')
   const [tokensLoading, setTokensLoading] = useState(false)
   const [tokenUploadLoading, setTokenUploadLoading] = useState(false)
   const [tokensError, setTokensError] = useState('')
   const tokenFileInputRef = useRef(null)
+  const undoHistoryRef = useRef([])
+  const selectedAssetIdRef = useRef(null)
+  const selectedAssetIdsRef = useRef([])
+  const undoActionRef = useRef(null)
+  const deleteSelectedAssetRef = useRef(null)
   const [chatDraft, setChatDraft] = useState('')
   const [chatStatus, setChatStatus] = useState('idle')
   const [chatMessages, setChatMessages] = useState([])
@@ -195,6 +260,53 @@ const RoomPage = () => {
     sides: 20,
     bonus: 0,
   })
+
+  useEffect(() => {
+    undoHistoryRef.current = []
+    selectedAssetIdRef.current = null
+    selectedAssetIdsRef.current = []
+    setSelectedAssetId(null)
+    setSelectedAssetIds([])
+  }, [roomId])
+
+  useEffect(() => {
+    if (!mapContextMenu) return undefined
+    const dismissMenu = (event) => {
+      if (!event.target.closest?.('[data-map-context-menu]')) setMapContextMenu(null)
+    }
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') setMapContextMenu(null)
+    }
+    document.addEventListener('pointerdown', dismissMenu)
+    window.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('pointerdown', dismissMenu)
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [mapContextMenu])
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (event) => {
+      const target = event.target
+      const isEditable = target instanceof HTMLElement && (
+        target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
+      )
+      if (isEditable) return
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && !event.shiftKey) {
+        event.preventDefault()
+        undoActionRef.current?.()
+        return
+      }
+
+      if ((event.key === 'Backspace' || event.key === 'Delete') && (selectedAssetIdRef.current != null || selectedAssetIdsRef.current.length > 0)) {
+        event.preventDefault()
+        deleteSelectedAssetRef.current?.(selectedAssetIdsRef.current.length ? selectedAssetIdsRef.current : [selectedAssetIdRef.current])
+      }
+    }
+    window.addEventListener('keydown', handleGlobalKeyDown)
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown)
+  }, [])
 
   useEffect(() => {
     if (activeSidePanel !== 'Tokens' || !roomId) return
@@ -248,7 +360,239 @@ const RoomPage = () => {
     '--tabletop-scale': zoom / 100,
     '--tabletop-x': `${pan.x}px`,
     '--tabletop-y': `${pan.y}px`,
-  }), [pan.x, pan.y, zoom])
+    '--tabletop-width': `${backgroundSettings.pageSizeX}px`,
+    '--tabletop-height': `${backgroundSettings.pageSizeY}px`,
+    backgroundColor: backgroundSettings.backgroundColor,
+  }), [backgroundSettings.backgroundColor, backgroundSettings.pageSizeX, backgroundSettings.pageSizeY, pan.x, pan.y, zoom])
+
+  const sendRoomMessage = (message) => {
+    const socket = websocketRef.current
+    if (socket?.readyState !== WebSocket.OPEN) {
+      setRoomSyncError('A conexão com a sala não está disponível. Tente novamente em instantes.')
+      return false
+    }
+    socket.send(JSON.stringify(message))
+    setRoomSyncError('')
+    return true
+  }
+
+  const applyBackgroundSettings = (settings) => {
+    const message = { type: 'background.change_settings', ...settings }
+    if (!sendRoomMessage(message)) return false
+    setBackgroundSettings((current) => ({
+      ...current,
+      ...(settings.visible_grid !== undefined && { visibleGrid: settings.visible_grid }),
+      ...(settings.background_color !== undefined && { backgroundColor: settings.background_color }),
+      ...(settings.grid_color !== undefined && { gridColor: settings.grid_color }),
+      ...(settings.grid_opacity !== undefined && { gridOpacity: settings.grid_opacity }),
+      ...(settings.page_size_x !== undefined && { pageSizeX: settings.page_size_x }),
+      ...(settings.page_size_y !== undefined && { pageSizeY: settings.page_size_y }),
+      ...(settings.map_scale_value !== undefined && { mapScaleValue: settings.map_scale_value }),
+      ...(settings.map_scale_unity !== undefined && { mapScaleUnity: settings.map_scale_unity }),
+      ...(settings.movement_adaptable_to_grid !== undefined && { movementAdaptableToGrid: settings.movement_adaptable_to_grid }),
+    }))
+    if (settings.grid_color !== undefined) setGridColorDraft(settings.grid_color)
+    return true
+  }
+
+  const fitTabletopToMap = (asset) => {
+    if (!asset || asset.layer !== 'map') return false
+    const image = tabletopRef.current?.querySelector(`[data-asset-id="${asset.id}"] img`)
+    const width = Math.ceil(Number(asset.width) || image?.naturalWidth || 0)
+    const height = Math.ceil(Number(asset.height) || image?.naturalHeight || 0)
+    if (width < 1 || height < 1) return false
+    return applyBackgroundSettings({ page_size_x: width, page_size_y: height })
+  }
+
+  const removeAssetFromTabletop = (assetIds, recordUndo = true) => {
+    const ids = (Array.isArray(assetIds) ? assetIds : [assetIds]).map(Number)
+    const assets = tabletopAssets.filter((item) => ids.includes(item.id) && item.layer != null)
+    if (!assets.length) return false
+    const socket = websocketRef.current
+    if (socket?.readyState !== WebSocket.OPEN) {
+      setRoomSyncError('A conexão com a sala não está disponível. Tente novamente em instantes.')
+      return false
+    }
+    assets.forEach((asset) => socket.send(JSON.stringify({ type: 'asset.remove_from_tabletop', asset_id: asset.id })))
+    if (recordUndo) undoHistoryRef.current.push({ type: 'restore-placement-group', assets: assets.map(tabletopAssetFields) })
+    setTabletopAssets((current) => current.map((item) => ids.includes(item.id) ? clearTabletopFields(item) : item))
+    if (ids.includes(selectedAssetIdRef.current)) selectedAssetIdRef.current = null
+    selectedAssetIdsRef.current = selectedAssetIdsRef.current.filter((id) => !ids.includes(id))
+    setSelectedAssetIds(selectedAssetIdsRef.current)
+    setSelectedAssetId((current) => ids.includes(current) ? null : current)
+    return true
+  }
+
+  deleteSelectedAssetRef.current = removeAssetFromTabletop
+
+  const undoLastAction = () => {
+    const action = undoHistoryRef.current.pop()
+    if (!action) return
+    const failAndRestoreHistory = () => { undoHistoryRef.current.push(action) }
+
+    if (action.type === 'restore-placement' || action.type === 'restore-placement-group') {
+      const assets = action.type === 'restore-placement' ? [action.asset] : action.assets
+      const socket = websocketRef.current
+      if (socket?.readyState !== WebSocket.OPEN) return failAndRestoreHistory()
+      assets.forEach((asset) => {
+        const { id, ...assetData } = tabletopAssetFields(asset)
+        socket.send(JSON.stringify({ type: 'asset.insert', asset_id: id, asset_data: assetData }))
+      })
+      setTabletopAssets((current) => current.map((item) => {
+        const asset = assets.find((candidate) => candidate.id === item.id)
+        return asset ? { ...item, ...tabletopAssetFields(asset) } : item
+      }))
+      selectedAssetIdsRef.current = assets.map((asset) => asset.id)
+      setSelectedAssetIds(selectedAssetIdsRef.current)
+      selectedAssetIdRef.current = assets[0]?.id ?? null
+      setSelectedAssetId(selectedAssetIdRef.current)
+      return
+    }
+
+    if (action.type === 'remove-placement') {
+      if (!removeAssetFromTabletop(action.assetId, false)) return failAndRestoreHistory()
+      return
+    }
+
+    if (action.type === 'move') {
+      if (!sendRoomMessage({ type: 'asset.move', asset_id: action.assetId, x: action.x, y: action.y })) return failAndRestoreHistory()
+      setTabletopAssets((current) => current.map((item) => item.id === action.assetId
+        ? { ...item, position_x: action.x, position_y: action.y }
+        : item))
+      return
+    }
+
+    if (action.type === 'move-group' || action.type === 'resize-group') {
+      const socket = websocketRef.current
+      if (socket?.readyState !== WebSocket.OPEN) return failAndRestoreHistory()
+      action.assets.forEach((asset) => {
+        if (action.type === 'resize-group') socket.send(JSON.stringify({ type: 'asset.change_size', asset_id: asset.id, width: asset.width, height: asset.height }))
+        socket.send(JSON.stringify({ type: 'asset.move', asset_id: asset.id, x: asset.x, y: asset.y }))
+      })
+      setTabletopAssets((current) => current.map((item) => {
+        const previous = action.assets.find((asset) => asset.id === item.id)
+        return previous ? { ...item, position_x: previous.x, position_y: previous.y, ...(previous.width && { width: previous.width }), ...(previous.height && { height: previous.height }) } : item
+      }))
+      return
+    }
+
+    if (action.type === 'resize') {
+      if (!sendRoomMessage({ type: 'asset.change_size', asset_id: action.assetId, width: action.width, height: action.height })) return failAndRestoreHistory()
+      if (action.x != null && action.y != null) {
+        sendRoomMessage({ type: 'asset.move', asset_id: action.assetId, x: action.x, y: action.y })
+      }
+      setTabletopAssets((current) => current.map((item) => item.id === action.assetId
+        ? { ...item, width: action.width, height: action.height, ...(action.x != null && { position_x: action.x }), ...(action.y != null && { position_y: action.y }) }
+        : item))
+      return
+    }
+
+    if (action.type === 'reorder') {
+      const socket = websocketRef.current
+      if (socket?.readyState !== WebSocket.OPEN) return failAndRestoreHistory()
+      action.assets.forEach((asset) => {
+        socket.send(JSON.stringify({ type: 'asset.change_order', asset_id: asset.id, layer: asset.layer, layer_order: asset.layer_order }))
+      })
+      setTabletopAssets((current) => current.map((item) => {
+        const previous = action.assets.find((asset) => asset.id === item.id)
+        return previous ? { ...item, layer: previous.layer, layer_order: previous.layer_order } : item
+      }))
+    }
+  }
+
+  undoActionRef.current = undoLastAction
+
+  const reorderAsset = (assetId, targetLayer, targetAssetId = null, insertBefore = true) => {
+    const draggedAsset = tabletopAssets.find((asset) => asset.id === assetId)
+    if (!draggedAsset) return
+    const sourceLayer = draggedAsset.layer
+    const sourceAssets = getLayerAssets(tabletopAssets, sourceLayer).filter((asset) => asset.id !== assetId)
+    const targetAssets = sourceLayer === targetLayer
+      ? sourceAssets
+      : getLayerAssets(tabletopAssets, targetLayer)
+    const targetIndex = targetAssetId == null
+      ? targetAssets.length
+      : Math.max(0, targetAssets.findIndex((asset) => asset.id === targetAssetId) + (insertBefore ? 0 : 1))
+    targetAssets.splice(targetIndex, 0, { ...draggedAsset, layer: targetLayer })
+
+    const affectedIds = new Set([assetId])
+    if (sourceLayer !== targetLayer) sourceAssets.forEach((asset) => affectedIds.add(asset.id))
+    targetAssets.forEach((asset) => affectedIds.add(asset.id))
+    const oldStates = tabletopAssets.filter((asset) => affectedIds.has(asset.id)).map((asset) => ({
+      id: asset.id,
+      layer: asset.layer,
+      layer_order: Number(asset.layer_order) || 0,
+    }))
+    const nextStates = []
+    if (sourceLayer !== targetLayer) {
+      sourceAssets.forEach((asset, index) => nextStates.push({ id: asset.id, layer: sourceLayer, layer_order: index }))
+    }
+    targetAssets.forEach((asset, index) => nextStates.push({ id: asset.id, layer: targetLayer, layer_order: index }))
+    const changedStates = nextStates.filter((next) => {
+      const previous = oldStates.find((asset) => asset.id === next.id)
+      return previous && (previous.layer !== next.layer || previous.layer_order !== next.layer_order)
+    })
+    if (!changedStates.length) return
+
+    const socket = websocketRef.current
+    if (socket?.readyState !== WebSocket.OPEN) {
+      setRoomSyncError('A conexão com a sala não está disponível. Tente novamente em instantes.')
+      return
+    }
+    changedStates.forEach((asset) => {
+      socket.send(JSON.stringify({ type: 'asset.change_order', asset_id: asset.id, layer: asset.layer, layer_order: asset.layer_order }))
+    })
+    undoHistoryRef.current.push({ type: 'reorder', assets: oldStates })
+    setTabletopAssets((current) => current.map((asset) => {
+      const next = nextStates.find((item) => item.id === asset.id)
+      return next ? { ...asset, layer: next.layer, layer_order: next.layer_order } : asset
+    }))
+    setRoomSyncError('')
+  }
+
+  const changeAssetVisibility = (asset) => {
+    const visible = asset.visible === false
+    if (!sendRoomMessage({ type: 'asset.change_visibility', asset_id: asset.id, visible })) return
+    setTabletopAssets((current) => current.map((item) => item.id === asset.id ? { ...item, visible } : item))
+  }
+
+  const changeMovementAdaptability = (enabled) => {
+    if (!applyBackgroundSettings({ movement_adaptable_to_grid: enabled }) || !enabled) return
+    tabletopAssets.forEach((asset) => {
+      if (asset.position_x == null || asset.position_y == null) return
+      const width = Math.max(gridCellSize, Math.ceil((Number(asset.width) || defaultTokenSize) / gridCellSize) * gridCellSize)
+      const height = Math.max(gridCellSize, Math.ceil((Number(asset.height) || defaultTokenSize) / gridCellSize) * gridCellSize)
+      const maxX = Math.max(0, backgroundSettings.pageSizeX - width)
+      const maxY = Math.max(0, backgroundSettings.pageSizeY - height)
+      const x = Math.max(0, Math.min(Math.floor(maxX / gridCellSize) * gridCellSize, Math.round((Number(asset.position_x) || 0) / gridCellSize) * gridCellSize))
+      const y = Math.max(0, Math.min(Math.floor(maxY / gridCellSize) * gridCellSize, Math.round((Number(asset.position_y) || 0) / gridCellSize) * gridCellSize))
+      setTabletopAssets((current) => current.map((item) => item.id === asset.id
+        ? { ...item, position_x: String(x), position_y: String(y), width: String(width), height: String(height) }
+        : item))
+      if (width !== Number(asset.width) || height !== Number(asset.height)) {
+        sendRoomMessage({ type: 'asset.change_size', asset_id: asset.id, width: String(width), height: String(height) })
+      }
+      if (x !== Number(asset.position_x) || y !== Number(asset.position_y)) {
+        sendRoomMessage({ type: 'asset.move', asset_id: asset.id, x: String(x), y: String(y) })
+      }
+    })
+  }
+
+  const handleLayerDrop = (event, layer) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const assetId = Number(event.dataTransfer.getData('application/x-room-asset-id'))
+    if (assetId && tabletopAssets.some((asset) => asset.id === assetId)) reorderAsset(assetId, layer)
+  }
+
+  const handleLayerAssetDrop = (event, targetAsset, layer) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const assetId = Number(event.dataTransfer.getData('application/x-room-asset-id'))
+    if (!assetId || assetId === targetAsset.id) return
+    const bounds = event.currentTarget.getBoundingClientRect()
+    reorderAsset(assetId, layer, targetAsset.id, event.clientY < bounds.top + bounds.height / 2)
+  }
 
   const changeZoom = (direction) => {
     setZoom((current) => Math.min(maxZoom, Math.max(minZoom, current + direction * zoomStep)))
@@ -378,7 +722,7 @@ const RoomPage = () => {
         const data = JSON.parse(event.data)
 
         if (data.event === 'error') {
-          setTokensError(data.payload?.message || 'O servidor não conseguiu atualizar o token.')
+          setRoomSyncError(data.payload?.message || 'O servidor não conseguiu atualizar a sala.')
           return
         }
 
@@ -391,14 +735,26 @@ const RoomPage = () => {
         const isDiceRoll = payload?.type === 'dice.roll'
 
         if (payload?.type === 'asset.insert') {
-          setTabletopAssets((current) => current.map((asset) => asset.id === payload.asset_id
-            ? { ...asset, ...payload.asset_data }
-            : asset))
-          // The insert broadcast carries the asset ID and coordinates, but not its image URL.
-          // Refresh the room content so other clients can render newly uploaded assets.
+          setTabletopAssets((current) => {
+            const hasAsset = current.some((asset) => asset.id === payload.asset_id)
+            return hasAsset
+              ? current.map((asset) => asset.id === payload.asset_id ? { ...asset, ...payload.asset_data } : asset)
+              : current
+          })
+          // Hydrate just this asset without replacing other tokens' current sizes and placements.
           getRoomTabletop(roomId)
-            .then((content) => setTabletopAssets(content.assets || []))
-            .catch((error) => console.error('Não foi possível atualizar os assets da sala.', error))
+            .then((content) => {
+              const insertedAsset = content.assets?.find((asset) => asset.id === payload.asset_id)
+              if (!insertedAsset) return
+              setTabletopAssets((current) => {
+                const existing = current.find((asset) => asset.id === insertedAsset.id)
+                if (existing) return current.map((asset) => asset.id === insertedAsset.id
+                  ? { ...existing, ...insertedAsset, ...payload.asset_data }
+                  : asset)
+                return [...current, { ...insertedAsset, ...payload.asset_data }]
+              })
+            })
+            .catch((error) => console.error('Não foi possível atualizar o asset inserido.', error))
           return
         }
 
@@ -406,6 +762,66 @@ const RoomPage = () => {
           setTabletopAssets((current) => current.map((asset) => asset.id === payload.asset_id
             ? { ...asset, position_x: payload.x, position_y: payload.y }
             : asset))
+          return
+        }
+
+        if (payload?.type === 'asset.change_layer') {
+          setTabletopAssets((current) => current.map((asset) => asset.id === payload.asset_id
+            ? { ...asset, layer: payload.layer }
+            : asset))
+          return
+        }
+
+        if (payload?.type === 'asset.change_order') {
+          setTabletopAssets((current) => current.map((asset) => asset.id === payload.asset_id
+            ? { ...asset, layer: payload.layer, layer_order: payload.layer_order }
+            : asset))
+          return
+        }
+
+        if (payload?.type === 'asset.remove_from_tabletop') {
+          setTabletopAssets((current) => current.map((asset) => asset.id === payload.asset_id
+            ? clearTabletopFields(asset)
+            : asset))
+          setSelectedAssetId((current) => current === payload.asset_id ? null : current)
+          if (selectedAssetIdRef.current === payload.asset_id) selectedAssetIdRef.current = null
+          setSelectedAssetIds((current) => {
+            const next = current.filter((id) => id !== payload.asset_id)
+            selectedAssetIdsRef.current = next
+            return next
+          })
+          return
+        }
+
+        if (payload?.type === 'asset.change_visibility') {
+          setTabletopAssets((current) => current.map((asset) => asset.id === payload.asset_id
+            ? { ...asset, visible: payload.visible }
+            : asset))
+          return
+        }
+
+        if (payload?.type === 'asset.change_size') {
+          setTabletopAssets((current) => current.map((asset) => asset.id === payload.asset_id
+            ? { ...asset, width: payload.width, height: payload.height }
+            : asset))
+          return
+        }
+
+        if (payload?.type === 'background.change_settings') {
+          setBackgroundSettings((current) => ({
+            ...current,
+            ...(payload.visible_grid != null && { visibleGrid: payload.visible_grid }),
+            ...(payload.background_color != null && { backgroundColor: payload.background_color }),
+            ...(payload.grid_color != null && { gridColor: payload.grid_color }),
+            ...(payload.grid_opacity != null && { gridOpacity: payload.grid_opacity }),
+            ...(payload.page_size_x != null && { pageSizeX: payload.page_size_x }),
+            ...(payload.page_size_y != null && { pageSizeY: payload.page_size_y }),
+            ...(payload.map_scale_value != null && { mapScaleValue: payload.map_scale_value }),
+            ...(payload.map_scale_unity != null && { mapScaleUnity: payload.map_scale_unity }),
+            ...(payload.movement_adaptable_to_grid != null && { movementAdaptableToGrid: payload.movement_adaptable_to_grid }),
+          }))
+          if (payload.background_color) setBackgroundColorDraft(payload.background_color)
+          if (payload.grid_color) setGridColorDraft(payload.grid_color)
           return
         }
 
@@ -476,7 +892,27 @@ const RoomPage = () => {
     })
   }
 
+  const startSelectionMarquee = (event) => {
+    if (event.button !== 0 || event.target.closest?.('.tabletopAsset')) return
+    event.preventDefault()
+    const bounds = tabletopFrameRef.current.getBoundingClientRect()
+    marqueeRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, frameLeft: bounds.left, frameTop: bounds.top }
+    marqueeCompletedRef.current = false
+    tabletopFrameRef.current.setPointerCapture(event.pointerId)
+    setSelectionMarquee({ left: event.clientX - bounds.left, top: event.clientY - bounds.top, width: 0, height: 0 })
+  }
+
   const handlePointerMove = (event) => {
+    if (marqueeRef.current?.pointerId === event.pointerId) {
+      const marquee = marqueeRef.current
+      setSelectionMarquee({
+        left: Math.min(marquee.startX, event.clientX) - marquee.frameLeft,
+        top: Math.min(marquee.startY, event.clientY) - marquee.frameTop,
+        width: Math.abs(event.clientX - marquee.startX),
+        height: Math.abs(event.clientY - marquee.startY),
+      })
+      return
+    }
     if (!drag || event.pointerId !== drag.pointerId) {
       return
     }
@@ -488,6 +924,28 @@ const RoomPage = () => {
   }
 
   const handlePointerUp = (event) => {
+    if (marqueeRef.current?.pointerId === event.pointerId) {
+      const marquee = marqueeRef.current
+      const left = Math.min(marquee.startX, event.clientX)
+      const right = Math.max(marquee.startX, event.clientX)
+      const top = Math.min(marquee.startY, event.clientY)
+      const bottom = Math.max(marquee.startY, event.clientY)
+      const selectedIds = [...tabletopRef.current.querySelectorAll('[data-asset-id]')]
+        .filter((element) => {
+          const bounds = element.getBoundingClientRect()
+          return bounds.right >= left && bounds.left <= right && bounds.bottom >= top && bounds.top <= bottom
+        })
+        .map((element) => Number(element.dataset.assetId))
+      marqueeCompletedRef.current = Math.abs(event.clientX - marquee.startX) > 4 || Math.abs(event.clientY - marquee.startY) > 4
+      setSelectedAssetIds(selectedIds)
+      selectedAssetIdsRef.current = selectedIds
+      setSelectedAssetId(selectedIds[0] ?? null)
+      selectedAssetIdRef.current = selectedIds[0] ?? null
+      tabletopFrameRef.current.releasePointerCapture(event.pointerId)
+      marqueeRef.current = null
+      setSelectionMarquee(null)
+      return
+    }
     if (!drag || event.pointerId !== drag.pointerId) {
       return
     }
@@ -670,19 +1128,23 @@ const RoomPage = () => {
   }
 
   const getTabletopPoint = (clientX, clientY) => {
-    const frame = tabletopFrameRef.current
-    if (!frame) return null
-    const bounds = frame.getBoundingClientRect()
-    const scale = zoom / 100
+    const tabletop = tabletopRef.current
+    if (!tabletop) return null
+    const bounds = tabletop.getBoundingClientRect()
     return {
-      x: (clientX - (bounds.left + bounds.width / 2 + pan.x)) / scale + 500,
-      y: (clientY - (bounds.top + bounds.height / 2 + pan.y)) / scale + 500,
+      x: (clientX - bounds.left) / (bounds.width / backgroundSettings.pageSizeX),
+      y: (clientY - bounds.top) / (bounds.height / backgroundSettings.pageSizeY),
     }
   }
 
   const handleTokenDragStart = (event, asset) => {
     event.dataTransfer.effectAllowed = 'move'
     event.dataTransfer.setData('application/x-room-asset-id', String(asset.id))
+    const image = event.currentTarget.querySelector('img')
+    event.dataTransfer.setData('application/x-room-asset-size', JSON.stringify({
+      width: image?.naturalWidth || asset.width || defaultTokenSize,
+      height: image?.naturalHeight || asset.height || defaultTokenSize,
+    }))
   }
 
   const handleTabletopDragOver = (event) => {
@@ -701,42 +1163,91 @@ const RoomPage = () => {
     if (!asset || !point || !tabletopBounds) return
     if (event.clientX < tabletopBounds.left || event.clientX > tabletopBounds.right || event.clientY < tabletopBounds.top || event.clientY > tabletopBounds.bottom) return
 
-    const socket = websocketRef.current
-    if (socket?.readyState !== WebSocket.OPEN) {
-      setTokensError('A conexão com a sala não está disponível. Tente novamente em instantes.')
-      return
+    const dragSize = (() => {
+      try { return JSON.parse(event.dataTransfer.getData('application/x-room-asset-size') || '{}') }
+      catch { return {} }
+    })()
+    let width = workOnLayer === 'map'
+      ? Number((asset.layer === 'map' && asset.width) || dragSize.width || asset.width) || defaultTokenSize
+      : defaultTokenSize
+    let height = workOnLayer === 'map'
+      ? Number((asset.layer === 'map' && asset.height) || dragSize.height || asset.height) || defaultTokenSize
+      : defaultTokenSize
+    if (backgroundSettings.movementAdaptableToGrid) {
+      width = Math.max(gridCellSize, Math.ceil(width / gridCellSize) * gridCellSize)
+      height = Math.max(gridCellSize, Math.ceil(height / gridCellSize) * gridCellSize)
     }
-
-    const positionX = Math.max(0, Math.min(936, point.x - 32))
-    const positionY = Math.max(0, Math.min(936, point.y - 32))
+    const maxX = Math.max(0, backgroundSettings.pageSizeX - width)
+    const maxY = Math.max(0, backgroundSettings.pageSizeY - height)
+    const rawX = point.x - width / 2
+    const rawY = point.y - height / 2
+    const positionX = backgroundSettings.movementAdaptableToGrid
+      ? Math.min(Math.floor(maxX / gridCellSize) * gridCellSize, Math.max(0, Math.round(rawX / gridCellSize) * gridCellSize))
+      : Math.max(0, Math.min(maxX, rawX))
+    const positionY = backgroundSettings.movementAdaptableToGrid
+      ? Math.min(Math.floor(maxY / gridCellSize) * gridCellSize, Math.max(0, Math.round(rawY / gridCellSize) * gridCellSize))
+      : Math.max(0, Math.min(maxY, rawY))
+    const layerOrder = getLayerAssets(tabletopAssets, workOnLayer).length
     const assetData = {
       position_x: String(positionX),
       position_y: String(positionY),
-      layer: 'players',
+      width: String(width),
+      height: String(height),
+      layer: workOnLayer,
+      layer_order: layerOrder,
     }
+    if (!sendRoomMessage({ type: 'asset.insert', asset_id: asset.id, asset_data: assetData })) return
+    const currentPlacement = tabletopAssets.find((item) => item.id === asset.id && item.layer != null)
     setTabletopAssets((current) => {
       const alreadyOnTable = current.some((item) => item.id === asset.id)
       return alreadyOnTable
         ? current.map((item) => item.id === asset.id ? { ...item, ...assetData } : item)
         : [...current, { ...asset, ...assetData }]
     })
+    undoHistoryRef.current.push(currentPlacement
+      ? { type: 'restore-placement', asset: tabletopAssetFields(currentPlacement) }
+      : { type: 'remove-placement', assetId: asset.id })
+    selectedAssetIdRef.current = asset.id
+    setSelectedAssetId(asset.id)
+    setSelectedAssetIds([asset.id])
+    selectedAssetIdsRef.current = [asset.id]
+  }
 
-    socket.send(JSON.stringify({ type: 'asset.insert', asset_id: asset.id, asset_data: assetData }))
+  const constrainAssetPosition = (value, maxValue) => {
+    const max = Math.max(0, maxValue)
+    if (!backgroundSettings.movementAdaptableToGrid) return Math.max(0, Math.min(max, value))
+    return Math.max(0, Math.min(Math.floor(max / gridCellSize) * gridCellSize, Math.round(value / gridCellSize) * gridCellSize))
   }
 
   const startAssetDrag = (event, asset) => {
     if (event.button !== 0) return
+    selectedAssetIdRef.current = asset.id
+    const currentSelection = selectedAssetIds.includes(asset.id) ? selectedAssetIds : [asset.id]
+    setSelectedAssetId(asset.id)
+    setSelectedAssetIds(currentSelection)
+    selectedAssetIdsRef.current = currentSelection
+    if (asset.layer !== workOnLayer) return
     event.preventDefault()
     event.stopPropagation()
     event.currentTarget.setPointerCapture(event.pointerId)
     setDraggingAssetId(asset.id)
+    const movableAssets = tabletopAssets.filter((item) => currentSelection.includes(item.id) && item.layer === workOnLayer)
     assetDragRef.current = {
       pointerId: event.pointerId,
       assetId: asset.id,
+      assets: movableAssets.map((item) => ({
+        id: item.id,
+        originX: Number(item.position_x) || 0,
+        originY: Number(item.position_y) || 0,
+        width: Number(item.width) || defaultTokenSize,
+        height: Number(item.height) || defaultTokenSize,
+      })),
       startX: event.clientX,
       startY: event.clientY,
       originX: Number(asset.position_x) || 0,
       originY: Number(asset.position_y) || 0,
+      width: Number(asset.width) || defaultTokenSize,
+      height: Number(asset.height) || defaultTokenSize,
     }
   }
 
@@ -744,11 +1255,18 @@ const RoomPage = () => {
     const activeDrag = assetDragRef.current
     if (!activeDrag || activeDrag.pointerId !== event.pointerId) return
     const scale = zoom / 100
-    const positionX = Math.max(0, Math.min(936, activeDrag.originX + (event.clientX - activeDrag.startX) / scale))
-    const positionY = Math.max(0, Math.min(936, activeDrag.originY + (event.clientY - activeDrag.startY) / scale))
-    setTabletopAssets((current) => current.map((asset) => asset.id === activeDrag.assetId
-      ? { ...asset, position_x: String(positionX), position_y: String(positionY) }
-      : asset))
+    const dx = (event.clientX - activeDrag.startX) / scale
+    const dy = (event.clientY - activeDrag.startY) / scale
+    const bounds = activeDrag.assets.reduce((result, item) => ({
+      minX: Math.min(result.minX, item.originX), minY: Math.min(result.minY, item.originY),
+      maxX: Math.max(result.maxX, item.originX + item.width), maxY: Math.max(result.maxY, item.originY + item.height),
+    }), { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity })
+    const moveX = constrainAssetPosition(bounds.minX + dx, backgroundSettings.pageSizeX - (bounds.maxX - bounds.minX)) - bounds.minX
+    const moveY = constrainAssetPosition(bounds.minY + dy, backgroundSettings.pageSizeY - (bounds.maxY - bounds.minY)) - bounds.minY
+    setTabletopAssets((current) => current.map((asset) => {
+      const origin = activeDrag.assets.find((item) => item.id === asset.id)
+      return origin ? { ...asset, position_x: String(origin.originX + moveX), position_y: String(origin.originY + moveY) } : asset
+    }))
   }
 
   const stopAssetDrag = (event) => {
@@ -758,20 +1276,212 @@ const RoomPage = () => {
     assetDragRef.current = null
     setDraggingAssetId(null)
     const scale = zoom / 100
-    const x = Math.max(0, Math.min(936, activeDrag.originX + (event.clientX - activeDrag.startX) / scale))
-    const y = Math.max(0, Math.min(936, activeDrag.originY + (event.clientY - activeDrag.startY) / scale))
+    const dx = (event.clientX - activeDrag.startX) / scale
+    const dy = (event.clientY - activeDrag.startY) / scale
+    const bounds = activeDrag.assets.reduce((result, item) => ({
+      minX: Math.min(result.minX, item.originX), minY: Math.min(result.minY, item.originY),
+      maxX: Math.max(result.maxX, item.originX + item.width), maxY: Math.max(result.maxY, item.originY + item.height),
+    }), { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity })
+    const moveX = constrainAssetPosition(bounds.minX + dx, backgroundSettings.pageSizeX - (bounds.maxX - bounds.minX)) - bounds.minX
+    const moveY = constrainAssetPosition(bounds.minY + dy, backgroundSettings.pageSizeY - (bounds.maxY - bounds.minY)) - bounds.minY
     const socket = websocketRef.current
     if (socket?.readyState === WebSocket.OPEN) {
-      setTabletopAssets((current) => current.map((asset) => asset.id === activeDrag.assetId
-        ? { ...asset, position_x: String(x), position_y: String(y) }
-        : asset))
-      socket.send(JSON.stringify({ type: 'asset.move', asset_id: activeDrag.assetId, x: String(x), y: String(y) }))
+      const moved = activeDrag.assets.filter((item) => item.originX + moveX !== item.originX || item.originY + moveY !== item.originY)
+      if (moved.length) {
+        undoHistoryRef.current.push({ type: 'move-group', assets: moved.map((item) => ({ id: item.id, x: String(item.originX), y: String(item.originY) })) })
+      }
+      setTabletopAssets((current) => current.map((asset) => {
+        const origin = activeDrag.assets.find((item) => item.id === asset.id)
+        return origin ? { ...asset, position_x: String(origin.originX + moveX), position_y: String(origin.originY + moveY) } : asset
+      }))
+      activeDrag.assets.forEach((item) => socket.send(JSON.stringify({ type: 'asset.move', asset_id: item.id, x: String(item.originX + moveX), y: String(item.originY + moveY) })))
     } else {
-      setTabletopAssets((current) => current.map((asset) => asset.id === activeDrag.assetId
-        ? { ...asset, position_x: String(activeDrag.originX), position_y: String(activeDrag.originY) }
-        : asset))
+      setTabletopAssets((current) => current.map((asset) => {
+        const origin = activeDrag.assets.find((item) => item.id === asset.id)
+        return origin ? { ...asset, position_x: String(origin.originX), position_y: String(origin.originY) } : asset
+      }))
       setTokensError('A conexão com a sala caiu. A movimentação não foi salva.')
     }
+  }
+
+  const calculateAssetResize = (event, activeResize) => {
+    if (activeResize.members) {
+      const deltaX = (event.clientX - activeResize.startX) / (zoom / 100)
+      const deltaY = (event.clientY - activeResize.startY) / (zoom / 100)
+      const { direction, originX, originY, originWidth, originHeight } = activeResize
+      let width = originWidth
+      let height = originHeight
+      if (direction.includes('e')) width += deltaX
+      if (direction.includes('w')) width -= deltaX
+      if (direction.includes('s')) height += deltaY
+      if (direction.includes('n')) height -= deltaY
+      if (direction.length === 2) {
+        const factor = Math.max(0.1, 1 + ((width / originWidth - 1) + (height / originHeight - 1)) / 2)
+        width = originWidth * factor
+        height = originHeight * factor
+      }
+      width = Math.max(20, Math.min(width, backgroundSettings.pageSizeX))
+      height = Math.max(20, Math.min(height, backgroundSettings.pageSizeY))
+      let x = direction.includes('w') ? originX + originWidth - width : originX
+      let y = direction.includes('n') ? originY + originHeight - height : originY
+      const clampedX = constrainAssetPosition(x, backgroundSettings.pageSizeX - width)
+      const clampedY = constrainAssetPosition(y, backgroundSettings.pageSizeY - height)
+      const scaleX = width / originWidth
+      const scaleY = height / originHeight
+      return activeResize.members.map((member) => ({
+        id: member.id,
+        x: clampedX + (member.x - originX) * scaleX,
+        y: clampedY + (member.y - originY) * scaleY,
+        width: member.width * scaleX,
+        height: member.height * scaleY,
+      }))
+    }
+    const scale = zoom / 100
+    const deltaX = (event.clientX - activeResize.startX) / scale
+    const deltaY = (event.clientY - activeResize.startY) / scale
+    const { direction, originX, originY, originWidth, originHeight } = activeResize
+    let width = originWidth
+    let height = originHeight
+    let x = originX
+    let y = originY
+    const horizontal = direction.includes('e') ? deltaX : direction.includes('w') ? -deltaX : 0
+    const vertical = direction.includes('s') ? deltaY : direction.includes('n') ? -deltaY : 0
+
+    if (direction.length === 2) {
+      const proportionalChange = (horizontal / originWidth + vertical / originHeight) / 2
+      const factor = Math.max(0.1, 1 + proportionalChange)
+      width = originWidth * factor
+      height = originHeight * factor
+    } else if (direction === 'e' || direction === 'w') {
+      width = originWidth + horizontal
+    } else {
+      height = originHeight + vertical
+    }
+
+    if (backgroundSettings.movementAdaptableToGrid) {
+      width = Math.max(gridCellSize, Math.round(width / gridCellSize) * gridCellSize)
+      height = Math.max(gridCellSize, Math.round(height / gridCellSize) * gridCellSize)
+    } else {
+      width = Math.max(20, width)
+      height = Math.max(20, height)
+    }
+    width = Math.min(width, backgroundSettings.pageSizeX)
+    height = Math.min(height, backgroundSettings.pageSizeY)
+
+    if (direction.includes('w')) x = originX + originWidth - width
+    if (direction.includes('n')) y = originY + originHeight - height
+    x = constrainAssetPosition(x, backgroundSettings.pageSizeX - width)
+    y = constrainAssetPosition(y, backgroundSettings.pageSizeY - height)
+    return { x, y, width, height }
+  }
+
+  const startAssetResize = (event, asset, direction) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setSelectedAssetId(asset.id)
+    setSelectedAssetIds([asset.id])
+    selectedAssetIdsRef.current = [asset.id]
+    if (asset.layer !== workOnLayer) return
+    event.currentTarget.setPointerCapture(event.pointerId)
+    const originWidth = Number(asset.width) || defaultTokenSize
+    const originHeight = Number(asset.height) || defaultTokenSize
+    assetResizeRef.current = {
+      pointerId: event.pointerId,
+      captureTarget: event.currentTarget,
+      assetId: asset.id,
+      direction,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: Number(asset.position_x) || 0,
+      originY: Number(asset.position_y) || 0,
+      originWidth,
+      originHeight,
+    }
+    setResizingAssetId(asset.id)
+  }
+
+  const startGroupResize = (event, direction, members, bounds) => {
+    event.preventDefault()
+    event.stopPropagation()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    assetResizeRef.current = {
+      pointerId: event.pointerId,
+      captureTarget: event.currentTarget,
+      direction,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: bounds.x,
+      originY: bounds.y,
+      originWidth: bounds.width,
+      originHeight: bounds.height,
+      members: members.map((asset) => ({
+        id: asset.id,
+        x: Number(asset.position_x) || 0,
+        y: Number(asset.position_y) || 0,
+        width: Number(asset.width) || defaultTokenSize,
+        height: Number(asset.height) || defaultTokenSize,
+      })),
+    }
+    setResizingAssetId('group')
+  }
+
+  const handleAssetPointerMove = (event) => {
+    const activeResize = assetResizeRef.current
+    if (activeResize?.pointerId === event.pointerId) {
+      const sizes = calculateAssetResize(event, activeResize)
+      setTabletopAssets((current) => current.map((asset) => {
+        const size = activeResize.members ? sizes.find((item) => item.id === asset.id) : (asset.id === activeResize.assetId ? sizes : null)
+        return size ? { ...asset, position_x: String(size.x), position_y: String(size.y), width: String(size.width), height: String(size.height) } : asset
+      }))
+      return
+    }
+    moveAssetDrag(event)
+  }
+
+  const finishAssetResize = (event) => {
+    const activeResize = assetResizeRef.current
+    if (!activeResize || activeResize.pointerId !== event.pointerId) return
+    activeResize.captureTarget.releasePointerCapture(event.pointerId)
+    assetResizeRef.current = null
+    setResizingAssetId(null)
+    const sizes = calculateAssetResize(event, activeResize)
+    const socket = websocketRef.current
+    if (socket?.readyState !== WebSocket.OPEN) {
+      setTabletopAssets((current) => current.map((asset) => {
+        const member = activeResize.members?.find((item) => item.id === asset.id)
+        const revert = activeResize.members ? member && { x: member.x, y: member.y, width: member.width, height: member.height } : asset.id === activeResize.assetId ? { x: activeResize.originX, y: activeResize.originY, width: activeResize.originWidth, height: activeResize.originHeight } : null
+        return revert ? { ...asset, position_x: String(revert.x), position_y: String(revert.y), width: String(revert.width), height: String(revert.height) } : asset
+      }))
+      setRoomSyncError('A conexão com a sala caiu. O redimensionamento não foi salvo.')
+      return
+    }
+    const originalMembers = activeResize.members || [{ id: activeResize.assetId, x: activeResize.originX, y: activeResize.originY, width: activeResize.originWidth, height: activeResize.originHeight }]
+    const resized = activeResize.members ? sizes : [sizes]
+    setTabletopAssets((current) => current.map((asset) => {
+      const size = resized.find((item) => item.id === asset.id)
+      return size ? { ...asset, position_x: String(size.x), position_y: String(size.y), width: String(size.width), height: String(size.height) } : asset
+    }))
+    const changed = resized.filter((size) => {
+      const original = originalMembers.find((item) => item.id === size.id)
+      return original && (size.x !== original.x || size.y !== original.y || size.width !== original.width || size.height !== original.height)
+    })
+    if (changed.length) {
+      undoHistoryRef.current.push({ type: 'resize-group', assets: changed.map((size) => {
+        const original = originalMembers.find((item) => item.id === size.id)
+        return { id: size.id, x: String(original.x), y: String(original.y), width: String(original.width), height: String(original.height) }
+      }) })
+    }
+    resized.forEach((size) => {
+      sendRoomMessage({ type: 'asset.change_size', asset_id: size.id, width: String(size.width), height: String(size.height) })
+      if (size.x !== originalMembers.find((item) => item.id === size.id)?.x || size.y !== originalMembers.find((item) => item.id === size.id)?.y) {
+        sendRoomMessage({ type: 'asset.move', asset_id: size.id, x: String(size.x), y: String(size.y) })
+      }
+    })
+  }
+
+  const handleAssetPointerUp = (event) => {
+    if (assetResizeRef.current?.pointerId === event.pointerId) finishAssetResize(event)
+    else stopAssetDrag(event)
   }
 
   const handleAdvancedRollChange = (field, value) => {
@@ -802,6 +1512,19 @@ const RoomPage = () => {
     />
   )
 
+  const selectedMovableAssets = tabletopAssets.filter((asset) => selectedAssetIds.includes(asset.id) && asset.layer === workOnLayer && asset.position_x != null && asset.position_y != null)
+  const selectedGroupBounds = selectedMovableAssets.length > 1 ? selectedMovableAssets.reduce((bounds, asset) => {
+    const x = Number(asset.position_x) || 0
+    const y = Number(asset.position_y) || 0
+    const width = Number(asset.width) || defaultTokenSize
+    const height = Number(asset.height) || defaultTokenSize
+    const left = Math.min(bounds.left, x)
+    const top = Math.min(bounds.top, y)
+    const right = Math.max(bounds.right, x + width)
+    const bottom = Math.max(bounds.bottom, y + height)
+    return { left, top, right, bottom, x: left, y: top, width: right - left, height: bottom - top }
+  }, { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity }) : null
+
   return (
     <main className={s.roomPage} onContextMenu={(event) => event.preventDefault()}>
       <IconButton
@@ -817,29 +1540,131 @@ const RoomPage = () => {
         className={cx('tabletopFrame', { isPanning: Boolean(drag) })}
         aria-label="Tabletop"
         onWheel={handleWheel}
-        onPointerDown={handlePointerDown}
+        onPointerDown={(event) => { handlePointerDown(event); startSelectionMarquee(event) }}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         onDragOver={handleTabletopDragOver}
         onDrop={handleTabletopDrop}
+        onClick={(event) => {
+          if (event.target === tabletopRef.current || event.target === tabletopFrameRef.current) {
+            if (marqueeCompletedRef.current) {
+              marqueeCompletedRef.current = false
+              return
+            }
+            setSelectedAssetId(null)
+            setSelectedAssetIds([])
+            selectedAssetIdsRef.current = []
+            selectedAssetIdRef.current = null
+          }
+        }}
       >
+        {selectionMarquee && <div className={s.selectionMarquee} style={selectionMarquee} aria-hidden="true" />}
         <div ref={tabletopRef} className={s.tabletop} style={gridStyle}>
-          {tabletopAssets.filter((asset) => asset.position_x != null && asset.position_y != null).map((asset) => (
-            <img
-              key={asset.id}
-              className={cx('tabletopAsset', { assetDragging: draggingAssetId === asset.id })}
-              src={asset.asset_image_url}
-              alt={asset.asset_image_file_name || 'Token'}
-              draggable="false"
-              style={{ left: `${asset.position_x}px`, top: `${asset.position_y}px` }}
-              onPointerDown={(event) => startAssetDrag(event, asset)}
-              onPointerMove={moveAssetDrag}
-              onPointerUp={stopAssetDrag}
-              onPointerCancel={stopAssetDrag}
-            />
-          ))}
+          {tabletopAssets.filter((asset) => asset.position_x != null && asset.position_y != null).map((asset) => {
+            const width = Number(asset.width) || defaultTokenSize
+            const height = Number(asset.height) || defaultTokenSize
+            const isSelected = selectedAssetIds.includes(asset.id) || selectedAssetId === asset.id
+            const canEdit = asset.layer === workOnLayer
+            const orderedLayerAssets = getLayerAssets(tabletopAssets, asset.layer)
+            const layerPosition = orderedLayerAssets.findIndex((item) => item.id === asset.id)
+            const layerBase = { map: 1000, master: 100000, players: 200000 }[asset.layer] || 0
+            return (
+              <div
+                key={asset.id}
+                className={cx('tabletopAsset', {
+                  assetDragging: draggingAssetId === asset.id,
+                  assetResizing: resizingAssetId === asset.id,
+                  assetSelected: isSelected,
+                  assetMapLayer: asset.layer === 'map',
+                })}
+                style={{
+                  left: `${asset.position_x}px`,
+                  top: `${asset.position_y}px`,
+                  width: `${width}px`,
+                  height: `${height}px`,
+                  zIndex: layerBase + orderedLayerAssets.length - layerPosition,
+                  opacity: asset.layer === 'master' ? 0.48 : 1,
+                  display: asset.visible === false ? 'none' : undefined,
+                  cursor: canEdit ? 'grab' : 'default',
+                }}
+                data-asset-id={asset.id}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  selectedAssetIdRef.current = asset.id
+                  setSelectedAssetId(asset.id)
+                  if (!selectedAssetIds.includes(asset.id)) {
+                    setSelectedAssetIds([asset.id])
+                    selectedAssetIdsRef.current = [asset.id]
+                  }
+                }}
+                onPointerDown={(event) => startAssetDrag(event, asset)}
+                onPointerMove={handleAssetPointerMove}
+                onPointerUp={handleAssetPointerUp}
+                onPointerCancel={handleAssetPointerUp}
+                onContextMenu={(event) => {
+                  if (asset.layer !== 'map') return
+                  event.preventDefault()
+                  event.stopPropagation()
+                  setMapContextMenu({
+                    asset,
+                    x: Math.max(8, Math.min(event.clientX, window.innerWidth - 230)),
+                    y: Math.max(8, Math.min(event.clientY, window.innerHeight - 70)),
+                  })
+                }}
+              >
+                <img className={s.tabletopAssetImage} src={asset.asset_image_url} alt={asset.asset_image_file_name || 'Token'} draggable="false" />
+                {isSelected && <span className={s.assetSelectionBorder} aria-hidden="true" />}
+                {isSelected && canEdit && selectedMovableAssets.length <= 1 && ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map((direction) => (
+                  <span
+                    key={direction}
+                    className={cx('assetResizeHandle', `assetResizeHandle-${direction}`)}
+                    aria-label={`Redimensionar token ${direction}`}
+                    onPointerDown={(event) => startAssetResize(event, asset, direction)}
+                  />
+                ))}
+              </div>
+            )
+          })}
+          {backgroundSettings.visibleGrid && <div
+            className={s.tabletopGridOverlay}
+            style={{
+              zIndex: 1001 + getLayerAssets(tabletopAssets, 'map').length,
+              backgroundImage: `linear-gradient(${backgroundSettings.gridColor} 1px, transparent 1px), linear-gradient(90deg, ${backgroundSettings.gridColor} 1px, transparent 1px)`,
+              backgroundSize: `${gridCellSize}px ${gridCellSize}px`,
+              backgroundPosition: '-1px -1px',
+              opacity: Math.max(0, Math.min(100, Number(backgroundSettings.gridOpacity))) / 100,
+            }}
+            aria-hidden="true"
+          />}
+          {selectedGroupBounds && <div
+            className={s.assetGroupSelection}
+            style={{ left: selectedGroupBounds.x, top: selectedGroupBounds.y, width: selectedGroupBounds.width, height: selectedGroupBounds.height }}
+            aria-label={`${selectedMovableAssets.length} tokens selecionados`}
+            onPointerMove={handleAssetPointerMove}
+            onPointerUp={handleAssetPointerUp}
+            onPointerCancel={handleAssetPointerUp}
+          >
+            {['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map((direction) => <span
+              key={direction}
+              className={cx('assetResizeHandle', `assetResizeHandle-${direction}`)}
+              onPointerDown={(event) => startGroupResize(event, direction, selectedMovableAssets, selectedGroupBounds)}
+            />)}
+          </div>}
         </div>
+        {mapContextMenu && <div
+          className={s.mapContextMenu}
+          data-map-context-menu
+          style={{ left: mapContextMenu.x, top: mapContextMenu.y }}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <button type="button" onClick={() => {
+            fitTabletopToMap(mapContextMenu.asset)
+            setMapContextMenu(null)
+          }}>
+            Ajustar tabletop a este mapa
+          </button>
+        </div>}
       </section>
 
       <aside className={s.zoomControl} aria-label="Zoom controls">
@@ -975,7 +1800,7 @@ const RoomPage = () => {
             <h2>Advanced roll</h2>
             <div className={s.advancedRollControls}>
               <div className={s.numberInput}>
-                <input
+                  <input
                   type="number"
                   min="1"
                   aria-label="Quantidade de dados"
@@ -1130,6 +1955,175 @@ const RoomPage = () => {
                 <span title={token.asset_image_file_name}>{token.asset_image_file_name || 'Token sem nome'}</span>
               </li>)}
             </ul> : <p className={s.tokenMessage}>{tokenSearch ? 'Nenhum token encontrado.' : 'Você ainda não tem tokens.'}</p>}
+          </> : activeSidePanel === 'Maps' ? <>
+            {roomSyncError && <p className={s.tokenMessage} role="alert">{roomSyncError}</p>}
+            <section className={s.mapsSection}>
+              <header className={s.mapsSectionHeader}>
+                <h3>Layers</h3>
+                <span className={s.mapsAddIcon} aria-hidden="true"><Icon name="copyPlus" size={18} color="#c9c7e0" /></span>
+              </header>
+              {tabletopLayers.map(({ value: layer, label }) => {
+                const layerAssets = getLayerAssets(tabletopAssets, layer)
+                return (
+                  <section
+                    className={s.layerGroup}
+                    key={layer}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => handleLayerDrop(event, layer)}
+                  >
+                    <button
+                      type="button"
+                      className={s.layerGroupToggle}
+                      aria-expanded={expandedLayers[layer]}
+                      onClick={() => setExpandedLayers((current) => ({ ...current, [layer]: !current[layer] }))}
+                    >
+                      <span className={cx('layerChevron', { layerChevronClosed: !expandedLayers[layer] })} aria-hidden="true"><Icon name="chevronDown" size={15} color="#c9c7e0" /></span>
+                      <span>{label}</span>
+                    </button>
+                    {expandedLayers[layer] && <ul className={s.layerAssetList}>
+                      {layerAssets.map((asset) => (
+                        <li
+                          className={cx('layerAssetRow', { layerAssetRowMap: layer === 'map' })}
+                          key={asset.id}
+                          draggable="true"
+                          onDragStart={(event) => handleTokenDragStart(event, asset)}
+                          onDragOver={(event) => event.preventDefault()}
+                          onDrop={(event) => handleLayerAssetDrop(event, asset, layer)}
+                        >
+                          <span className={s.layerAssetThumbnail}>
+                            {asset.asset_image_url ? <img src={asset.asset_image_url} alt="" /> : <span>&lt;placeholder&gt;</span>}
+                          </span>
+                          <span className={s.layerAssetName} title={asset.asset_image_file_name}>{asset.asset_image_file_name || `Token ${asset.id}`}</span>
+                          <button
+                            type="button"
+                            className={cx('visibilityButton', { assetHidden: asset.visible === false })}
+                            aria-label={asset.visible === false ? 'Mostrar token' : 'Ocultar token'}
+                            title={asset.visible === false ? 'Mostrar token' : 'Ocultar token'}
+                            onClick={() => changeAssetVisibility(asset)}
+                          >
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/>{asset.visible === false && <path d="M4 20 20 4"/>}</svg>
+                          </button>
+                          {layer === 'map' && <button
+                            type="button"
+                            className={s.fitMapButton}
+                            aria-label="Ajustar tamanho do tabletop a este mapa"
+                            title="Ajustar tamanho do tabletop a este mapa"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              fitTabletopToMap(asset)
+                            }}
+                          >
+                            <Icon name="maximize2" size={17} color="#fff" />
+                          </button>}
+                        </li>
+                      ))}
+                      {!layerAssets.length && <li className={s.emptyLayer}>Arraste tokens para esta layer</li>}
+                    </ul>}
+                  </section>
+                )
+              })}
+            </section>
+
+            <section className={s.mapsSection}>
+              <header className={s.mapsSectionHeader}><h3>Configurations</h3></header>
+              <label className={s.mapsFieldLabel}>Background</label>
+              <div className={s.mapsCheckboxRow}>
+                <label className={s.gridCheckbox}>
+                <input
+                    type="checkbox"
+                    checked={backgroundSettings.visibleGrid}
+                    onChange={(event) => applyBackgroundSettings({ visible_grid: event.target.checked })}
+                  />
+                  <span>Visible Grid</span>
+                </label>
+                <label className={s.gridCheckbox}>
+                  <input
+                    type="checkbox"
+                    checked={backgroundSettings.movementAdaptableToGrid}
+                    onChange={(event) => changeMovementAdaptability(event.target.checked)}
+                  />
+                  <span>Movement Adaptable to Grid</span>
+                </label>
+              </div>
+              <label className={s.mapsFieldLabel}>Grid Color</label>
+              <div className={s.backgroundColorField}>
+                  <input
+                    type="color"
+                    aria-label="Cor da grid"
+                    value={/^#[0-9a-f]{6}$/i.test(gridColorDraft) ? gridColorDraft : backgroundSettings.gridColor}
+                    onChange={(event) => {
+                      setGridColorDraft(event.target.value)
+                      applyBackgroundSettings({ grid_color: event.target.value })
+                    }}
+                  />
+                  <input
+                    type="text"
+                    aria-label="Hexadecimal da cor da grid"
+                    value={gridColorDraft}
+                    onChange={(event) => setGridColorDraft(event.target.value)}
+                    onBlur={() => {
+                      if (/^#[0-9a-f]{6}$/i.test(gridColorDraft)) applyBackgroundSettings({ grid_color: gridColorDraft })
+                      else setGridColorDraft(backgroundSettings.gridColor)
+                    }}
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    aria-label="Opacidade da grid em porcentagem"
+                    value={backgroundSettings.gridOpacity}
+                    onChange={(event) => setBackgroundSettings((current) => ({ ...current, gridOpacity: Math.max(0, Math.min(100, Number(event.target.value) || 0)) }))}
+                    onBlur={() => applyBackgroundSettings({ grid_opacity: Math.round(backgroundSettings.gridOpacity) })}
+                  />
+                  <span className={s.gridOpacitySuffix}>%</span>
+              </div>
+              <label className={s.mapsFieldLabel}>Background Color</label>
+              <div className={s.backgroundColorField}>
+                <input
+                  type="color"
+                  aria-label="Cor de fundo do tabletop"
+                  value={/^#[0-9a-f]{6}$/i.test(backgroundColorDraft) ? backgroundColorDraft : backgroundSettings.backgroundColor}
+                  onChange={(event) => {
+                    setBackgroundColorDraft(event.target.value)
+                    applyBackgroundSettings({ background_color: event.target.value })
+                  }}
+                />
+                <input
+                  type="text"
+                  aria-label="Hexadecimal da cor de fundo"
+                  value={backgroundColorDraft}
+                  onChange={(event) => setBackgroundColorDraft(event.target.value)}
+                  onBlur={() => {
+                    if (/^#[0-9a-f]{6}$/i.test(backgroundColorDraft)) applyBackgroundSettings({ background_color: backgroundColorDraft })
+                    else setBackgroundColorDraft(backgroundSettings.backgroundColor)
+                  }}
+                />
+              </div>
+
+              <label className={s.mapsFieldLabel}>Page Size</label>
+              <div className={s.pageSizeFields}>
+                <label><span>X</span><input type="number" min="100" value={backgroundSettings.pageSizeX} onChange={(event) => setBackgroundSettings((current) => ({ ...current, pageSizeX: Number(event.target.value) || 100 }))} onBlur={() => applyBackgroundSettings({ page_size_x: Math.round(backgroundSettings.pageSizeX) })} /></label>
+                <label><span>Y</span><input type="number" min="100" value={backgroundSettings.pageSizeY} onChange={(event) => setBackgroundSettings((current) => ({ ...current, pageSizeY: Number(event.target.value) || 100 }))} onBlur={() => applyBackgroundSettings({ page_size_y: Math.round(backgroundSettings.pageSizeY) })} /></label>
+              </div>
+
+              <label className={s.mapsFieldLabel}>Map Scale</label>
+              <div className={s.mapScaleFields}>
+                <input type="number" step="any" value={backgroundSettings.mapScaleValue} onChange={(event) => setBackgroundSettings((current) => ({ ...current, mapScaleValue: Number(event.target.value) || 0 }))} onBlur={() => applyBackgroundSettings({ map_scale_value: backgroundSettings.mapScaleValue })} aria-label="Valor da escala do mapa" />
+                <select value={backgroundSettings.mapScaleUnity} onChange={(event) => applyBackgroundSettings({ map_scale_unity: event.target.value })} aria-label="Unidade da escala do mapa">
+                  {mapScaleUnits.map((unit) => <option key={unit.label} value={unit.value}>{unit.label}</option>)}
+                </select>
+              </div>
+            </section>
+
+            <section className={cx('mapsSection', 'workOnLayerSection')}>
+              <header className={s.mapsSectionHeader}><h3>Work on layer</h3></header>
+              <div className={s.workLayerButtons} role="group" aria-label="Layer ativa para movimentação">
+                {[{ value: 'players', label: 'Players' }, { value: 'map', label: 'Map' }, { value: 'master', label: 'DM' }].map((layer) => (
+                  <button key={layer.value} type="button" aria-pressed={workOnLayer === layer.value} onClick={() => setWorkOnLayer(layer.value)}>{layer.label}</button>
+                ))}
+              </div>
+            </section>
           </> : <p className={s.tokenMessage}>Conteúdo de {activeSidePanel}.</p>}
         </div>}
       </aside>

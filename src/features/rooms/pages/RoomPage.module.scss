@@ -29,37 +29,61 @@
 
 .tabletop {
   position: relative;
-  width: 1000px;
-  height: 1000px;
+  width: var(--tabletop-width, 1000px);
+  height: var(--tabletop-height, 1000px);
   flex: 0 0 auto;
   transform: translate(var(--tabletop-x), var(--tabletop-y)) scale(var(--tabletop-scale));
   transform-origin: center;
   transition: transform 140ms ease;
   // background-color: rgba(0, 0, 0, 0.32);
   background-color: rgb(255, 255, 255, 0.30);
-  background-image:
-    linear-gradient(rgba(0, 0, 0, 0.5) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.5) 1px, transparent 1px);
-  background-size: 50px 50px;
-  background-position: -1px -1px;
 }
+
+.tabletopGridOverlay { position: absolute; inset: 0; pointer-events: none; }
+.selectionMarquee { position: absolute; z-index: 10000; border: 1px solid #78aaff; background: rgba(85, 145, 255, 0.2); pointer-events: none; }
+.assetGroupSelection { position: absolute; z-index: 300000; box-sizing: border-box; border: 2px solid #78aaff; pointer-events: none; }
+.assetGroupSelection .assetResizeHandle { pointer-events: auto; }
 
 .tabletopAsset {
   position: absolute;
   z-index: 1;
-  width: 64px;
-  height: 64px;
+  box-sizing: border-box;
+  overflow: visible;
   border-radius: 9px;
-  object-fit: cover;
   cursor: grab;
   user-select: none;
   touch-action: none;
-  transition: left 240ms ease, top 240ms ease;
+  transition: left 240ms ease, top 240ms ease, width 180ms ease, height 180ms ease;
 }
 
 .tabletopAsset:hover { z-index: 2; }
 .tabletopAsset:active { cursor: grabbing; }
-.assetDragging { z-index: 3; transition: none; }
+.tabletopAsset.assetSelected { overflow: visible; }
+.tabletopAsset.assetDragging,
+.tabletopAsset.assetResizing { z-index: 10; transition: none; }
+.tabletopAssetImage { display: block; width: 100%; height: 100%; border-radius: 5px; object-fit: fill; pointer-events: none; user-select: none; }
+
+.assetSelectionBorder { position: absolute; z-index: 4; inset: 0; border: 2px solid #c5a3ed; pointer-events: none; }
+
+.assetResizeHandle {
+  position: absolute;
+  z-index: 5;
+  width: 9px;
+  height: 9px;
+  border: 1px solid #8c5fc0;
+  border-radius: 2px;
+  background: #fff;
+  touch-action: none;
+}
+
+.assetResizeHandle-nw { top: -5px; left: -5px; cursor: nwse-resize; }
+.assetResizeHandle-ne { top: -5px; right: -5px; cursor: nesw-resize; }
+.assetResizeHandle-sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.assetResizeHandle-se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+.assetResizeHandle-n { top: -5px; left: calc(50% - 4px); cursor: ns-resize; }
+.assetResizeHandle-s { bottom: -5px; left: calc(50% - 4px); cursor: ns-resize; }
+.assetResizeHandle-e { top: calc(50% - 4px); right: -5px; cursor: ew-resize; }
+.assetResizeHandle-w { top: calc(50% - 4px); left: -5px; cursor: ew-resize; }
 
 .tokenItem[draggable="true"] { cursor: grab; }
 .tokenItem[draggable="true"]:active { cursor: grabbing; }
@@ -212,6 +236,180 @@
   line-height: 1.3;
   font-weight: 700;
 }
+
+.mapsSection { margin-top: 20px; }
+
+.mapsSectionHeader {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+  border-bottom: 2px solid rgba(255, 255, 255, .08);
+}
+
+.mapsSectionHeader h3 {
+  margin: 0 0 5px;
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.mapsAddIcon { display: inline-flex; align-items: center; color: #c9c7e0; line-height: 1; }
+
+.layerGroup { margin-top: 4px; }
+
+.layerGroupToggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  padding: 2px 4px 5px;
+  background: transparent;
+  color: #e4e2f3;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.layerChevron { display: inline-flex; align-items: center; justify-content: center; width: 13px; flex: 0 0 13px; color: #c9c7e0; transition: transform 140ms ease; }
+.layerChevronClosed { transform: rotate(-90deg); }
+
+.layerAssetList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 8px 12px;
+  padding: 0 0 0 10px;
+  border-left: 2px solid #625f7c;
+  list-style: none;
+}
+
+.layerAssetRow {
+  min-width: 0;
+  height: 50px;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  border-radius: 7px;
+  background: #454457;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .18);
+  cursor: grab;
+}
+.layerAssetRowMap { grid-template-columns: 56px minmax(0, 1fr) 30px 30px; gap: 4px; }
+
+.layerAssetRow:active { cursor: grabbing; }
+
+.layerAssetThumbnail {
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #5a5871;
+  color: #bdbad1;
+  padding: 4px;
+  font-size: 9px;
+}
+
+.layerAssetThumbnail img { width: 100%; height: 100%; object-fit: contain; }
+.layerAssetName { overflow: hidden; color: #f4f3fa; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+
+.visibilityButton {
+  width: 30px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 5px;
+  padding: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+.fitMapButton {
+  width: 30px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 5px;
+  padding: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+.fitMapButton:hover, .fitMapButton:focus-visible,
+.visibilityButton:hover, .visibilityButton:focus-visible { background: rgba(255,255,255,.12); }
+.fitMapButton svg { width: 17px; height: 17px; stroke: currentColor; stroke-width: 1.8; }
+
+.visibilityButton svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.assetHidden { color: #a29fb8; }
+.emptyLayer { padding: 9px 6px; color: #a29fb8; font-size: 11px; }
+.mapContextMenu { position: fixed; z-index: 20000; min-width: 212px; overflow: hidden; padding: 4px; border: 1px solid rgba(255,255,255,.12); border-radius: 7px; background: #363547; box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+.mapContextMenu button { width: 100%; min-height: 36px; border: 0; border-radius: 4px; padding: 0 10px; background: transparent; color: #f4f3fa; font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+.mapContextMenu button:hover, .mapContextMenu button:focus-visible { background: #4a495c; }
+.mapsFieldLabel { display: block; margin: 8px 0 5px 10px; color: #e7e5f2; font-size: 11px; }
+
+.mapsCheckboxRow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 0 0 12px 10px; }
+.gridCheckbox { display: flex; align-items: center; gap: 8px; margin: 0; color: #f0eef7; font-size: 12px; cursor: pointer; }
+.gridCheckbox input { width: 15px; height: 15px; margin: 0; accent-color: #8b88a7; }
+
+.backgroundColorField,
+.pageSizeFields label,
+.mapScaleFields {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  background: #4a495c;
+  box-shadow: 0 2px 3px rgba(0,0,0,.15);
+}
+
+.backgroundColorField { gap: 10px; padding: 5px 9px; }
+.backgroundColorField input[type="color"] { width: 25px; height: 25px; flex: 0 0 auto; border: 0; border-radius: 3px; padding: 0; background: transparent; cursor: pointer; }
+.backgroundColorField input[type="text"] { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #fff; font: inherit; font-size: 12px; }
+.backgroundColorField input[type="number"] { width: 42px; flex: 0 0 42px; border: 0; outline: 0; background: transparent; color: #fff; font: inherit; font-size: 12px; text-align: right; appearance: textfield; }
+.backgroundColorField input[type="number"]::-webkit-inner-spin-button,
+.backgroundColorField input[type="number"]::-webkit-outer-spin-button { appearance: none; margin: 0; }
+.gridOpacitySuffix { color: #c9c7e0; font-size: 11px; }
+
+.pageSizeFields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pageSizeFields label { gap: 10px; padding: 0 12px; }
+.pageSizeFields label span { color: #aaa7c4; font-size: 12px; }
+.pageSizeFields input,
+.mapScaleFields input,
+.mapScaleFields select { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #fff; font: inherit; font-size: 12px; }
+.pageSizeFields input { appearance: textfield; }
+.pageSizeFields input::-webkit-inner-spin-button, .pageSizeFields input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+
+.mapScaleFields { margin-bottom: 2px; }
+.mapScaleFields input { height: 40px; padding: 0 12px; }
+.mapScaleFields select {
+  width: 43%;
+  height: 40px;
+  flex: 0 0 43%;
+  appearance: none;
+  border-left: 1px solid rgba(20,19,30,.2);
+  padding: 0 34px 0 10px;
+  background-image: linear-gradient(45deg, transparent 50%, #f4f3fa 50%), linear-gradient(135deg, #f4f3fa 50%, transparent 50%);
+  background-position: calc(100% - 22px) 17px, calc(100% - 16px) 17px;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+.mapScaleFields option { background: #454457; }
+
+.workOnLayerSection { margin-top: 14px; }
+.workLayerButtons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; padding: 5px 2px 0; }
+.workLayerButtons button { height: 43px; border: 0; border-radius: 6px; background: #363547; color: #f4f3fa; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,.18); }
+.workLayerButtons button[aria-pressed="true"] { background: #66647c; }
+.workLayerButtons button:hover { filter: brightness(1.12); }
 
 .tokenSearchRow {
   display: grid;
