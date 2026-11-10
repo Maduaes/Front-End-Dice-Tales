@@ -351,7 +351,25 @@ const RoomPage = () => {
   useEffect(() => {
     let cancelled = false
     getRoomTabletop(roomId)
-      .then((content) => { if (!cancelled) setTabletopAssets(content.assets || []) })
+      .then((content) => {
+        if (cancelled) return
+        setTabletopAssets(content.assets || [])
+        const settings = content.settings
+        if (!settings) return
+        setBackgroundSettings({
+          visibleGrid: settings.visible_grid,
+          movementAdaptableToGrid: settings.movement_adaptable_to_grid,
+          gridColor: settings.grid_color,
+          gridOpacity: settings.grid_opacity,
+          backgroundColor: settings.background_color,
+          pageSizeX: settings.page_size_x,
+          pageSizeY: settings.page_size_y,
+          mapScaleValue: Number(settings.map_scale_value) || 0,
+          mapScaleUnity: settings.map_scale_unity,
+        })
+        setGridColorDraft(settings.grid_color)
+        setBackgroundColorDraft(settings.background_color)
+      })
       .catch((error) => console.error('Não foi possível carregar os assets da sala.', error))
     return () => { cancelled = true }
   }, [roomId])
@@ -1456,7 +1474,7 @@ const RoomPage = () => {
       return
     }
     const originalMembers = activeResize.members || [{ id: activeResize.assetId, x: activeResize.originX, y: activeResize.originY, width: activeResize.originWidth, height: activeResize.originHeight }]
-    const resized = activeResize.members ? sizes : [sizes]
+    const resized = activeResize.members ? sizes : [{ ...sizes, id: activeResize.assetId }]
     setTabletopAssets((current) => current.map((asset) => {
       const size = resized.find((item) => item.id === asset.id)
       return size ? { ...asset, position_x: String(size.x), position_y: String(size.y), width: String(size.width), height: String(size.height) } : asset

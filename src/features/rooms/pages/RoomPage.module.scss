@@ -301,7 +301,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, .18);
   cursor: grab;
 }
-.layerAssetRowMap { grid-template-columns: 56px minmax(0, 1fr) 30px 30px; gap: 4px; }
+.layerAssetRowMap { grid-template-columns: 56px minmax(0, 1fr) 30px 35px; gap: 4px; }
 
 .layerAssetRow:active { cursor: grabbing; }
 
@@ -343,6 +343,8 @@
   background: transparent;
   color: #fff;
   cursor: pointer;
+  justify-self: start;
+  margin-right: 5px;
 }
 .fitMapButton:hover, .fitMapButton:focus-visible,
 .visibilityButton:hover, .visibilityButton:focus-visible { background: rgba(255,255,255,.12); }
