@@ -145,6 +145,11 @@ const icons = {
       <path d="M11.6667 2.91675V8.75008M17.5 2.91675V8.75008M23.3334 2.91675V8.75008M11.6667 14.5834H20.4167M11.6667 20.4167H23.3334M11.6667 26.2501H18.9584M8.75004 5.83341H26.25C27.8609 5.83341 29.1667 7.13925 29.1667 8.75008V29.1667C29.1667 30.7776 27.8609 32.0834 26.25 32.0834H8.75004C7.13921 32.0834 5.83337 30.7776 5.83337 29.1667V8.75008C5.83337 7.13925 7.13921 5.83341 8.75004 5.83341Z" stroke="white" strokeWidth="2.1875" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   ),
+  pages: (
+    <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M24.7917 4.375C25.5652 4.375 26.3071 4.68229 26.8541 5.22927C27.401 5.77625 27.7083 6.51812 27.7083 7.29167V29.1667C27.7082 29.422 27.6411 29.6729 27.5136 29.8942C27.3861 30.1155 27.2028 30.2994 26.9819 30.4276C26.761 30.5557 26.5103 30.6237 26.2549 30.6245C25.9995 30.6254 25.7484 30.5592 25.5267 30.4325L18.9467 26.6729C18.5061 26.4212 18.0074 26.2889 17.5 26.2889C16.9926 26.2889 16.4939 26.4212 16.0533 26.6729L9.47333 30.4325C9.25158 30.5592 9.00045 30.6254 8.74507 30.6245C8.48969 30.6237 8.23901 30.5557 8.01812 30.4276C7.79723 30.2994 7.61387 30.1155 7.48638 29.8942C7.35889 29.6729 7.29175 29.422 7.29166 29.1667V7.29167C7.29166 6.51812 7.59895 5.77625 8.14594 5.22927C8.69292 4.68229 9.43478 4.375 10.2083 4.375H24.7917Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="white"/>
+    </svg>
+  ),
   settings: (
     <svg width="30" height="30" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M14.1035 6.03172C14.1838 5.18639 14.5765 4.40137 15.2047 3.83005C15.8329 3.25873 16.6515 2.94214 17.5007 2.94214C18.3498 2.94214 19.1685 3.25873 19.7967 3.83005C20.4249 4.40137 20.8175 5.18639 20.8979 6.03172C20.9462 6.5778 21.1253 7.10421 21.4202 7.56639C21.715 8.02856 22.1168 8.4129 22.5917 8.68688C23.0665 8.96085 23.6004 9.11639 24.1481 9.14034C24.6957 9.16428 25.2411 9.05592 25.7381 8.82443C26.5097 8.47411 27.3841 8.42342 28.191 8.68223C28.9979 8.94103 29.6797 9.49082 30.1036 10.2246C30.5275 10.9584 30.6633 11.8236 30.4844 12.6519C30.3056 13.4803 29.8249 14.2124 29.136 14.7059C28.6874 15.0207 28.3212 15.4389 28.0684 15.9251C27.8156 16.4113 27.6836 16.9513 27.6836 17.4993C27.6836 18.0474 27.8156 18.5873 28.0684 19.0736C28.3212 19.5598 28.6874 19.978 29.136 20.2928C29.8249 20.7862 30.3056 21.5184 30.4844 22.3467C30.6633 23.1751 30.5275 24.0403 30.1036 24.7741C29.6797 25.5078 28.9979 26.0576 28.191 26.3164C27.3841 26.5752 26.5097 26.5245 25.7381 26.1742C25.2411 25.9427 24.6957 25.8344 24.1481 25.8583C23.6004 25.8823 23.0665 26.0378 22.5917 26.3118C22.1168 26.5858 21.715 26.9701 21.4202 27.4323C21.1253 27.8944 20.9462 28.4209 20.8979 28.9669C20.8175 29.8123 20.4249 30.5973 19.7967 31.1686C19.1685 31.7399 18.3498 32.0565 17.5007 32.0565C16.6515 32.0565 15.8329 31.7399 15.2047 31.1686C14.5765 30.5973 14.1838 29.8123 14.1035 28.9669C14.0553 28.4207 13.8761 27.8941 13.5812 27.4317C13.2863 26.9694 12.8843 26.5849 12.4093 26.3109C11.9342 26.0369 11.4001 25.8814 10.8523 25.8576C10.3044 25.8338 9.75883 25.9424 9.26183 26.1742C8.49021 26.5245 7.61585 26.5752 6.80891 26.3164C6.00198 26.0576 5.32021 25.5078 4.89629 24.7741C4.47236 24.0403 4.33662 23.1751 4.51548 22.3467C4.69434 21.5184 5.175 20.7862 5.86391 20.2928C6.31253 19.978 6.67873 19.5598 6.93154 19.0736C7.18436 18.5873 7.31635 18.0474 7.31635 17.4993C7.31635 16.9513 7.18436 16.4113 6.93154 15.9251C6.67873 15.4389 6.31253 15.0207 5.86391 14.7059C5.17597 14.2122 4.69615 13.4803 4.51773 12.6525C4.3393 11.8248 4.47501 10.9602 4.89847 10.2269C5.32194 9.49364 6.00291 8.94398 6.80905 8.68478C7.61518 8.42558 8.48889 8.47536 9.26037 8.82443C9.75731 9.05592 10.3027 9.16428 10.8504 9.14034C11.3981 9.11639 11.9319 8.96085 12.4068 8.68688C12.8816 8.4129 13.2835 8.02856 13.5783 7.56639C13.8731 7.10421 14.0523 6.5778 14.1006 6.03172M21.875 17.5001C21.875 19.9163 19.9162 21.8751 17.5 21.8751C15.0837 21.8751 13.125 19.9163 13.125 17.5001C13.125 15.0838 15.0837 13.1251 17.5 13.1251C19.9162 13.1251 21.875 15.0838 21.875 17.5001Z" stroke="white" strokeWidth="2.1875" strokeLinecap="round" strokeLinejoin="round"/>
@@ -237,6 +242,23 @@ const RoomPage = () => {
   const [tokenUploadLoading, setTokenUploadLoading] = useState(false)
   const [tokensError, setTokensError] = useState('')
   const tokenFileInputRef = useRef(null)
+  const loadTabletopPageRef = useRef(null)
+  const isRoomMasterRef = useRef(false)
+  const currentUserIdRef = useRef(null)
+  const pageLoadSequenceRef = useRef(0)
+  const currentPageIdRef = useRef(null)
+  const [pages, setPages] = useState([])
+  const [folders, setFolders] = useState([])
+  const [currentPageId, setCurrentPageId] = useState(null)
+  const [playersPageId, setPlayersPageId] = useState(null)
+  const [pageSearch, setPageSearch] = useState('')
+  const [expandedFolders, setExpandedFolders] = useState({})
+  const [renamingPageId, setRenamingPageId] = useState(null)
+  const [renamingFolderId, setRenamingFolderId] = useState(null)
+  const isRoomMaster = room?.role === 'master'
+  const sidePanels = isRoomMaster
+    ? ['Sheets', 'Images', 'Maps', 'Pages', 'Notes']
+    : ['Sheets', 'Images', 'Notes']
   const undoHistoryRef = useRef([])
   const selectedAssetIdRef = useRef(null)
   const selectedAssetIdsRef = useRef([])
@@ -268,6 +290,12 @@ const RoomPage = () => {
     setSelectedAssetId(null)
     setSelectedAssetIds([])
   }, [roomId])
+
+  useEffect(() => {
+    if (!isRoomMaster && ['Maps', 'Pages'].includes(activeSidePanel)) {
+      setActiveSidePanel(null)
+    }
+  }, [activeSidePanel, isRoomMaster])
 
   useEffect(() => {
     if (!mapContextMenu) return undefined
@@ -309,7 +337,7 @@ const RoomPage = () => {
   }, [])
 
   useEffect(() => {
-    if (activeSidePanel !== 'Tokens' || !roomId) return
+    if (activeSidePanel !== 'Images' || !roomId) return
     let cancelled = false
     setTokensLoading(true)
     setTokensError('')
@@ -348,31 +376,59 @@ const RoomPage = () => {
     (token.asset_image_file_name || '').toLowerCase().includes(tokenSearch.trim().toLowerCase())
   )
 
+  const loadTabletopPage = async (requestedPageId = null) => {
+    const sequence = ++pageLoadSequenceRef.current
+    const content = await getRoomTabletop(roomId, requestedPageId)
+    if (sequence !== pageLoadSequenceRef.current) return
+    const loadedPageId = content.page_id ?? null
+    if (currentPageIdRef.current !== loadedPageId) undoHistoryRef.current = []
+    currentPageIdRef.current = loadedPageId
+    setCurrentPageId(loadedPageId)
+    setPlayersPageId(content.active_page_id ?? null)
+    setPages(content.pages || [])
+    setFolders(content.folders || [])
+    setTabletopAssets(content.assets || [])
+    setSelectedAssetId(null)
+    setSelectedAssetIds([])
+    selectedAssetIdRef.current = null
+    selectedAssetIdsRef.current = []
+    const settings = content.settings
+    if (!settings) return
+    setBackgroundSettings({
+      visibleGrid: settings.visible_grid,
+      movementAdaptableToGrid: settings.movement_adaptable_to_grid,
+      gridColor: settings.grid_color,
+      gridOpacity: settings.grid_opacity,
+      backgroundColor: settings.background_color,
+      pageSizeX: settings.page_size_x,
+      pageSizeY: settings.page_size_y,
+      mapScaleValue: Number(settings.map_scale_value) || 0,
+      mapScaleUnity: settings.map_scale_unity,
+    })
+    setGridColorDraft(settings.grid_color)
+    setBackgroundColorDraft(settings.background_color)
+  }
+  loadTabletopPageRef.current = loadTabletopPage
+  isRoomMasterRef.current = isRoomMaster
+  currentUserIdRef.current = currentUser?.id
+
   useEffect(() => {
+    if (!roomId) return undefined
     let cancelled = false
-    getRoomTabletop(roomId)
-      .then((content) => {
-        if (cancelled) return
-        setTabletopAssets(content.assets || [])
-        const settings = content.settings
-        if (!settings) return
-        setBackgroundSettings({
-          visibleGrid: settings.visible_grid,
-          movementAdaptableToGrid: settings.movement_adaptable_to_grid,
-          gridColor: settings.grid_color,
-          gridOpacity: settings.grid_opacity,
-          backgroundColor: settings.background_color,
-          pageSizeX: settings.page_size_x,
-          pageSizeY: settings.page_size_y,
-          mapScaleValue: Number(settings.map_scale_value) || 0,
-          mapScaleUnity: settings.map_scale_unity,
-        })
-        setGridColorDraft(settings.grid_color)
-        setBackgroundColorDraft(settings.background_color)
-      })
-      .catch((error) => console.error('Não foi possível carregar os assets da sala.', error))
-    return () => { cancelled = true }
+    loadTabletopPage(null).catch((error) => {
+      if (!cancelled) console.error('Não foi possível carregar o tabletop da sala.', error)
+    })
+    return () => { cancelled = true; pageLoadSequenceRef.current += 1 }
   }, [roomId])
+
+  useEffect(() => {
+    if (currentPageId == null) return
+    const firstMapAsset = getLayerAssets(tabletopAssets, 'map')[0]
+    const previewImageUrl = firstMapAsset?.asset_image_url || null
+    setPages((current) => current.map((page) => page.id === currentPageId && page.preview_image_url !== previewImageUrl
+      ? { ...page, preview_image_url: previewImageUrl }
+      : page))
+  }, [currentPageId, tabletopAssets])
 
   const gridStyle = useMemo(() => ({
     '--tabletop-scale': zoom / 100,
@@ -395,7 +451,7 @@ const RoomPage = () => {
   }
 
   const applyBackgroundSettings = (settings) => {
-    const message = { type: 'background.change_settings', ...settings }
+    const message = { type: 'background.change_settings', page_id: currentPageIdRef.current, ...settings }
     if (!sendRoomMessage(message)) return false
     setBackgroundSettings((current) => ({
       ...current,
@@ -431,7 +487,7 @@ const RoomPage = () => {
       setRoomSyncError('A conexão com a sala não está disponível. Tente novamente em instantes.')
       return false
     }
-    assets.forEach((asset) => socket.send(JSON.stringify({ type: 'asset.remove_from_tabletop', asset_id: asset.id })))
+    assets.forEach((asset) => socket.send(JSON.stringify({ type: 'asset.remove_from_tabletop', page_id: currentPageIdRef.current, asset_id: asset.id })))
     if (recordUndo) undoHistoryRef.current.push({ type: 'restore-placement-group', assets: assets.map(tabletopAssetFields) })
     setTabletopAssets((current) => current.map((item) => ids.includes(item.id) ? clearTabletopFields(item) : item))
     if (ids.includes(selectedAssetIdRef.current)) selectedAssetIdRef.current = null
@@ -454,7 +510,7 @@ const RoomPage = () => {
       if (socket?.readyState !== WebSocket.OPEN) return failAndRestoreHistory()
       assets.forEach((asset) => {
         const { id, ...assetData } = tabletopAssetFields(asset)
-        socket.send(JSON.stringify({ type: 'asset.insert', asset_id: id, asset_data: assetData }))
+        socket.send(JSON.stringify({ type: 'asset.insert', page_id: currentPageIdRef.current, asset_id: id, asset_data: assetData }))
       })
       setTabletopAssets((current) => current.map((item) => {
         const asset = assets.find((candidate) => candidate.id === item.id)
@@ -473,7 +529,7 @@ const RoomPage = () => {
     }
 
     if (action.type === 'move') {
-      if (!sendRoomMessage({ type: 'asset.move', asset_id: action.assetId, x: action.x, y: action.y })) return failAndRestoreHistory()
+      if (!sendRoomMessage({ type: 'asset.move', page_id: currentPageIdRef.current, asset_id: action.assetId, x: action.x, y: action.y })) return failAndRestoreHistory()
       setTabletopAssets((current) => current.map((item) => item.id === action.assetId
         ? { ...item, position_x: action.x, position_y: action.y }
         : item))
@@ -484,8 +540,8 @@ const RoomPage = () => {
       const socket = websocketRef.current
       if (socket?.readyState !== WebSocket.OPEN) return failAndRestoreHistory()
       action.assets.forEach((asset) => {
-        if (action.type === 'resize-group') socket.send(JSON.stringify({ type: 'asset.change_size', asset_id: asset.id, width: asset.width, height: asset.height }))
-        socket.send(JSON.stringify({ type: 'asset.move', asset_id: asset.id, x: asset.x, y: asset.y }))
+        if (action.type === 'resize-group') socket.send(JSON.stringify({ type: 'asset.change_size', page_id: currentPageIdRef.current, asset_id: asset.id, width: asset.width, height: asset.height }))
+        socket.send(JSON.stringify({ type: 'asset.move', page_id: currentPageIdRef.current, asset_id: asset.id, x: asset.x, y: asset.y }))
       })
       setTabletopAssets((current) => current.map((item) => {
         const previous = action.assets.find((asset) => asset.id === item.id)
@@ -495,9 +551,9 @@ const RoomPage = () => {
     }
 
     if (action.type === 'resize') {
-      if (!sendRoomMessage({ type: 'asset.change_size', asset_id: action.assetId, width: action.width, height: action.height })) return failAndRestoreHistory()
+      if (!sendRoomMessage({ type: 'asset.change_size', page_id: currentPageIdRef.current, asset_id: action.assetId, width: action.width, height: action.height })) return failAndRestoreHistory()
       if (action.x != null && action.y != null) {
-        sendRoomMessage({ type: 'asset.move', asset_id: action.assetId, x: action.x, y: action.y })
+        sendRoomMessage({ type: 'asset.move', page_id: currentPageIdRef.current, asset_id: action.assetId, x: action.x, y: action.y })
       }
       setTabletopAssets((current) => current.map((item) => item.id === action.assetId
         ? { ...item, width: action.width, height: action.height, ...(action.x != null && { position_x: action.x }), ...(action.y != null && { position_y: action.y }) }
@@ -509,7 +565,7 @@ const RoomPage = () => {
       const socket = websocketRef.current
       if (socket?.readyState !== WebSocket.OPEN) return failAndRestoreHistory()
       action.assets.forEach((asset) => {
-        socket.send(JSON.stringify({ type: 'asset.change_order', asset_id: asset.id, layer: asset.layer, layer_order: asset.layer_order }))
+        socket.send(JSON.stringify({ type: 'asset.change_order', page_id: currentPageIdRef.current, asset_id: asset.id, layer: asset.layer, layer_order: asset.layer_order }))
       })
       setTabletopAssets((current) => current.map((item) => {
         const previous = action.assets.find((asset) => asset.id === item.id)
@@ -558,7 +614,7 @@ const RoomPage = () => {
       return
     }
     changedStates.forEach((asset) => {
-      socket.send(JSON.stringify({ type: 'asset.change_order', asset_id: asset.id, layer: asset.layer, layer_order: asset.layer_order }))
+      socket.send(JSON.stringify({ type: 'asset.change_order', page_id: currentPageIdRef.current, asset_id: asset.id, layer: asset.layer, layer_order: asset.layer_order }))
     })
     undoHistoryRef.current.push({ type: 'reorder', assets: oldStates })
     setTabletopAssets((current) => current.map((asset) => {
@@ -570,7 +626,7 @@ const RoomPage = () => {
 
   const changeAssetVisibility = (asset) => {
     const visible = asset.visible === false
-    if (!sendRoomMessage({ type: 'asset.change_visibility', asset_id: asset.id, visible })) return
+    if (!sendRoomMessage({ type: 'asset.change_visibility', page_id: currentPageIdRef.current, asset_id: asset.id, visible })) return
     setTabletopAssets((current) => current.map((item) => item.id === asset.id ? { ...item, visible } : item))
   }
 
@@ -588,10 +644,10 @@ const RoomPage = () => {
         ? { ...item, position_x: String(x), position_y: String(y), width: String(width), height: String(height) }
         : item))
       if (width !== Number(asset.width) || height !== Number(asset.height)) {
-        sendRoomMessage({ type: 'asset.change_size', asset_id: asset.id, width: String(width), height: String(height) })
+        sendRoomMessage({ type: 'asset.change_size', page_id: currentPageIdRef.current, asset_id: asset.id, width: String(width), height: String(height) })
       }
       if (x !== Number(asset.position_x) || y !== Number(asset.position_y)) {
-        sendRoomMessage({ type: 'asset.move', asset_id: asset.id, x: String(x), y: String(y) })
+        sendRoomMessage({ type: 'asset.move', page_id: currentPageIdRef.current, asset_id: asset.id, x: String(x), y: String(y) })
       }
     })
   }
@@ -744,15 +800,53 @@ const RoomPage = () => {
           return
         }
 
+        if (data.event === 'page.created') {
+          const page = data.payload
+          setPages((current) => current.some((item) => item.id === page.id) ? current : [...current, page])
+          if (isRoomMasterRef.current && data.user_id === currentUserIdRef.current) loadTabletopPageRef.current?.(page.id).catch(console.error)
+          return
+        }
+        if (data.event === 'folder.created') {
+          setFolders((current) => current.some((item) => item.id === data.payload.id) ? current : [...current, data.payload])
+          return
+        }
+        if (data.event === 'page.updated') {
+          setPages((current) => current.map((item) => item.id === data.payload.id ? { ...item, ...data.payload } : item))
+          return
+        }
+        if (data.event === 'folder.updated') {
+          setFolders((current) => current.map((item) => item.id === data.payload.id ? { ...item, ...data.payload } : item))
+          return
+        }
+        if (data.event === 'page.published') {
+          setPlayersPageId(data.payload.page_id)
+          setPages((current) => current.map((item) => ({ ...item, is_players_page: item.id === data.payload.page_id })))
+          if (!isRoomMasterRef.current) loadTabletopPageRef.current?.(data.payload.page_id).catch(console.error)
+          return
+        }
+
         if (data.event !== 'message') {
           return
         }
 
         const payload = data.payload
+        if (payload?.page_id != null && Number(payload.page_id) !== Number(currentPageIdRef.current)) {
+          const previewAffectingMessages = ['asset.insert', 'asset.change_layer', 'asset.change_order', 'asset.remove_from_tabletop']
+          if (isRoomMasterRef.current && previewAffectingMessages.includes(payload.type)) {
+            getRoomTabletop(roomId, payload.page_id).then((content) => {
+              const previews = new Map((content.pages || []).map((page) => [page.id, page.preview_image_url]))
+              setPages((current) => current.map((page) => previews.has(page.id)
+                ? { ...page, preview_image_url: previews.get(page.id) || null }
+                : page))
+            }).catch((error) => console.error('Não foi possível atualizar o preview das pages.', error))
+          }
+          return
+        }
         const isChatMessage = payload?.type === 'chat.message'
         const isDiceRoll = payload?.type === 'dice.roll'
 
         if (payload?.type === 'asset.insert') {
+          if (!isRoomMasterRef.current && payload.asset_data?.layer === 'master') return
           setTabletopAssets((current) => {
             const hasAsset = current.some((asset) => asset.id === payload.asset_id)
             return hasAsset
@@ -760,7 +854,7 @@ const RoomPage = () => {
               : current
           })
           // Hydrate just this asset without replacing other tokens' current sizes and placements.
-          getRoomTabletop(roomId)
+          getRoomTabletop(roomId, payload.page_id)
             .then((content) => {
               const insertedAsset = content.assets?.find((asset) => asset.id === payload.asset_id)
               if (!insertedAsset) return
@@ -784,6 +878,16 @@ const RoomPage = () => {
         }
 
         if (payload?.type === 'asset.change_layer') {
+          if (!isRoomMasterRef.current && payload.layer === 'master') {
+            setTabletopAssets((current) => current.map((asset) => asset.id === payload.asset_id ? clearTabletopFields(asset) : asset))
+            return
+          }
+          if (!isRoomMasterRef.current) {
+            getRoomTabletop(roomId, payload.page_id).then((content) => {
+              if (Number(currentPageIdRef.current) === Number(payload.page_id)) setTabletopAssets(content.assets || [])
+            }).catch(console.error)
+            return
+          }
           setTabletopAssets((current) => current.map((asset) => asset.id === payload.asset_id
             ? { ...asset, layer: payload.layer }
             : asset))
@@ -791,6 +895,16 @@ const RoomPage = () => {
         }
 
         if (payload?.type === 'asset.change_order') {
+          if (!isRoomMasterRef.current && payload.layer === 'master') {
+            setTabletopAssets((current) => current.map((asset) => asset.id === payload.asset_id ? clearTabletopFields(asset) : asset))
+            return
+          }
+          if (!isRoomMasterRef.current) {
+            getRoomTabletop(roomId, payload.page_id).then((content) => {
+              if (Number(currentPageIdRef.current) === Number(payload.page_id)) setTabletopAssets(content.assets || [])
+            }).catch(console.error)
+            return
+          }
           setTabletopAssets((current) => current.map((asset) => asset.id === payload.asset_id
             ? { ...asset, layer: payload.layer, layer_order: payload.layer_order }
             : asset))
@@ -1214,7 +1328,7 @@ const RoomPage = () => {
       layer: workOnLayer,
       layer_order: layerOrder,
     }
-    if (!sendRoomMessage({ type: 'asset.insert', asset_id: asset.id, asset_data: assetData })) return
+    if (!sendRoomMessage({ type: 'asset.insert', page_id: currentPageIdRef.current, asset_id: asset.id, asset_data: assetData })) return
     const currentPlacement = tabletopAssets.find((item) => item.id === asset.id && item.layer != null)
     setTabletopAssets((current) => {
       const alreadyOnTable = current.some((item) => item.id === asset.id)
@@ -1229,6 +1343,33 @@ const RoomPage = () => {
     setSelectedAssetId(asset.id)
     setSelectedAssetIds([asset.id])
     selectedAssetIdsRef.current = [asset.id]
+  }
+
+  const sendPageAction = (message) => sendRoomMessage(message)
+  const startPageDrag = (event, page) => {
+    event.dataTransfer.setData('application/x-room-page-id', String(page.id))
+    event.dataTransfer.effectAllowed = 'move'
+  }
+  const dropPageIntoFolder = (event, folderId) => {
+    event.preventDefault()
+    const pageId = Number(event.dataTransfer.getData('application/x-room-page-id'))
+    if (!pageId || !isRoomMaster) return
+    sendPageAction({ type: 'page.move', page_id: pageId, folder_id: folderId })
+  }
+  const visiblePages = pages.filter((page) => page.name.toLowerCase().includes(pageSearch.trim().toLowerCase()))
+  const renamePage = (pageId, name) => {
+    if (name.trim()) sendPageAction({ type: 'page.rename', page_id: pageId, name: name.trim() })
+    setRenamingPageId(null)
+  }
+  const renameFolder = (folderId, name) => {
+    if (name.trim()) sendPageAction({ type: 'folder.rename', folder_id: folderId, name: name.trim() })
+    setRenamingFolderId(null)
+  }
+  const publishPage = (pageId) => {
+    if (!isRoomMaster || !sendPageAction({ type: 'page.set_active', page_id: pageId })) return
+    setPlayersPageId(pageId)
+    setPages((current) => current.map((page) => ({ ...page, is_players_page: page.id === pageId })))
+    loadTabletopPage(pageId).catch((error) => console.error('Não foi possível abrir a page.', error))
   }
 
   const constrainAssetPosition = (value, maxValue) => {
@@ -1312,7 +1453,7 @@ const RoomPage = () => {
         const origin = activeDrag.assets.find((item) => item.id === asset.id)
         return origin ? { ...asset, position_x: String(origin.originX + moveX), position_y: String(origin.originY + moveY) } : asset
       }))
-      activeDrag.assets.forEach((item) => socket.send(JSON.stringify({ type: 'asset.move', asset_id: item.id, x: String(item.originX + moveX), y: String(item.originY + moveY) })))
+      activeDrag.assets.forEach((item) => socket.send(JSON.stringify({ type: 'asset.move', page_id: currentPageIdRef.current, asset_id: item.id, x: String(item.originX + moveX), y: String(item.originY + moveY) })))
     } else {
       setTabletopAssets((current) => current.map((asset) => {
         const origin = activeDrag.assets.find((item) => item.id === asset.id)
@@ -1490,9 +1631,9 @@ const RoomPage = () => {
       }) })
     }
     resized.forEach((size) => {
-      sendRoomMessage({ type: 'asset.change_size', asset_id: size.id, width: String(size.width), height: String(size.height) })
+      sendRoomMessage({ type: 'asset.change_size', page_id: currentPageIdRef.current, asset_id: size.id, width: String(size.width), height: String(size.height) })
       if (size.x !== originalMembers.find((item) => item.id === size.id)?.x || size.y !== originalMembers.find((item) => item.id === size.id)?.y) {
-        sendRoomMessage({ type: 'asset.move', asset_id: size.id, x: String(size.x), y: String(size.y) })
+        sendRoomMessage({ type: 'asset.move', page_id: currentPageIdRef.current, asset_id: size.id, x: String(size.x), y: String(size.y) })
       }
     })
   }
@@ -1938,11 +2079,11 @@ const RoomPage = () => {
 
       <nav className={s.sideMenu} aria-label="Room panels">
         <div className={s.sideMenuTop}>
-          {['Tokens', 'Journal', 'Maps', 'Notes'].map((panel, index) => (
+          {sidePanels.map((panel) => (
             <IconButton
               key={panel}
               label={panel}
-              icon={['scroll', 'pawn', 'map', 'notes'][index]}
+              icon={{ Sheets: 'scroll', Images: 'pawn', Maps: 'map', Pages: 'pages', Notes: 'notes' }[panel]}
               pressed={activeSidePanel === panel}
               onClick={() => setActiveSidePanel((current) => current === panel ? null : panel)}
             />
@@ -1954,26 +2095,26 @@ const RoomPage = () => {
       <aside className={cx('sidePanel', { sidePanelOpen: Boolean(activeSidePanel) })} aria-hidden={!activeSidePanel}>
         {activeSidePanel && <div className={s.sidePanelContent}>
           <h2>{activeSidePanel}</h2>
-          {activeSidePanel === 'Tokens' ? <>
+          {activeSidePanel === 'Images' ? <>
             <div className={s.tokenSearchRow}>
               <label className={s.tokenSearch}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
-                <input type="search" placeholder="Search..." aria-label="Pesquisar tokens" value={tokenSearch} onChange={(event) => setTokenSearch(event.target.value)} />
+                <input type="search" placeholder="Search..." aria-label="Pesquisar imagens" value={tokenSearch} onChange={(event) => setTokenSearch(event.target.value)} />
               </label>
-              <button className={s.tokenUploadButton} type="button" aria-label="Enviar token" title="Enviar token" disabled={tokenUploadLoading} onClick={() => tokenFileInputRef.current?.click()}>
+              <button className={s.tokenUploadButton} type="button" aria-label="Enviar imagem" title="Enviar imagem" disabled={tokenUploadLoading} onClick={() => tokenFileInputRef.current?.click()}>
                 {tokenUploadLoading ? <span className={s.uploadSpinner} /> : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v2a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3ZM7 11h10l1.5 8h-13L7 11ZM5 21h14"/></svg>}
               </button>
               <input ref={tokenFileInputRef} className={s.visuallyHidden} type="file" accept="image/png,image/jpeg,image/webp" onChange={handleTokenUpload} />
             </div>
-            <h3 className={s.tokenSectionTitle}>My Tokens</h3>
+            <h3 className={s.tokenSectionTitle}>My Images</h3>
             {tokensError && <p className={s.tokenMessage} role="alert">{tokensError}</p>}
-            {tokensLoading ? <p className={s.tokenMessage}>Carregando tokens...</p> : filteredTokens.length ? <ul className={s.tokenList}>
+            {tokensLoading ? <p className={s.tokenMessage}>Carregando imagens...</p> : filteredTokens.length ? <ul className={s.tokenList}>
               {filteredTokens.map((token) => <li className={s.tokenItem} key={token.id} draggable="true" onDragStart={(event) => handleTokenDragStart(event, token)}>
                 <div className={s.tokenThumbnail}>{token.asset_image_url && <img src={token.asset_image_url} alt="" />}</div>
-                <span title={token.asset_image_file_name}>{token.asset_image_file_name || 'Token sem nome'}</span>
+                <span title={token.asset_image_file_name}>{token.asset_image_file_name || 'Imagem sem nome'}</span>
               </li>)}
-            </ul> : <p className={s.tokenMessage}>{tokenSearch ? 'Nenhum token encontrado.' : 'Você ainda não tem tokens.'}</p>}
-          </> : activeSidePanel === 'Maps' ? <>
+            </ul> : <p className={s.tokenMessage}>{tokenSearch ? 'Nenhuma imagem encontrada.' : 'Você ainda não tem imagens.'}</p>}
+          </> : activeSidePanel === 'Sheets' ? null : activeSidePanel === 'Maps' ? <>
             {roomSyncError && <p className={s.tokenMessage} role="alert">{roomSyncError}</p>}
             <section className={s.mapsSection}>
               <header className={s.mapsSectionHeader}>
@@ -2141,6 +2282,38 @@ const RoomPage = () => {
                   <button key={layer.value} type="button" aria-pressed={workOnLayer === layer.value} onClick={() => setWorkOnLayer(layer.value)}>{layer.label}</button>
                 ))}
               </div>
+            </section>
+          </> : activeSidePanel === 'Pages' ? <>
+            <label className={s.tokenSearch}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
+              <input type="search" placeholder="Search..." aria-label="Pesquisar pages" value={pageSearch} onChange={(event) => setPageSearch(event.target.value)} />
+            </label>
+            <section className={s.pagesSection}>
+              <header className={s.mapsSectionHeader}><h3>Map pages</h3></header>
+              {isRoomMaster && <div className={s.pageActions}>
+                <button type="button" onClick={() => sendPageAction({ type: 'page.create' })}><Icon name="copyPlus" size={16} color="#c9c7e0" /> New page</button>
+                <button type="button" onClick={() => sendPageAction({ type: 'folder.create' })}><Icon name="copyPlus" size={16} color="#c9c7e0" /> New folder</button>
+              </div>}
+              {folders.map((folder) => {
+                const folderPages = visiblePages.filter((page) => page.folder_id === folder.id)
+                if (pageSearch && !folderPages.length && !folder.name.toLowerCase().includes(pageSearch.trim().toLowerCase())) return null
+                const expanded = expandedFolders[folder.id] !== false
+                return <section key={folder.id} className={s.pageFolder} onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropPageIntoFolder(event, folder.id)}>
+                  <div className={s.pageFolderHeading}>
+                    <button type="button" aria-expanded={expanded} onClick={() => setExpandedFolders((current) => ({ ...current, [folder.id]: !expanded }))}><Icon name="chevronDown" size={15} color="#c9c7e0" /></button>
+                    {renamingFolderId === folder.id ? <input autoFocus defaultValue={folder.name} onBlur={(event) => renameFolder(folder.id, event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') renameFolder(folder.id, event.currentTarget.value); if (event.key === 'Escape') setRenamingFolderId(null) }} /> : <button type="button" onClick={() => isRoomMaster && setRenamingFolderId(folder.id)}>{folder.name}</button>}
+                  </div>
+                  {expanded && <ul className={s.pageCardList}>{folderPages.map((page) => <li key={page.id} draggable={isRoomMaster} onDragStart={(event) => startPageDrag(event, page)} className={cx('pageCard', { pageCardCurrent: page.id === currentPageId })}>
+                    <button type="button" className={s.pagePreview} aria-label={`Abrir ${page.name}`} onClick={() => { if (isRoomMaster || page.id === playersPageId) loadTabletopPage(page.id).catch(console.error) }}>{page.preview_image_url && <img src={page.preview_image_url} alt="" />}</button>
+                    {renamingPageId === page.id ? <input autoFocus className={s.pageNameInput} defaultValue={page.name} onBlur={(event) => renamePage(page.id, event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') renamePage(page.id, event.currentTarget.value); if (event.key === 'Escape') setRenamingPageId(null) }} /> : <button type="button" className={s.pageName} onClick={() => isRoomMaster && setRenamingPageId(page.id)}>{page.name}</button>}
+                    <button type="button" className={cx('pageBookmark', { pageBookmarkInactive: page.id !== playersPageId })} aria-label={page.id === playersPageId ? 'Page visível para os jogadores' : 'Mostrar esta page para os jogadores'} title={page.id === playersPageId ? 'Page visível para os jogadores' : 'Mostrar para os jogadores'} onClick={() => publishPage(page.id)} disabled={!isRoomMaster}><Icon name={page.id === playersPageId ? 'bookmarkCheck' : 'bookmark'} size={20} color="#f4f3fa" /></button>
+                  </li>)}</ul>}
+                </section>
+              })}
+              {visiblePages.filter((page) => page.folder_id == null).length > 0 && <section className={s.pageFolder} onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropPageIntoFolder(event, null)}>
+                <div className={s.pageFolderHeading}><span>Unfiled pages</span></div>
+                <ul className={s.pageCardList}>{visiblePages.filter((page) => page.folder_id == null).map((page) => <li key={page.id} draggable={isRoomMaster} onDragStart={(event) => startPageDrag(event, page)} className={s.pageCard}><button type="button" className={s.pagePreview} aria-label={`Abrir ${page.name}`} onClick={() => { if (isRoomMaster || page.id === playersPageId) loadTabletopPage(page.id).catch(console.error) }}>{page.preview_image_url && <img src={page.preview_image_url} alt="" />}</button>{renamingPageId === page.id ? <input autoFocus className={s.pageNameInput} defaultValue={page.name} onBlur={(event) => renamePage(page.id, event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') renamePage(page.id, event.currentTarget.value); if (event.key === 'Escape') setRenamingPageId(null) }} /> : <button type="button" className={s.pageName} onClick={() => isRoomMaster && setRenamingPageId(page.id)}>{page.name}</button>}<button type="button" className={cx('pageBookmark', { pageBookmarkInactive: page.id !== playersPageId })} onClick={() => publishPage(page.id)} disabled={!isRoomMaster} aria-label="Mostrar para os jogadores"><Icon name={page.id === playersPageId ? 'bookmarkCheck' : 'bookmark'} size={20} color="#f4f3fa" /></button></li>)}</ul>
+              </section>}
             </section>
           </> : <p className={s.tokenMessage}>Conteúdo de {activeSidePanel}.</p>}
         </div>}
