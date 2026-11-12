@@ -20,12 +20,12 @@ const cx = cn.bind(s)
 const zoomStep = 10
 const minZoom = 1
 const maxZoom = 200
-const chatMinWidth = 280
-const chatMinHeight = 360
-const chatMenuSafeArea = 88
-const diceMenuWidth = 592
-const diceMenuHeight = 292
-const diceMenuSafeArea = 76
+const chatMinWidth = 240
+const chatMinHeight = 300
+const chatMenuSafeArea = 20
+const diceMenuWidth = 520
+const diceMenuHeight = 230
+const diceMenuSafeArea = 12
 const gridCellSize = 70
 const defaultTokenSize = 70
 const diceOptions = [
@@ -71,6 +71,7 @@ const clearTabletopFields = (asset) => ({
   height: null,
   visible: null,
 })
+const drawingPath = (points, padding = 0) => points.map((point, index) => `${index ? 'L' : 'M'} ${Number(point.x) + padding} ${Number(point.y) + padding}`).join(' ')
 
 const buildWebSocketUrl = (roomCode) => {
   const apiUrl = import.meta.env.VITE_API_URL
@@ -176,7 +177,29 @@ const icons = {
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M2.5 3.75L5 6.25L7.5 3.75" stroke="#EFE5D5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
-  )
+  ),
+  shapeAngle: (
+    <svg width="31" height="31" viewBox="0 0 31 31" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g clip-path="url(#clip0_414_828)">
+        <path d="M3.83862 9.93457L6.54783 17.4619M6.54783 17.4619L9.25703 24.9892C9.43666 25.4883 9.8072 25.8955 10.2871 26.1214C10.7671 26.3473 11.3171 26.3733 11.8162 26.1937L19.3435 23.4845M6.54783 17.4619C9.04328 16.5637 11.7933 16.6937 14.193 17.8231C16.5926 18.9526 18.4453 20.989 19.3435 23.4845M19.3435 23.4845L26.8707 20.7753" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#DCD4FA"/>
+      </g>
+      <defs>
+        <clipPath id="clip0_414_828">
+          <rect width="24" height="24" fill="white" transform="translate(0 8.12769) rotate(-19.7947)"/>
+        </clipPath>
+      </defs>
+    </svg>
+  ),
+  snappSquareDashedX: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 21H15M14 3H15M19 3C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5M21 14V15M21 19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21M21 9V10M3 14V15M3 9V10M5 21C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19M5 3C4.46957 3 3.96086 3.21071 3.58579 3.58579C3.21071 3.96086 3 4.46957 3 5M9 15L12 12M12 12L15 9M12 12L9 9M12 12L15 15M9 21H10M9 3H10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#DCD4FA"/>
+    </svg>
+  ),
+  snappSquareDashedXCorner: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 3H15M16 16L18.5 18.5M18.5 18.5L21 21M18.5 18.5L21 16M18.5 18.5L16 21M19 3C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5M21 9V10M3 14V15M3 9V10M5 21C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19M5 3C4.46957 3 3.96086 3.21071 3.58579 3.58579C3.21071 3.96086 3 4.46957 3 5M9 21H10M9 3H10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#DCD4FA"/>
+    </svg>
+  ),
 }
 
 const IconButton = ({ label, icon, className = '', onClick, pressed }) => (
@@ -202,9 +225,12 @@ const RoomPage = () => {
   const assetResizeRef = useRef(null)
   const marqueeRef = useRef(null)
   const marqueeCompletedRef = useRef(false)
+  const drawDragRef = useRef(null)
+  const drawingMoveRef = useRef(null)
   const chatDragRef = useRef(null)
   const chatResizeRef = useRef(null)
   const diceDragRef = useRef(null)
+  const textDragRef = useRef(null)
   const [room, setRoom] = useState(null)
   const [currentUser, setCurrentUser] = useState(null)
   const [zoom, setZoom] = useState(100)
@@ -212,6 +238,36 @@ const RoomPage = () => {
   const [drag, setDrag] = useState(null)
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isDiceMenuOpen, setIsDiceMenuOpen] = useState(false)
+  const [activeTool, setActiveTool] = useState('select')
+  const [tabletopTexts, setTabletopTexts] = useState([])
+  const [tabletopDrawings, setTabletopDrawings] = useState([])
+  const tabletopDrawingsRef = useRef([])
+  const [selectedDrawingIds, setSelectedDrawingIds] = useState([])
+  const selectedDrawingIdsRef = useRef([])
+  const [drawPreview, setDrawPreview] = useState(null)
+  const [drawSettings, setDrawSettings] = useState({ color: '#16151A', strokeWidth: 4 })
+  const tabletopTextsRef = useRef([])
+  const [selectedTextId, setSelectedTextId] = useState(null)
+  const selectedTextIdRef = useRef(null)
+  const [selectedTextIds, setSelectedTextIds] = useState([])
+  const selectedTextIdsRef = useRef([])
+  const [editingTextId, setEditingTextId] = useState(null)
+  const [textSettings, setTextSettings] = useState({ fontFamily: 'Arial', fontSize: 24, color: '#EFE5D5', bold: false, italic: false })
+  const [isMeasurePanelOpen, setIsMeasurePanelOpen] = useState(false)
+  const [measureShape, setMeasureShape] = useState('line')
+  const [measureSnap, setMeasureSnap] = useState('none')
+  const [measureDropdown, setMeasureDropdown] = useState(null)
+  const [keepMeasure, setKeepMeasure] = useState(false)
+  const [measureTokenMovement, setMeasureTokenMovement] = useState(true)
+  const [broadcastMeasure, setBroadcastMeasure] = useState(true)
+  const [measurePanelPosition, setMeasurePanelPosition] = useState({ x: 12, y: 90 })
+  const [measurement, setMeasurement] = useState(null)
+  const measurementRef = useRef(null)
+  const measureDragRef = useRef(null)
+  const measureBroadcastRef = useRef(false)
+  const measurePanelDragRef = useRef(null)
+  const lastMeasureBroadcastRef = useRef(0)
+  const assetMeasureRef = useRef(false)
   const [activeSidePanel, setActiveSidePanel] = useState(null)
   const [tokens, setTokens] = useState([])
   const [tabletopAssets, setTabletopAssets] = useState([])
@@ -230,7 +286,7 @@ const RoomPage = () => {
     gridOpacity: 25,
     pageSizeX: 1920,
     pageSizeY: 1080,
-    mapScaleValue: 0,
+    mapScaleValue: 1,
     mapScaleUnity: 'meters',
     movementAdaptableToGrid: false,
   })
@@ -267,11 +323,12 @@ const RoomPage = () => {
   const [chatDraft, setChatDraft] = useState('')
   const [chatStatus, setChatStatus] = useState('idle')
   const [chatMessages, setChatMessages] = useState([])
+  const roomUserProfilesRef = useRef({})
   const [chatBox, setChatBox] = useState({
     x: 22,
     y: 22,
-    width: 398,
-    height: 625,
+    width: 320,
+    height: 460,
   })
   const [diceMenuPosition, setDiceMenuPosition] = useState({
     x: 132,
@@ -289,7 +346,14 @@ const RoomPage = () => {
     selectedAssetIdsRef.current = []
     setSelectedAssetId(null)
     setSelectedAssetIds([])
+    setSelectedTextId(null)
+    selectedTextIdRef.current = null
+    setSelectedTextIds([])
+    selectedTextIdsRef.current = []
   }, [roomId])
+
+  useEffect(() => { tabletopTextsRef.current = tabletopTexts }, [tabletopTexts])
+  useEffect(() => { tabletopDrawingsRef.current = tabletopDrawings }, [tabletopDrawings])
 
   useEffect(() => {
     if (!isRoomMaster && ['Maps', 'Pages'].includes(activeSidePanel)) {
@@ -327,6 +391,23 @@ const RoomPage = () => {
         return
       }
 
+      if ((event.key === 'Backspace' || event.key === 'Delete') && (selectedTextIdRef.current != null || selectedDrawingIdsRef.current.length > 0)) {
+        event.preventDefault()
+        const drawingIds = selectedDrawingIdsRef.current
+        drawingIds.forEach((id) => { if (!String(id).startsWith('draft-')) sendRoomMessage({ type: 'drawing.delete', page_id: currentPageIdRef.current, drawing_id: id }) })
+        setTabletopDrawings((current) => current.filter((item) => !drawingIds.includes(item.id)))
+        tabletopDrawingsRef.current = tabletopDrawingsRef.current.filter((item) => !drawingIds.includes(item.id))
+        selectedDrawingIdsRef.current = []
+        setSelectedDrawingIds([])
+        const ids = selectedTextIdsRef.current.length ? selectedTextIdsRef.current : [selectedTextIdRef.current]
+        ids.forEach((id) => { if (!String(id).startsWith('draft-')) sendRoomMessage({ type: 'text.delete', page_id: currentPageIdRef.current, text_id: id }) })
+        setTabletopTexts((current) => current.filter((item) => !ids.includes(item.id)))
+        selectedTextIdRef.current = null
+        selectedTextIdsRef.current = []
+        setSelectedTextIds([])
+        setSelectedTextId(null)
+        return
+      }
       if ((event.key === 'Backspace' || event.key === 'Delete') && (selectedAssetIdRef.current != null || selectedAssetIdsRef.current.length > 0)) {
         event.preventDefault()
         deleteSelectedAssetRef.current?.(selectedAssetIdsRef.current.length ? selectedAssetIdsRef.current : [selectedAssetIdRef.current])
@@ -388,6 +469,15 @@ const RoomPage = () => {
     setPages(content.pages || [])
     setFolders(content.folders || [])
     setTabletopAssets(content.assets || [])
+    setTabletopTexts(content.texts || [])
+    setTabletopDrawings(content.drawings || [])
+    setSelectedTextId(null)
+    setEditingTextId(null)
+    selectedTextIdRef.current = null
+    setSelectedTextIds([])
+    selectedTextIdsRef.current = []
+    selectedDrawingIdsRef.current = []
+    setSelectedDrawingIds([])
     setSelectedAssetId(null)
     setSelectedAssetIds([])
     selectedAssetIdRef.current = null
@@ -402,7 +492,7 @@ const RoomPage = () => {
       backgroundColor: settings.background_color,
       pageSizeX: settings.page_size_x,
       pageSizeY: settings.page_size_y,
-      mapScaleValue: Number(settings.map_scale_value) || 0,
+      mapScaleValue: Number(settings.map_scale_value) || 1,
       mapScaleUnity: settings.map_scale_unity,
     })
     setGridColorDraft(settings.grid_color)
@@ -673,10 +763,12 @@ const RoomPage = () => {
   }
 
   const keepChatInsideScreen = useCallback((nextBox) => {
-    const maxWidth = Math.max(chatMinWidth, window.innerWidth - chatMenuSafeArea)
-    const maxHeight = Math.max(chatMinHeight, window.innerHeight - chatMenuSafeArea)
-    const width = Math.min(Math.max(nextBox.width, chatMinWidth), maxWidth)
-    const height = Math.min(Math.max(nextBox.height, chatMinHeight), maxHeight)
+    const maxWidth = Math.max(180, window.innerWidth - chatMenuSafeArea)
+    const maxHeight = Math.max(220, window.innerHeight - chatMenuSafeArea)
+    const minWidth = Math.min(chatMinWidth, maxWidth)
+    const minHeight = Math.min(chatMinHeight, maxHeight)
+    const width = Math.min(Math.max(nextBox.width, minWidth), maxWidth)
+    const height = Math.min(Math.max(nextBox.height, minHeight), maxHeight)
     const x = Math.min(
       Math.max(nextBox.x, 0),
       Math.max(0, window.innerWidth - width - chatMenuSafeArea)
@@ -690,13 +782,16 @@ const RoomPage = () => {
   }, [])
 
   const keepDiceMenuInsideScreen = useCallback((nextPosition) => {
+    const diceMenu = document.querySelector('[data-dice-menu]')
+    const width = diceMenu?.offsetWidth || Math.min(diceMenuWidth, window.innerWidth - diceMenuSafeArea * 2)
+    const height = diceMenu?.offsetHeight || Math.min(diceMenuHeight, window.innerHeight - diceMenuSafeArea * 2)
     const x = Math.min(
       Math.max(nextPosition.x, 0),
-      Math.max(0, window.innerWidth - diceMenuWidth - diceMenuSafeArea)
+      Math.max(0, window.innerWidth - width - diceMenuSafeArea)
     )
     const y = Math.min(
       Math.max(nextPosition.y, 0),
-      Math.max(0, window.innerHeight - diceMenuHeight - diceMenuSafeArea)
+      Math.max(0, window.innerHeight - height - diceMenuSafeArea)
     )
 
     return { x, y }
@@ -707,7 +802,6 @@ const RoomPage = () => {
     const total = payload.result?.total ?? dices.reduce((sum, dice) => sum + dice, 0) + payload.bonus
     const bonusLabel = payload.bonus ? `${payload.bonus > 0 ? '+' : ''}${payload.bonus}` : ''
     const expression = `${payload.quantity}d${payload.sides}${bonusLabel}`
-    const details = [...dices, ...(payload.bonus ? [payload.bonus] : [])].join('+')
 
     let txtColor = '#11111a'
 
@@ -745,6 +839,16 @@ const RoomPage = () => {
             className={s.rollNumberResult}
             style={{ color: txtColor }}
           >{total}</p>
+        </div>
+        <div className={s.rollDiceDetails} aria-label={`Dice results: ${dices.join(', ')}`}>
+          <div className={s.rollDiceValues}>
+            {dices.map((die, index) => <span
+              className={s.rollDieValue}
+              key={`${index}-${die}`}
+              style={{ color: die === payload.sides ? '#158801' : die === 1 ? '#AB0404' : undefined }}
+            >{die}</span>)}
+          </div>
+          {payload.bonus !== 0 && <span className={s.rollBonusValue}>Bonus {bonusLabel}</span>}
         </div>
       </div>
     )
@@ -800,6 +904,11 @@ const RoomPage = () => {
           return
         }
 
+        if (data.event === 'player.join') {
+          roomUserProfilesRef.current[String(data.user_id)] = data.profilepic_image_url || null
+          return
+        }
+
         if (data.event === 'page.created') {
           const page = data.payload
           setPages((current) => current.some((item) => item.id === page.id) ? current : [...current, page])
@@ -825,11 +934,22 @@ const RoomPage = () => {
           return
         }
 
-        if (data.event !== 'message') {
+        if (data.event !== 'message' && data.event !== 'measure.update') {
           return
         }
 
         const payload = data.payload
+        if (data.event === 'measure.update' || payload?.type === 'measure.update') {
+          if (Number(data.user_id) !== Number(currentUser?.id)) {
+            const nextMeasurement = payload.phase === 'end' && !payload.keep ? null : {
+              x: payload.x1, y: payload.y1, endX: payload.x2, endY: payload.y2,
+              shape: payload.shape, userId: data.user_id, isDragging: payload.phase !== 'end',
+            }
+            measurementRef.current = nextMeasurement
+            setMeasurement(nextMeasurement)
+          }
+          return
+        }
         if (payload?.page_id != null && Number(payload.page_id) !== Number(currentPageIdRef.current)) {
           const previewAffectingMessages = ['asset.insert', 'asset.change_layer', 'asset.change_order', 'asset.remove_from_tabletop']
           if (isRoomMasterRef.current && previewAffectingMessages.includes(payload.type)) {
@@ -840,6 +960,61 @@ const RoomPage = () => {
                 : page))
             }).catch((error) => console.error('Não foi possível atualizar o preview das pages.', error))
           }
+          return
+        }
+        if (payload?.type === 'text.create') {
+          const text = { id: payload.text_id, page_id: payload.page_id, client_id: payload.client_id, content: payload.content || '', position_x: payload.x, position_y: payload.y, layer: payload.layer, font_family: payload.font_family, font_size: payload.font_size, color: payload.color, bold: payload.bold, italic: payload.italic }
+          setTabletopTexts((current) => {
+            const draft = current.find((item) => item.client_id === payload.client_id)
+            return draft
+              ? current.map((item) => item.client_id === payload.client_id ? { ...text, content: item.content, font_family: item.font_family, font_size: item.font_size, color: item.color, bold: item.bold, italic: item.italic } : item)
+              : current.some((item) => item.id === payload.text_id) ? current.map((item) => item.id === payload.text_id ? { ...item, ...text } : item) : [...current, text]
+          })
+          setSelectedTextId((current) => { const next = current === `draft-${payload.client_id}` ? payload.text_id : current; selectedTextIdRef.current = next; return next })
+          setSelectedTextIds((current) => {
+            const next = current.map((id) => id === `draft-${payload.client_id}` ? payload.text_id : id)
+            selectedTextIdsRef.current = next
+            return next
+          })
+          setEditingTextId((current) => current === `draft-${payload.client_id}` ? payload.text_id : current)
+          return
+        }
+        if (payload?.type === 'text.update') {
+          const changes = Object.fromEntries(['content', 'font_family', 'font_size', 'color', 'bold', 'italic'].filter((key) => payload[key] != null).map((key) => [key, payload[key]]))
+          setTabletopTexts((current) => current.map((item) => item.id === payload.text_id ? { ...item, ...changes } : item))
+          return
+        }
+        if (payload?.type === 'text.move') {
+          setTabletopTexts((current) => current.map((item) => item.id === payload.text_id ? { ...item, position_x: payload.x, position_y: payload.y } : item))
+          return
+        }
+        if (payload?.type === 'text.delete') {
+          setTabletopTexts((current) => current.filter((item) => item.id !== payload.text_id))
+          setSelectedTextId((current) => current === payload.text_id ? null : current)
+          setSelectedTextIds((current) => { const next = current.filter((id) => id !== payload.text_id); selectedTextIdsRef.current = next; return next })
+          setEditingTextId((current) => current === payload.text_id ? null : current)
+          if (selectedTextIdRef.current === payload.text_id) selectedTextIdRef.current = null
+          return
+        }
+        if (payload?.type === 'drawing.create') {
+          const drawing = { id: payload.drawing_id, client_id: payload.client_id, page_id: payload.page_id, position_x: payload.position_x, position_y: payload.position_y, points: payload.points, color: payload.color, stroke_width: payload.stroke_width, layer: payload.layer }
+          setTabletopDrawings((current) => current.some((item) => item.client_id === payload.client_id)
+            ? current.map((item) => item.client_id === payload.client_id ? { ...drawing, position_x: item.position_x, position_y: item.position_y } : item)
+            : current.some((item) => item.id === payload.drawing_id) ? current.map((item) => item.id === payload.drawing_id ? { ...item, ...drawing } : item) : [...current, drawing])
+          setSelectedDrawingIds((current) => {
+            const next = current.map((id) => id === `draft-${payload.client_id}` ? payload.drawing_id : id)
+            selectedDrawingIdsRef.current = next
+            return next
+          })
+          return
+        }
+        if (payload?.type === 'drawing.move') {
+          setTabletopDrawings((current) => current.map((item) => item.id === payload.drawing_id ? { ...item, position_x: payload.position_x, position_y: payload.position_y } : item))
+          return
+        }
+        if (payload?.type === 'drawing.delete') {
+          setTabletopDrawings((current) => current.filter((item) => item.id !== payload.drawing_id))
+          setSelectedDrawingIds((current) => { const next = current.filter((id) => id !== payload.drawing_id); selectedDrawingIdsRef.current = next; return next })
           return
         }
         const isChatMessage = payload?.type === 'chat.message'
@@ -967,7 +1142,8 @@ const RoomPage = () => {
             id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
             text: isDiceRoll ? formatDiceRoll(data.payload) : data.payload.message,
             userId: data.user_id,
-            isOwn: data.user_id === currentUser?.id,
+            avatarUrl: roomUserProfilesRef.current[String(data.user_id)] ?? data.profilepic_image_url ?? null,
+            isOwn: Number(data.user_id) === Number(currentUser?.id),
           },
         ])
       } catch (error) {
@@ -997,6 +1173,12 @@ const RoomPage = () => {
     const handleWindowResize = () => {
       setChatBox((current) => keepChatInsideScreen(current))
       setDiceMenuPosition((current) => keepDiceMenuInsideScreen(current))
+      const measurePanel = document.querySelector('[data-measure-panel]')
+      const panelWidth = measurePanel?.offsetWidth || Math.min(560, window.innerWidth - 24)
+      setMeasurePanelPosition((current) => ({
+        x: Math.max(8, Math.min(window.innerWidth - panelWidth - 8, current.x)),
+        y: Math.max(8, Math.min(window.innerHeight - (measurePanel?.offsetHeight || 400) - 8, current.y)),
+      }))
     }
 
     window.addEventListener('resize', handleWindowResize)
@@ -1009,7 +1191,64 @@ const RoomPage = () => {
   }
 
   const handlePointerDown = (event) => {
-    if (event.button !== 2) {
+    if (activeTool === 'draw') {
+      if (event.button !== 0 || !event.target.closest?.('[data-tabletop]')) return
+      const point = getTabletopPoint(event.clientX, event.clientY)
+      if (!point || currentPageIdRef.current == null) return
+      event.preventDefault()
+      event.stopPropagation()
+      setSelectedTextId(null)
+      selectedTextIdRef.current = null
+      setSelectedTextIds([])
+      selectedTextIdsRef.current = []
+      setSelectedDrawingIds([])
+      selectedDrawingIdsRef.current = []
+      setSelectedAssetId(null)
+      setSelectedAssetIds([])
+      selectedAssetIdRef.current = null
+      selectedAssetIdsRef.current = []
+      drawDragRef.current = { pointerId: event.pointerId, points: [point], lastClientX: event.clientX, lastClientY: event.clientY, color: drawSettings.color, strokeWidth: drawSettings.strokeWidth, layer: workOnLayer }
+      event.currentTarget.setPointerCapture(event.pointerId)
+      setDrawPreview({ points: [point], color: drawSettings.color, strokeWidth: drawSettings.strokeWidth })
+      return
+    }
+    if (activeTool === 'text') {
+      if (event.button !== 0) return
+      const existingText = event.target.closest?.('[data-text-id]')
+      if (existingText) return
+      if (!event.target.closest?.('[data-tabletop]')) return
+      const point = getTabletopPoint(event.clientX, event.clientY)
+      if (!point || currentPageIdRef.current == null) return
+      event.preventDefault()
+      event.stopPropagation()
+      const clientId = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+      const draft = { id: `draft-${clientId}`, client_id: clientId, page_id: currentPageIdRef.current, content: '', position_x: point.x, position_y: point.y, layer: workOnLayer, font_family: textSettings.fontFamily, font_size: textSettings.fontSize, color: textSettings.color, bold: textSettings.bold, italic: textSettings.italic }
+      tabletopTextsRef.current = [...tabletopTextsRef.current, draft]
+      setTabletopTexts((current) => [...current, draft])
+      setSelectedTextId(draft.id)
+      selectedTextIdRef.current = draft.id
+      setSelectedTextIds([draft.id])
+      selectedTextIdsRef.current = [draft.id]
+      setEditingTextId(draft.id)
+      return
+    }
+    if (activeTool === 'measure') {
+      if (event.button !== 0) return
+      if (!event.target.closest?.('[data-tabletop]')) return
+      event.preventDefault()
+      const bounds = tabletopRef.current.getBoundingClientRect()
+      const point = snapMeasurePoint({ x: (event.clientX - bounds.left) / (zoom / 100), y: (event.clientY - bounds.top) / (zoom / 100) })
+      const next = { ...point, endX: point.x, endY: point.y, shape: measureShape, userId: currentUser?.id, isDragging: true }
+      measurementRef.current = next
+      measureDragRef.current = { pointerId: event.pointerId, start: point }
+      measureBroadcastRef.current = broadcastMeasure
+      event.currentTarget.setPointerCapture(event.pointerId)
+      setMeasurement(next)
+      if (measureBroadcastRef.current) sendRoomMessage({ type: 'measure.update', page_id: currentPageIdRef.current, phase: 'start', x1: point.x, y1: point.y, x2: point.x, y2: point.y, shape: measureShape, keep: keepMeasure })
+      return
+    }
+    const canPan = activeTool === 'move' ? event.button === 0 || event.button === 2 : event.button === 2
+    if (!canPan) {
       return
     }
 
@@ -1025,7 +1264,8 @@ const RoomPage = () => {
   }
 
   const startSelectionMarquee = (event) => {
-    if (event.button !== 0 || event.target.closest?.('.tabletopAsset')) return
+    if (activeTool !== 'select') return
+    if (event.button !== 0 || event.target.closest?.('[data-asset-id]') || event.target.closest?.('[data-text-id]') || event.target.closest?.('[data-drawing-id]')) return
     event.preventDefault()
     const bounds = tabletopFrameRef.current.getBoundingClientRect()
     marqueeRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, frameLeft: bounds.left, frameTop: bounds.top }
@@ -1035,6 +1275,55 @@ const RoomPage = () => {
   }
 
   const handlePointerMove = (event) => {
+    if (drawDragRef.current?.pointerId === event.pointerId) {
+      const active = drawDragRef.current
+      const dx = event.clientX - active.lastClientX
+      const dy = event.clientY - active.lastClientY
+      if (dx * dx + dy * dy < 2.25) return
+      const point = getTabletopPoint(event.clientX, event.clientY)
+      if (!point || active.points.length >= 5000) return
+      active.points.push(point)
+      active.lastClientX = event.clientX
+      active.lastClientY = event.clientY
+      setDrawPreview((current) => current ? { ...current, points: active.points.slice() } : current)
+      return
+    }
+    if (drawingMoveRef.current?.pointerId === event.pointerId) {
+      const active = drawingMoveRef.current
+      const point = getTabletopPoint(event.clientX, event.clientY)
+      if (!point) return
+      const dx = point.x - active.startX
+      const dy = point.y - active.startY
+      setTabletopDrawings((current) => current.map((item) => {
+        const origin = active.items.find((entry) => entry.id === item.id)
+        return origin ? { ...item, position_x: Math.max(0, origin.x + dx), position_y: Math.max(0, origin.y + dy) } : item
+      }))
+      return
+    }
+    if (textDragRef.current?.pointerId === event.pointerId) {
+      const active = textDragRef.current
+      const point = getTabletopPoint(event.clientX, event.clientY)
+      if (!point) return
+      const dx = point.x - active.startX
+      const dy = point.y - active.startY
+      setTabletopTexts((current) => current.map((item) => {
+        const origin = active.items.find((entry) => entry.id === item.id)
+        return origin ? { ...item, position_x: Math.max(0, origin.originX + dx), position_y: Math.max(0, origin.originY + dy) } : item
+      }))
+      return
+    }
+    if (measureDragRef.current?.pointerId === event.pointerId) {
+      const bounds = tabletopRef.current.getBoundingClientRect()
+      const point = snapMeasurePoint({ x: (event.clientX - bounds.left) / (zoom / 100), y: (event.clientY - bounds.top) / (zoom / 100) })
+      const next = { ...measurementRef.current, endX: point.x, endY: point.y, isDragging: true }
+      measurementRef.current = next
+      setMeasurement(next)
+      if (measureBroadcastRef.current && Date.now() - lastMeasureBroadcastRef.current > 35) {
+        lastMeasureBroadcastRef.current = Date.now()
+        sendRoomMessage({ type: 'measure.update', page_id: currentPageIdRef.current, phase: 'update', x1: next.x, y1: next.y, x2: next.endX, y2: next.endY, shape: next.shape, keep: keepMeasure })
+      }
+      return
+    }
     if (marqueeRef.current?.pointerId === event.pointerId) {
       const marquee = marqueeRef.current
       setSelectionMarquee({
@@ -1056,6 +1345,89 @@ const RoomPage = () => {
   }
 
   const handlePointerUp = (event) => {
+    if (drawDragRef.current?.pointerId === event.pointerId) {
+      const active = drawDragRef.current
+      drawDragRef.current = null
+      const point = getTabletopPoint(event.clientX, event.clientY)
+      if (point) {
+        const previous = active.points[active.points.length - 1]
+        if (active.points.length < 5000 && (!previous || Math.hypot(point.x - previous.x, point.y - previous.y) > 0.5)) active.points.push(point)
+      }
+      const xs = active.points.map((item) => item.x)
+      const ys = active.points.map((item) => item.y)
+      const minX = Math.min(...xs)
+      const minY = Math.min(...ys)
+      const clientId = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+      const drawing = {
+        id: `draft-${clientId}`, client_id: clientId, page_id: currentPageIdRef.current,
+        position_x: minX, position_y: minY,
+        points: active.points.map((item) => ({ x: item.x - minX, y: item.y - minY })),
+        color: active.color,
+        stroke_width: active.strokeWidth,
+        layer: active.layer,
+      }
+      setDrawPreview(null)
+      if (active.points.length > 0) {
+        tabletopDrawingsRef.current = [...tabletopDrawingsRef.current, drawing]
+        setTabletopDrawings((current) => [...current, drawing])
+        setSelectedDrawingIds([drawing.id])
+        selectedDrawingIdsRef.current = [drawing.id]
+        const sent = sendRoomMessage({ type: 'drawing.create', page_id: drawing.page_id, client_id: clientId, position_x: drawing.position_x, position_y: drawing.position_y, points: drawing.points, color: drawing.color, stroke_width: drawing.stroke_width, layer: drawing.layer })
+        if (!sent) {
+          setTabletopDrawings((current) => current.filter((item) => item.id !== drawing.id))
+          tabletopDrawingsRef.current = tabletopDrawingsRef.current.filter((item) => item.id !== drawing.id)
+          setSelectedDrawingIds([])
+          selectedDrawingIdsRef.current = []
+        }
+      }
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+      return
+    }
+    if (drawingMoveRef.current?.pointerId === event.pointerId) {
+      const active = drawingMoveRef.current
+      drawingMoveRef.current = null
+      const point = getTabletopPoint(event.clientX, event.clientY)
+      if (point) {
+        const dx = point.x - active.startX
+        const dy = point.y - active.startY
+        active.items.forEach((item) => {
+          if (!String(item.id).startsWith('draft-')) sendRoomMessage({ type: 'drawing.move', page_id: currentPageIdRef.current, drawing_id: item.id, position_x: Math.max(0, item.x + dx), position_y: Math.max(0, item.y + dy) })
+        })
+      }
+      return
+    }
+    if (textDragRef.current?.pointerId === event.pointerId) {
+      const active = textDragRef.current
+      textDragRef.current = null
+      const point = getTabletopPoint(event.clientX, event.clientY)
+      if (point) {
+        const dx = point.x - active.startX
+        const dy = point.y - active.startY
+        active.items.forEach((item) => {
+          if (!String(item.id).startsWith('draft-')) sendRoomMessage({ type: 'text.move', page_id: currentPageIdRef.current, text_id: item.id, x: Math.max(0, item.originX + dx), y: Math.max(0, item.originY + dy) })
+        })
+      }
+      return
+    }
+    if (measureDragRef.current?.pointerId === event.pointerId) {
+      const dragState = measureDragRef.current
+      const bounds = tabletopRef.current.getBoundingClientRect()
+      const point = snapMeasurePoint({ x: (event.clientX - bounds.left) / (zoom / 100), y: (event.clientY - bounds.top) / (zoom / 100) })
+      const next = { ...measurementRef.current, endX: point.x, endY: point.y }
+      measureDragRef.current = null
+      event.currentTarget.releasePointerCapture(event.pointerId)
+      if (!keepMeasure) {
+        measurementRef.current = null
+        setMeasurement(null)
+      } else {
+        const finishedMeasurement = { ...next, isDragging: false }
+        measurementRef.current = finishedMeasurement
+        setMeasurement(finishedMeasurement)
+      }
+      if (measureBroadcastRef.current) sendRoomMessage({ type: 'measure.update', page_id: currentPageIdRef.current, phase: 'end', x1: next.x, y1: next.y, x2: next.endX, y2: next.endY, shape: next.shape, keep: keepMeasure })
+      measureBroadcastRef.current = false
+      return
+    }
     if (marqueeRef.current?.pointerId === event.pointerId) {
       const marquee = marqueeRef.current
       const left = Math.min(marquee.startX, event.clientX)
@@ -1068,11 +1440,35 @@ const RoomPage = () => {
           return bounds.right >= left && bounds.left <= right && bounds.bottom >= top && bounds.top <= bottom
         })
         .map((element) => Number(element.dataset.assetId))
+      const selectedTextIds = [...tabletopRef.current.querySelectorAll('[data-text-id]')]
+        .filter((element) => {
+          const bounds = element.getBoundingClientRect()
+          return bounds.right >= left && bounds.left <= right && bounds.bottom >= top && bounds.top <= bottom
+        })
+        .map((element) => {
+          const rawId = element.dataset.textId
+          return /^\d+$/.test(rawId) ? Number(rawId) : rawId
+        })
+      const selectedDrawingIds = [...tabletopRef.current.querySelectorAll('[data-drawing-id]')]
+        .filter((element) => {
+          const bounds = element.getBoundingClientRect()
+          return bounds.right >= left && bounds.left <= right && bounds.bottom >= top && bounds.top <= bottom
+        })
+        .map((element) => {
+          const rawId = element.dataset.drawingId
+          return /^\d+$/.test(rawId) ? Number(rawId) : rawId
+        })
       marqueeCompletedRef.current = Math.abs(event.clientX - marquee.startX) > 4 || Math.abs(event.clientY - marquee.startY) > 4
       setSelectedAssetIds(selectedIds)
       selectedAssetIdsRef.current = selectedIds
       setSelectedAssetId(selectedIds[0] ?? null)
       selectedAssetIdRef.current = selectedIds[0] ?? null
+      selectedTextIdsRef.current = selectedTextIds
+      setSelectedTextIds(selectedTextIds)
+      selectedTextIdRef.current = selectedTextIds[0] ?? null
+      setSelectedTextId(selectedTextIds[0] ?? null)
+      selectedDrawingIdsRef.current = selectedDrawingIds
+      setSelectedDrawingIds(selectedDrawingIds)
       tabletopFrameRef.current.releasePointerCapture(event.pointerId)
       marqueeRef.current = null
       setSelectionMarquee(null)
@@ -1084,6 +1480,22 @@ const RoomPage = () => {
 
     event.currentTarget.releasePointerCapture(event.pointerId)
     setDrag(null)
+  }
+
+  const snapMeasurePoint = ({ x, y }) => {
+    let snappedX = x
+    let snappedY = y
+    if (measureSnap === 'center') {
+      snappedX = Math.floor(x / gridCellSize) * gridCellSize + gridCellSize / 2
+      snappedY = Math.floor(y / gridCellSize) * gridCellSize + gridCellSize / 2
+    } else if (measureSnap === 'corner') {
+      snappedX = Math.round(x / gridCellSize) * gridCellSize
+      snappedY = Math.round(y / gridCellSize) * gridCellSize
+    }
+    return {
+      x: Math.max(0, Math.min(backgroundSettings.pageSizeX, snappedX)),
+      y: Math.max(0, Math.min(backgroundSettings.pageSizeY, snappedY)),
+    }
   }
 
   const startChatDrag = (event) => {
@@ -1203,6 +1615,29 @@ const RoomPage = () => {
     }
   }
 
+  const startMeasurePanelDrag = (event) => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    measurePanelDragRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, origin: measurePanelPosition }
+  }
+  const moveMeasurePanelDrag = (event) => {
+    const dragState = measurePanelDragRef.current
+    if (!dragState || dragState.pointerId !== event.pointerId) return
+    const panel = event.currentTarget.closest('[data-measure-panel]')
+    const width = panel?.offsetWidth || 420
+    const height = panel?.offsetHeight || 400
+    setMeasurePanelPosition({
+      x: Math.max(8, Math.min(window.innerWidth - width - 8, dragState.origin.x + event.clientX - dragState.x)),
+      y: Math.max(8, Math.min(window.innerHeight - height - 8, dragState.origin.y + event.clientY - dragState.y)),
+    })
+  }
+  const stopMeasurePanelDrag = (event) => {
+    if (measurePanelDragRef.current?.pointerId !== event.pointerId) return
+    event.currentTarget.releasePointerCapture(event.pointerId)
+    measurePanelDragRef.current = null
+  }
+
   const moveDiceMenuDrag = (event) => {
     const dragState = diceDragRef.current
 
@@ -1267,6 +1702,64 @@ const RoomPage = () => {
       x: (clientX - bounds.left) / (bounds.width / backgroundSettings.pageSizeX),
       y: (clientY - bounds.top) / (bounds.height / backgroundSettings.pageSizeY),
     }
+  }
+
+  const persistText = (textId, changes) => {
+    if (textId == null || String(textId).startsWith('draft-')) return false
+    sendRoomMessage({ type: 'text.update', page_id: currentPageIdRef.current, text_id: textId, ...changes })
+    return true
+  }
+
+  const finishTextEdit = (text) => {
+    if (!text) return
+    setEditingTextId(null)
+    if (String(text.id).startsWith('draft-')) {
+      if (!text.content.trim()) {
+        setTabletopTexts((current) => current.filter((item) => item.id !== text.id))
+        tabletopTextsRef.current = tabletopTextsRef.current.filter((item) => item.id !== text.id)
+        return
+      }
+      if (text.pending_save) return
+      const sent = sendRoomMessage({ type: 'text.create', page_id: currentPageIdRef.current, client_id: text.client_id, content: text.content, x: text.position_x, y: text.position_y, layer: text.layer, font_family: text.font_family, font_size: text.font_size, color: text.color, bold: text.bold, italic: text.italic })
+      if (sent) {
+        const pending = { ...text, pending_save: true }
+        tabletopTextsRef.current = tabletopTextsRef.current.map((item) => item.id === text.id ? pending : item)
+        setTabletopTexts((current) => current.map((item) => item.id === text.id ? pending : item))
+      }
+      return
+    }
+    if (!text.content.trim()) {
+      sendRoomMessage({ type: 'text.delete', page_id: currentPageIdRef.current, text_id: text.id })
+      setTabletopTexts((current) => current.filter((item) => item.id !== text.id))
+      return
+    }
+    persistText(text.id, { content: text.content, font_family: text.font_family, font_size: text.font_size, color: text.color, bold: text.bold, italic: text.italic })
+  }
+
+  const changeTextSetting = (key, value) => {
+    setTextSettings((current) => ({ ...current, [key]: value }))
+    const selected = tabletopTexts.find((item) => item.id === selectedTextId)
+    if (!selected) return
+    const field = { fontFamily: 'font_family', fontSize: 'font_size', color: 'color', bold: 'bold', italic: 'italic' }[key]
+    setTabletopTexts((current) => current.map((item) => item.id === selected.id ? { ...item, [field]: value } : item))
+    if (!String(selected.id).startsWith('draft-')) persistText(selected.id, { [field]: value })
+  }
+
+  const startTextDrag = (event, text) => {
+    if (activeTool !== 'select' || event.button !== 0 || editingTextId === text.id) return
+    event.preventDefault()
+    event.stopPropagation()
+    const currentSelection = selectedTextIdsRef.current.includes(text.id) ? selectedTextIdsRef.current : [text.id]
+    selectedTextIdsRef.current = currentSelection
+    setSelectedTextIds(currentSelection)
+    selectedTextIdRef.current = text.id
+    setSelectedTextId(text.id)
+    if (text.layer !== workOnLayer) return
+    const point = getTabletopPoint(event.clientX, event.clientY)
+    if (!point) return
+    const movable = tabletopTexts.filter((item) => currentSelection.includes(item.id) && item.layer === workOnLayer)
+    textDragRef.current = { pointerId: event.pointerId, items: movable.map((item) => ({ id: item.id, originX: Number(item.position_x) || 0, originY: Number(item.position_y) || 0 })), startX: point.x, startY: point.y }
+    event.currentTarget.setPointerCapture(event.pointerId)
   }
 
   const handleTokenDragStart = (event, asset) => {
@@ -1379,6 +1872,7 @@ const RoomPage = () => {
   }
 
   const startAssetDrag = (event, asset) => {
+    if (activeTool !== 'select') return
     if (event.button !== 0) return
     selectedAssetIdRef.current = asset.id
     const currentSelection = selectedAssetIds.includes(asset.id) ? selectedAssetIds : [asset.id]
@@ -1386,6 +1880,13 @@ const RoomPage = () => {
     setSelectedAssetIds(currentSelection)
     selectedAssetIdsRef.current = currentSelection
     if (asset.layer !== workOnLayer) return
+    if (measureTokenMovement) {
+      const startX = (Number(asset.position_x) || 0) + (Number(asset.width) || defaultTokenSize) / 2
+      const startY = (Number(asset.position_y) || 0) + (Number(asset.height) || defaultTokenSize) / 2
+      setMeasurement({ x: startX, y: startY, endX: startX, endY: startY, shape: 'line', isDragging: true })
+      assetMeasureRef.current = true
+      if (broadcastMeasure) sendRoomMessage({ type: 'measure.update', page_id: currentPageIdRef.current, phase: 'start', x1: startX, y1: startY, x2: startX, y2: startY, shape: 'line' })
+    }
     event.preventDefault()
     event.stopPropagation()
     event.currentTarget.setPointerCapture(event.pointerId)
@@ -1416,6 +1917,14 @@ const RoomPage = () => {
     const scale = zoom / 100
     const dx = (event.clientX - activeDrag.startX) / scale
     const dy = (event.clientY - activeDrag.startY) / scale
+    if (assetMeasureRef.current) {
+      const next = { x: activeDrag.originX + activeDrag.width / 2, y: activeDrag.originY + activeDrag.height / 2, endX: activeDrag.originX + activeDrag.width / 2 + dx, endY: activeDrag.originY + activeDrag.height / 2 + dy, shape: 'line' }
+      setMeasurement(next)
+      if (broadcastMeasure && Date.now() - lastMeasureBroadcastRef.current > 35) {
+        lastMeasureBroadcastRef.current = Date.now()
+        sendRoomMessage({ type: 'measure.update', page_id: currentPageIdRef.current, phase: 'update', x1: next.x, y1: next.y, x2: next.endX, y2: next.endY, shape: 'line' })
+      }
+    }
     const bounds = activeDrag.assets.reduce((result, item) => ({
       minX: Math.min(result.minX, item.originX), minY: Math.min(result.minY, item.originY),
       maxX: Math.max(result.maxX, item.originX + item.width), maxY: Math.max(result.maxY, item.originY + item.height),
@@ -1437,6 +1946,12 @@ const RoomPage = () => {
     const scale = zoom / 100
     const dx = (event.clientX - activeDrag.startX) / scale
     const dy = (event.clientY - activeDrag.startY) / scale
+    if (assetMeasureRef.current) {
+      const next = { x: activeDrag.originX + activeDrag.width / 2, y: activeDrag.originY + activeDrag.height / 2, endX: activeDrag.originX + activeDrag.width / 2 + dx, endY: activeDrag.originY + activeDrag.height / 2 + dy, shape: 'line' }
+      if (broadcastMeasure) sendRoomMessage({ type: 'measure.update', page_id: currentPageIdRef.current, phase: 'end', x1: next.x, y1: next.y, x2: next.endX, y2: next.endY, shape: 'line' })
+      setMeasurement(null)
+      assetMeasureRef.current = false
+    }
     const bounds = activeDrag.assets.reduce((result, item) => ({
       minX: Math.min(result.minX, item.originX), minY: Math.min(result.minY, item.originY),
       maxX: Math.max(result.maxX, item.originX + item.width), maxY: Math.max(result.maxY, item.originY + item.height),
@@ -1691,13 +2206,17 @@ const RoomPage = () => {
         label="Chat"
         icon="chat"
         pressed={isChatOpen}
-        onClick={() => setIsChatOpen((current) => !current)}
+        onClick={() => {
+          if (!isChatOpen) setChatBox((current) => keepChatInsideScreen(current))
+          setIsChatOpen((current) => !current)
+        }}
       />
 
       <section
         ref={tabletopFrameRef}
-        className={cx('tabletopFrame', { isPanning: Boolean(drag) })}
+        className={cx('tabletopFrame', { isPanning: Boolean(drag), selectToolActive: activeTool === 'select', moveToolActive: activeTool === 'move', measureToolActive: activeTool === 'measure', textToolActive: activeTool === 'text', drawToolActive: activeTool === 'draw' })}
         aria-label="Tabletop"
+        data-tabletop-frame
         onWheel={handleWheel}
         onPointerDown={(event) => { handlePointerDown(event); startSelectionMarquee(event) }}
         onPointerMove={handlePointerMove}
@@ -1706,6 +2225,7 @@ const RoomPage = () => {
         onDragOver={handleTabletopDragOver}
         onDrop={handleTabletopDrop}
         onClick={(event) => {
+          if (activeTool !== 'select') return
           if (event.target === tabletopRef.current || event.target === tabletopFrameRef.current) {
             if (marqueeCompletedRef.current) {
               marqueeCompletedRef.current = false
@@ -1715,11 +2235,48 @@ const RoomPage = () => {
             setSelectedAssetIds([])
             selectedAssetIdsRef.current = []
             selectedAssetIdRef.current = null
+            setSelectedTextId(null)
+            selectedTextIdRef.current = null
+            setSelectedTextIds([])
+            selectedTextIdsRef.current = []
+            setSelectedDrawingIds([])
+            selectedDrawingIdsRef.current = []
           }
         }}
       >
         {selectionMarquee && <div className={s.selectionMarquee} style={selectionMarquee} aria-hidden="true" />}
-        <div ref={tabletopRef} className={s.tabletop} style={gridStyle}>
+        <div ref={tabletopRef} className={s.tabletop} data-tabletop style={gridStyle}>
+          {drawPreview && drawPreview.points.length > 0 && <svg className={s.drawPreview} viewBox={`0 0 ${backgroundSettings.pageSizeX} ${backgroundSettings.pageSizeY}`} aria-hidden="true">
+            <path d={drawingPath(drawPreview.points)} fill="none" stroke={drawPreview.color} strokeWidth={drawPreview.strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+            {drawPreview.points.length === 1 && <circle cx={drawPreview.points[0].x} cy={drawPreview.points[0].y} r={drawPreview.strokeWidth / 2} fill={drawPreview.color} />}
+          </svg>}
+          {measurement && (() => {
+            const dx = measurement.endX - measurement.x
+            const dy = measurement.endY - measurement.y
+            const distance = Math.hypot(dx, dy)
+            const angle = Math.atan2(dy, dx)
+            const value = distance / gridCellSize * Number(backgroundSettings.mapScaleValue || 0)
+            const label = `${Number(value.toFixed(2))} ${backgroundSettings.mapScaleUnity === 'meters' ? 'm' : backgroundSettings.mapScaleUnity === 'kilometers' ? 'km' : backgroundSettings.mapScaleUnity === 'miles' ? 'mi' : 'ft'}`
+            const labelX = measurement.endX
+            const labelY = measurement.isDragging ? Math.max(18, measurement.endY - 28) : measurement.endY
+            const normalX = distance ? -dy / distance : 0
+            const normalY = distance ? dx / distance : 0
+            const halfWidth = distance / 2
+            const shapePath = measurement.shape === 'square'
+              ? `M ${measurement.x + normalX * halfWidth} ${measurement.y + normalY * halfWidth} L ${measurement.endX + normalX * halfWidth} ${measurement.endY + normalY * halfWidth} L ${measurement.endX - normalX * halfWidth} ${measurement.endY - normalY * halfWidth} L ${measurement.x - normalX * halfWidth} ${measurement.y - normalY * halfWidth} Z`
+              : measurement.shape === 'cone'
+                ? `M ${measurement.x} ${measurement.y} L ${measurement.x + distance * Math.cos(angle - Math.PI / 6)} ${measurement.y + distance * Math.sin(angle - Math.PI / 6)} A ${distance} ${distance} 0 0 1 ${measurement.x + distance * Math.cos(angle + Math.PI / 6)} ${measurement.y + distance * Math.sin(angle + Math.PI / 6)} Z`
+                : null
+            return <svg className={s.measureOverlay} viewBox={`0 0 ${backgroundSettings.pageSizeX} ${backgroundSettings.pageSizeY}`} aria-hidden="true">
+              <defs><marker id="measure-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#111" /></marker></defs>
+              {measurement.shape === 'circle' && <circle cx={measurement.x} cy={measurement.y} r={distance} className={s.measureArea} />}
+              {shapePath && <path d={shapePath} className={s.measureArea} />}
+              <line x1={measurement.x} y1={measurement.y} x2={measurement.endX} y2={measurement.endY} className={s.measureLine} markerEnd="url(#measure-arrow)" />
+              <circle cx={measurement.x} cy={measurement.y} r="4" className={s.measureOrigin} />
+              <circle cx={labelX} cy={labelY} r="16" className={s.measureLabelBg} />
+              <text x={labelX} y={labelY + 4} className={s.measureLabel}>{label}</text>
+            </svg>
+          })()}
           {tabletopAssets.filter((asset) => asset.position_x != null && asset.position_y != null).map((asset) => {
             const width = Number(asset.width) || defaultTokenSize
             const height = Number(asset.height) || defaultTokenSize
@@ -1749,6 +2306,7 @@ const RoomPage = () => {
                 }}
                 data-asset-id={asset.id}
                 onClick={(event) => {
+                  if (activeTool !== 'select') return
                   event.stopPropagation()
                   selectedAssetIdRef.current = asset.id
                   setSelectedAssetId(asset.id)
@@ -1784,6 +2342,62 @@ const RoomPage = () => {
                 ))}
               </div>
             )
+          })}
+          {tabletopTexts.filter((item) => item.layer !== 'master' || isRoomMaster).map((item) => (
+            <div
+              key={item.id}
+              className={cx('tabletopText', { tabletopTextSelected: selectedTextIds.includes(item.id) || selectedTextId === item.id })}
+              style={{ left: `${item.position_x}px`, top: `${item.position_y}px`, zIndex: item.layer === 'master' ? 250000 : item.layer === 'map' ? 150000 : 250000, color: item.color, fontFamily: item.font_family, fontSize: `${item.font_size}px`, fontWeight: item.bold ? 700 : 400, fontStyle: item.italic ? 'italic' : 'normal' }}
+              data-text-id={item.id}
+              onPointerDown={(event) => {
+                  if (activeTool === 'text') { event.preventDefault(); event.stopPropagation(); setSelectedTextId(item.id); selectedTextIdRef.current = item.id; setSelectedTextIds([item.id]); selectedTextIdsRef.current = [item.id]; setEditingTextId(item.id); setTextSettings({ fontFamily: item.font_family, fontSize: item.font_size, color: item.color, bold: item.bold, italic: item.italic }); return }
+                startTextDrag(event, item)
+              }}
+            >
+              {editingTextId === item.id
+                ? <textarea autoFocus rows={Math.max(1, (item.content || '').split('\n').length)} value={item.content} placeholder="Digite o texto" onChange={(event) => {
+                  const updated = tabletopTextsRef.current.map((text) => text.id === item.id ? { ...text, content: event.target.value, font_family: textSettings.fontFamily, font_size: textSettings.fontSize, color: textSettings.color, bold: textSettings.bold, italic: textSettings.italic } : text)
+                  tabletopTextsRef.current = updated
+                  setTabletopTexts(updated)
+                }} onBlur={() => finishTextEdit(tabletopTextsRef.current.find((text) => text.id === item.id))} onKeyDown={(event) => { event.stopPropagation(); if (event.key === 'Escape') event.currentTarget.blur() }} />
+                : <span>{item.content}</span>}
+            </div>
+          ))}
+          {tabletopDrawings.filter((item) => item.layer !== 'master' || isRoomMaster).map((drawing) => {
+            const points = drawing.points || []
+            const padding = Math.max(7, (Number(drawing.stroke_width) || 4) / 2)
+            const contentWidth = Math.max(1, ...points.map((point) => Number(point.x) || 0))
+            const contentHeight = Math.max(1, ...points.map((point) => Number(point.y) || 0))
+            const width = contentWidth + padding * 2
+            const height = contentHeight + padding * 2
+            const selected = selectedDrawingIds.includes(drawing.id)
+            return <svg
+              key={drawing.id}
+              className={cx('tabletopDrawing', { tabletopDrawingSelected: selected })}
+              data-drawing-id={drawing.id}
+              viewBox={`0 0 ${width} ${height}`}
+              style={{ left: `${Number(drawing.position_x) - padding}px`, top: `${Number(drawing.position_y) - padding}px`, width: `${width}px`, height: `${height}px`, zIndex: drawing.layer === 'master' ? 290000 : drawing.layer === 'map' ? 180000 : 280000, overflow: 'visible' }}
+              aria-label="Desenho no tabletop"
+              onPointerDown={(event) => {
+                if (activeTool !== 'select' || event.button !== 0) return
+                event.preventDefault()
+                event.stopPropagation()
+                const selection = selectedDrawingIdsRef.current.includes(drawing.id) ? selectedDrawingIdsRef.current : [drawing.id]
+                selectedDrawingIdsRef.current = selection
+                setSelectedDrawingIds(selection)
+                if (drawing.layer !== workOnLayer) return
+                const point = getTabletopPoint(event.clientX, event.clientY)
+                if (!point) return
+                const movable = tabletopDrawings.filter((item) => selection.includes(item.id) && item.layer === workOnLayer)
+                drawingMoveRef.current = { pointerId: event.pointerId, startX: point.x, startY: point.y, items: movable.map((item) => ({ id: item.id, x: Number(item.position_x) || 0, y: Number(item.position_y) || 0 })) }
+                event.currentTarget.setPointerCapture(event.pointerId)
+              }}
+            >
+              {selected && <rect className={s.drawingSelectionBorder} x="1" y="1" width={Math.max(0, width - 2)} height={Math.max(0, height - 2)} />}
+              <path d={drawingPath(points, padding)} fill="none" stroke={drawing.color} strokeWidth={drawing.stroke_width} strokeLinecap="round" strokeLinejoin="round" />
+              <path d={drawingPath(points, padding)} fill="none" stroke="transparent" strokeWidth={Math.max(12, Number(drawing.stroke_width) || 4)} pointerEvents="stroke" />
+              {points.length === 1 && <circle cx={Number(points[0].x) + padding} cy={Number(points[0].y) + padding} r={Number(drawing.stroke_width) / 2} fill={drawing.color} />}
+            </svg>
           })}
           {backgroundSettings.visibleGrid && <div
             className={s.tabletopGridOverlay}
@@ -1872,7 +2486,7 @@ const RoomPage = () => {
                   chatMessageOther: !message.isOwn,
                 })}
               >
-                {!message.isOwn && <span className={s.chatAvatar} aria-hidden="true" />}
+                {!message.isOwn && <span className={s.chatAvatar} aria-hidden="true">{message.avatarUrl && <img src={message.avatarUrl} alt="" />}</span>}
                 <p className={cx('chatBubble', {
                   chatBubbleOwn: message.isOwn,
                   chatBubbleOther: !message.isOwn,
@@ -1914,6 +2528,7 @@ const RoomPage = () => {
       {isDiceMenuOpen && (
         <section
           className={s.diceMenuPanel}
+          data-dice-menu
           aria-label="Dice roll"
           style={{
             transform: `translate(${diceMenuPosition.x}px, ${diceMenuPosition.y}px)`,
@@ -1958,7 +2573,7 @@ const RoomPage = () => {
           <div className={s.advancedRoll}>
             <h2>Advanced roll</h2>
             <div className={s.advancedRollControls}>
-              <div className={s.numberInput}>
+              <div className={s.numberInput} style={{ width: `calc(${Math.max(2, String(advancedRoll.quantity ?? '').length)}ch + 48px)` }}>
                   <input
                   type="number"
                   min="1"
@@ -2001,6 +2616,7 @@ const RoomPage = () => {
               <select
                 aria-label="Tipo de dado"
                 value={advancedRoll.sides}
+                style={{ width: `calc(${Math.max(3, (diceOptions.find((dice) => String(dice.sides) === String(advancedRoll.sides))?.label || 'D20').length)}ch + 59px)` }}
                 onChange={(event) => handleAdvancedRollChange('sides', event.target.value)}
               >
                 {diceOptions.map((dice) => (
@@ -2008,7 +2624,7 @@ const RoomPage = () => {
                 ))}
               </select>
               <span className={s.advancedRollPlus}>+</span>
-              <div className={s.numberInput}>
+              <div className={s.numberInput} style={{ width: `calc(${Math.max(2, String(advancedRoll.bonus ?? '').length)}ch + 48px)` }}>
                 <input
                   type="number"
                   min="0"
@@ -2063,19 +2679,45 @@ const RoomPage = () => {
       )}
 
       <nav className={s.bottomMenu} aria-label="Tabletop tools">
-        <IconButton label="Select" icon="cursor" />
-        <IconButton label="Move" icon="hand" />
-        <IconButton label="Draw" icon="brush" />
-        <IconButton label="Text" icon="text" />
-        <IconButton label="Measure" icon="ruler" />
+        <IconButton label="Select" icon="cursor" pressed={activeTool === 'select'} onClick={() => { setActiveTool('select'); setIsMeasurePanelOpen(false) }} />
+        <IconButton label="Move" icon="hand" pressed={activeTool === 'move'} onClick={() => { setActiveTool('move'); setIsMeasurePanelOpen(false) }} />
+        <IconButton label="Draw" icon="brush" pressed={activeTool === 'draw'} onClick={() => { setActiveTool((current) => current === 'draw' ? 'select' : 'draw'); setIsMeasurePanelOpen(false) }} />
+        <IconButton label="Text" icon="text" pressed={activeTool === 'text'} onClick={() => {
+          if (activeTool === 'text') {
+            const editing = tabletopTextsRef.current.find((item) => item.id === selectedTextIdRef.current)
+            if (editingTextId != null) finishTextEdit(editing)
+            setEditingTextId(null)
+            setActiveTool('select')
+          } else {
+            setActiveTool('text')
+          }
+          setIsMeasurePanelOpen(false)
+        }} />
+        <IconButton label="Measure" icon="ruler" pressed={activeTool === 'measure'} onClick={() => { setActiveTool('measure'); setIsMeasurePanelOpen((open) => !open) }} />
         <span className={s.separator} aria-hidden="true" />
         <IconButton
           label="Dice"
           icon="dice"
           pressed={isDiceMenuOpen}
-          onClick={() => setIsDiceMenuOpen((current) => !current)}
+          onClick={() => {
+            if (!isDiceMenuOpen) setDiceMenuPosition((current) => keepDiceMenuInsideScreen(current))
+            setIsDiceMenuOpen((current) => !current)
+          }}
         />
       </nav>
+
+      {activeTool === 'text' && <section className={s.textToolbar} aria-label="Text formatting">
+        <label>Font<select value={textSettings.fontFamily} onChange={(event) => changeTextSetting('fontFamily', event.target.value)}><option>Arial</option><option>Georgia</option><option>Times New Roman</option><option>Courier New</option><option>Verdana</option></select></label>
+        <label>Size<input type="number" min="6" max="200" value={textSettings.fontSize} onChange={(event) => changeTextSetting('fontSize', Math.max(6, Math.min(200, Number(event.target.value) || 6)))} /></label>
+        <label>Color<input aria-label="Text color" type="color" value={textSettings.color} onChange={(event) => changeTextSetting('color', event.target.value)} /></label>
+        <button type="button" aria-pressed={textSettings.bold} onClick={() => changeTextSetting('bold', !textSettings.bold)}><strong>B</strong></button>
+        <button type="button" aria-pressed={textSettings.italic} onClick={() => changeTextSetting('italic', !textSettings.italic)}><em>I</em></button>
+      </section>}
+      {activeTool === 'draw' && <section className={s.drawToolbar} aria-label="Draw settings">
+        <label>Color<input type="color" value={drawSettings.color} onChange={(event) => setDrawSettings((current) => ({ ...current, color: event.target.value }))} /></label>
+        <label className={s.drawWidthField}>Thickness<input type="range" min="1" max="24" step="1" value={drawSettings.strokeWidth} onChange={(event) => setDrawSettings((current) => ({ ...current, strokeWidth: Number(event.target.value) }))} /></label>
+        <output>{drawSettings.strokeWidth}px</output>
+      </section>}
 
       <nav className={s.sideMenu} aria-label="Room panels">
         <div className={s.sideMenuTop}>
@@ -2091,6 +2733,52 @@ const RoomPage = () => {
         </div>
         <IconButton label="Settings" icon="settings" pressed={activeSidePanel === 'Settings'} onClick={() => setActiveSidePanel((current) => current === 'Settings' ? null : 'Settings')} />
       </nav>
+
+      {isMeasurePanelOpen && <section
+        className={cx('measurePanel', { measurePanelWithShapeDropdown: measureDropdown === 'shape' })}
+        data-measure-panel
+        style={{ left: measurePanelPosition.x, top: measurePanelPosition.y }}
+        aria-label="Measure settings"
+      >
+        <header className={s.measurePanelHeader} onPointerDown={startMeasurePanelDrag} onPointerMove={moveMeasurePanelDrag} onPointerUp={stopMeasurePanelDrag} onPointerCancel={stopMeasurePanelDrag}>
+          <span className={s.measurePanelIcon}>{icons.ruler}</span>
+          <strong>Measure</strong>
+          <button className={s.measureCloseButton} type="button" aria-label="Close measure" title="Close measure" onPointerDown={(event) => event.stopPropagation()} onClick={() => setIsMeasurePanelOpen(false)}>{icons.quit}</button>
+        </header>
+        <div className={s.measurePanelContent}>
+          <div className={s.measureSelectLabel}><span>Shape</span>
+            <div className={s.measureSelectWrap}>
+              <button type="button" className={s.measureSelectTrigger} aria-expanded={measureDropdown === 'shape'} onClick={() => setMeasureDropdown((current) => current === 'shape' ? null : 'shape')}>
+                {measureShape === 'cone' ? icons.shapeAngle : <Icon name={{ line: 'shapePline', circle: 'shapeCircle', square: 'shapeSquare' }[measureShape]} size={25} color="#DCD4FA" />}
+                <span className={s.measureSelectValue}>{measureShape[0].toUpperCase() + measureShape.slice(1)}</span><Icon name="chevronDown" size={20} color="#DCD4FA" />
+              </button>
+              {measureDropdown === 'shape' && <div className={s.measureDropdown}>{[
+                { value: 'line', label: 'Line', icon: <Icon name="shapePline" size={23} color="#DCD4FA" /> },
+                { value: 'circle', label: 'Circle', icon: <Icon name="shapeCircle" size={23} color="#DCD4FA" /> },
+                { value: 'square', label: 'Square', icon: <Icon name="shapeSquare" size={23} color="#DCD4FA" /> },
+                { value: 'cone', label: 'Cone', icon: icons.shapeAngle },
+              ].map((option) => <button type="button" key={option.value} aria-pressed={measureShape === option.value} onClick={() => { setMeasureShape(option.value); setMeasureDropdown(null) }}>{option.icon}<span>{option.label}</span></button>)}</div>}
+            </div>
+          </div>
+          <div className={s.measureSelectLabel}><span>Grid Snapping</span>
+            <div className={s.measureSelectWrap}>
+              <button type="button" className={s.measureSelectTrigger} aria-expanded={measureDropdown === 'snap'} onClick={() => setMeasureDropdown((current) => current === 'snap' ? null : 'snap')}>
+                {measureSnap === 'none' ? <Icon name="snappSquareDashed" size={25} color="#DCD4FA" /> : measureSnap === 'center' ? icons.snappSquareDashedX : icons.snappSquareDashedXCorner}
+                <span className={s.measureSelectValue}>{{ none: 'No snapping', center: 'Snap to center', corner: 'Snap to corner' }[measureSnap]}</span><Icon name="chevronDown" size={20} color="#DCD4FA" />
+              </button>
+              {measureDropdown === 'snap' && <div className={s.measureDropdown}>{[
+                { value: 'none', label: 'No snapping', icon: <Icon name="snappSquareDashed" size={23} color="#DCD4FA" /> },
+                { value: 'center', label: 'Snap to center', icon: icons.snappSquareDashedX },
+                { value: 'corner', label: 'Snap to corner', icon: icons.snappSquareDashedXCorner },
+              ].map((option) => <button type="button" key={option.value} aria-pressed={measureSnap === option.value} onClick={() => { setMeasureSnap(option.value); setMeasureDropdown(null) }}>{option.icon}<span>{option.label}</span></button>)}</div>}
+            </div>
+          </div>
+          <label className={s.measureCheckbox}><span>Keep the shape on tabletop</span><input type="checkbox" checked={keepMeasure} onChange={(event) => setKeepMeasure(event.target.checked)} /></label>
+          <label className={s.measureCheckbox}><span>Always measure token movement</span><input type="checkbox" checked={measureTokenMovement} onChange={(event) => setMeasureTokenMovement(event.target.checked)} /></label>
+          <label className={s.measureCheckbox}><span>Broadcast to others</span><input type="checkbox" checked={broadcastMeasure} onChange={(event) => setBroadcastMeasure(event.target.checked)} /></label>
+          <div className={s.measureScale}>1 Cell = {backgroundSettings.mapScaleValue || 0} {backgroundSettings.mapScaleUnity}</div>
+        </div>
+      </section>}
 
       <aside className={cx('sidePanel', { sidePanelOpen: Boolean(activeSidePanel) })} aria-hidden={!activeSidePanel}>
         {activeSidePanel && <div className={s.sidePanelContent}>

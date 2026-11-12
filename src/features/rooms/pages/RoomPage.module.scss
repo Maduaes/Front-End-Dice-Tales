@@ -13,7 +13,7 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  cursor: grab;
+  cursor: default;
   user-select: none;
   touch-action: none;
   filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.15));
@@ -22,6 +22,15 @@
 .isPanning {
   cursor: grabbing;
 }
+
+.isPanning, .isPanning * { cursor: grabbing !important; }
+.selectToolActive, .selectToolActive .tabletopAsset, .selectToolActive .tabletopText { cursor: default; }
+.moveToolActive, .moveToolActive * { cursor: grab; }
+.measureToolActive { cursor: crosshair; }
+.measureToolActive .tabletopAsset { cursor: crosshair !important; }
+.textToolActive { cursor: text; }
+.textToolActive .tabletopAsset { cursor: text !important; }
+.drawToolActive, .drawToolActive * { cursor: crosshair; }
 
 .isPanning .tabletop {
   transition: none;
@@ -40,6 +49,16 @@
 }
 
 .tabletopGridOverlay { position: absolute; inset: 0; pointer-events: none; }
+.measureOverlay { position: absolute; z-index: 300001; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.drawPreview { position: absolute; z-index: 300000; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.tabletopDrawing { position: absolute; touch-action: none; }
+.tabletopDrawingSelected { filter: drop-shadow(0 0 2px rgba(80, 120, 255, .9)); }
+.drawingSelectionBorder { fill: rgba(100, 145, 255, .08); stroke: #477bff; stroke-width: 1; stroke-dasharray: 5 4; pointer-events: none; }
+.measureArea { fill: rgba(35, 34, 47, 0.55); stroke: #17161b; stroke-width: 3; }
+.measureLine { stroke: #111; stroke-width: 4; marker-end: none; }
+.measureOrigin { fill: #111; }
+.measureLabelBg { fill: rgba(35, 34, 47, 0.72); stroke: #111; stroke-width: 1; }
+.measureLabel { fill: #fff; text-anchor: middle; font-size: 15px; font-weight: 700; paint-order: stroke; stroke: rgba(0,0,0,.6); stroke-width: 2px; }
 .selectionMarquee { position: absolute; z-index: 10000; border: 1px solid #78aaff; background: rgba(85, 145, 255, 0.2); pointer-events: none; }
 .assetGroupSelection { position: absolute; z-index: 300000; box-sizing: border-box; border: 2px solid #78aaff; pointer-events: none; }
 .assetGroupSelection .assetResizeHandle { pointer-events: auto; }
@@ -50,7 +69,7 @@
   box-sizing: border-box;
   overflow: visible;
   border-radius: 9px;
-  cursor: grab;
+  cursor: default;
   user-select: none;
   touch-action: none;
   transition: left 240ms ease, top 240ms ease, width 180ms ease, height 180ms ease;
@@ -58,10 +77,30 @@
 
 .tabletopAsset:hover { z-index: 2; }
 .tabletopAsset:active { cursor: grabbing; }
+.tabletopAsset.assetDragging { cursor: grabbing; }
 .tabletopAsset.assetSelected { overflow: visible; }
 .tabletopAsset.assetDragging,
 .tabletopAsset.assetResizing { z-index: 10; transition: none; }
 .tabletopAssetImage { display: block; width: 100%; height: 100%; border-radius: 5px; object-fit: fill; pointer-events: none; user-select: none; }
+
+.tabletopText { position: absolute; min-width: 2px; min-height: 1.2em; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.2; cursor: default; user-select: none; touch-action: none; }
+.tabletopText:active { cursor: grabbing; }
+.tabletopTextSelected { outline: 1px dashed rgba(220, 212, 250, .8); outline-offset: 3px; }
+.tabletopText textarea { display: block; min-width: 120px; min-height: 1.4em; max-width: min(40vw, 560px); resize: both; border: 0; outline: 1px solid rgba(220, 212, 250, .7); padding: 0; background: transparent; color: inherit; font: inherit; line-height: inherit; white-space: pre-wrap; overflow: hidden; }
+.textToolbar { position: fixed; z-index: 300010; left: 50%; bottom: 78px; display: flex; align-items: end; gap: 8px; max-width: calc(100vw - 24px); padding: 9px 11px; border: 1px solid rgba(220, 212, 250, .2); border-radius: 10px; background: #363547; box-shadow: 0 8px 24px rgba(0, 0, 0, .32); color: #EFE5D5; transform: translateX(-50%); }
+.textToolbar label { display: grid; gap: 3px; font-size: 10px; }
+.textToolbar select, .textToolbar input[type="number"] { width: 118px; height: 30px; border: 1px solid rgba(220, 212, 250, .25); border-radius: 5px; padding: 0 6px; background: #48475b; color: #DCD4FA; }
+.textToolbar input[type="number"] { width: 55px; }
+.textToolbar input[type="color"] { width: 34px; height: 30px; border: 1px solid rgba(220, 212, 250, .25); border-radius: 5px; padding: 2px; background: #48475b; }
+.textToolbar > button { width: 30px; height: 30px; border: 1px solid rgba(220, 212, 250, .25); border-radius: 5px; background: #48475b; color: #DCD4FA; cursor: pointer; }
+.textToolbar > button[aria-pressed="true"] { background: #6a6686; }
+@media (max-width: 520px) { .textToolbar { gap: 5px; padding: 7px; } .textToolbar select { width: 98px; } }
+.drawToolbar { position: fixed; z-index: 300010; left: 50%; bottom: 78px; display: flex; align-items: end; gap: 12px; max-width: calc(100vw - 24px); padding: 9px 12px; border: 1px solid rgba(220, 212, 250, .2); border-radius: 10px; background: #363547; box-shadow: 0 8px 24px rgba(0, 0, 0, .32); color: #EFE5D5; transform: translateX(-50%); }
+.drawToolbar label { display: grid; gap: 4px; font-size: 11px; }
+.drawToolbar input[type="color"] { width: 38px; height: 30px; border: 1px solid rgba(220, 212, 250, .25); border-radius: 5px; padding: 2px; background: #48475b; }
+.drawWidthField input { width: clamp(90px, 18vw, 170px); accent-color: #a7a5d3; }
+.drawToolbar output { min-width: 32px; padding-bottom: 6px; color: #DCD4FA; font-size: 12px; }
+@media (max-width: 520px) { .drawToolbar { gap: 8px; padding: 7px 9px; } .drawWidthField input { width: 90px; } }
 
 .assetSelectionBorder { position: absolute; z-index: 4; inset: 0; border: 2px solid #c5a3ed; pointer-events: none; }
 
@@ -564,10 +603,77 @@
 
 .sideMenu .iconButton { cursor: pointer; }
 .sideMenu .iconButton[aria-pressed="true"] svg path { stroke: #b48add; }
+.bottomMenu .iconButton { cursor: pointer; }
+.bottomMenu .iconButton[aria-pressed="true"] { background: #514661; }
+.bottomMenu .iconButton[aria-pressed="true"] svg path { stroke: #c9a4ef; }
+
+.measurePanel {
+  position: absolute;
+  z-index: 13;
+  width: min(400px, calc(100vw - 24px));
+  max-height: calc(100vh - 16px);
+  border-radius: 16px;
+  overflow-y: auto;
+  background: #363547;
+  color: #EFE5D5;
+  box-shadow: 0 18px 28px rgba(0, 0, 0, .28);
+  padding-bottom: 0;
+  transition: padding-bottom 180ms ease;
+}
+.measurePanelWithShapeDropdown { padding-bottom: 14px; }
+.measurePanelHeader {
+  height: 50px;
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 2px solid rgba(26, 25, 39, .34);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.measurePanelHeader:active { cursor: grabbing; }
+.measurePanelHeader strong { text-align: center; font-size: 22px; }
+.measurePanelIcon { display: grid; place-items: center; color: #9290B2; }
+.measurePanelIcon svg path { stroke: #9290B2; }
+.measureCloseButton { width: 30px; height: 30px; display: grid; place-items: center; justify-self: end; border: 0; padding: 0; background: transparent; color: #9290B2; cursor: pointer; }
+.measureCloseButton svg { width: 24px; height: 24px; }
+.measurePanelContent { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 10px; padding: 14px; }
+.measureSelectLabel { display: grid; gap: 6px; color: #EFE5D5; font-size: 14px; font-weight: 600; }
+.measureSelectWrap {
+  position: relative;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-radius: 9px;
+  background: #414052;
+  color: #DCD4FA;
+  box-shadow: 0 4px 7px rgba(0, 0, 0, .24);
+}
+.measureSelectTrigger { width: 100%; height: 100%; display: flex; align-items: center; gap: 8px; padding: 0; border: 0; background: transparent; color: #DCD4FA; text-align: left; cursor: pointer; }
+.measureSelectValue { color: #DCD4FA; font-size: 13px; font-weight: 600; pointer-events: none; white-space: nowrap; }
+.measureSelectTrigger > :last-child { margin-left: auto; pointer-events: none; }
+.measureDropdown { position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; right: 0; display: grid; padding: 5px; border: 1px solid rgba(220, 212, 250, .2); border-radius: 10px; background: #363547; box-shadow: 0 8px 18px rgba(0, 0, 0, .36); }
+.measureDropdown button { display: flex; align-items: center; gap: 12px; min-height: 42px; padding: 7px 10px; border: 0; border-radius: 7px; background: transparent; color: #DCD4FA; text-align: left; font: inherit; font-size: 14px; cursor: pointer; }
+.measureDropdown button:hover, .measureDropdown button[aria-pressed="true"] { background: #514f64; }
+.measureDropdown button svg { flex: 0 0 23px; }
+.measureCheckbox { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 27px; color: #EFE5D5; font-size: 13px; font-weight: 500; }
+.measureCheckbox input { position: relative; appearance: none; width: 22px; height: 22px; flex: 0 0 22px; margin: 0 2px 0 0; border: 2px solid #8581a6; border-radius: 5px; background: transparent; cursor: pointer; }
+.measureCheckbox input:checked { background: #268d83; border-color: #8581a6; }
+.measureCheckbox input:checked::after { content: ''; position: absolute; top: 50%; left: 50%; width: 5px; height: 10px; border: solid #fff; border-width: 0 2px 2px 0; transform: translate(-50%, -60%) rotate(45deg); }
+.measureScale { grid-column: 1 / -1; justify-self: end; margin-top: -3px; color: #DCD4FA; font-size: 11px; }
 
 @media screen and (max-width: 620px) {
   .sidePanel { right: 78px; width: min(390px, calc(100vw - 104px)); }
   .sidePanelContent { padding: 24px 20px; }
+  .measurePanelContent { grid-template-columns: 1fr; gap: 14px; padding: 18px; }
+  .measureCheckbox, .measureScale { grid-column: 1; }
+  .measureSelectLabel { font-size: 14px; }
+  .measureSelectWrap { height: 42px; }
+  .measurePanelHeader { height: 48px; }
+  .measurePanelHeader strong { font-size: 21px; }
 }
 
 .chatPanel {
@@ -575,10 +681,12 @@
   top: 0;
   left: 0;
   z-index: 8;
-  min-width: 280px;
-  min-height: 360px;
+  min-width: 240px;
+  min-height: 300px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px);
   display: grid;
-  grid-template-rows: 74px minmax(0, 1fr) 83px;
+  grid-template-rows: 56px minmax(0, 1fr) 68px;
   overflow: visible;
   border-radius: 16px;
   // background: #343346;
@@ -589,10 +697,10 @@
 
 .chatHeader {
   display: grid;
-  grid-template-columns: 58px 1fr 58px;
+  grid-template-columns: 38px 1fr 38px;
   align-items: center;
-  gap: 12px;
-  padding: 0 24px;
+  gap: 8px;
+  padding: 0 14px;
   border-bottom: 1px solid rgba(16, 16, 26, 0.34);
   cursor: grab;
   touch-action: none;
@@ -612,16 +720,16 @@
 }
 
 .chatHeaderIcon {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
   color: #adabc9;
 }
 
 .chatHeaderIcon svg {
-  width: 34px;
-  height: 34px;
+  width: 27px;
+  height: 27px;
 }
 
 .chatHeaderIcon path {
@@ -629,8 +737,8 @@
 }
 
 .chatCloseButton {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
   border: 0;
@@ -642,8 +750,8 @@
 }
 
 .chatCloseButton svg {
-  width: 34px;
-  height: 34px;
+  width: 27px;
+  height: 27px;
 }
 
 .chatMessages {
@@ -651,7 +759,7 @@
   flex-direction: column;
   gap: clamp(16px, 4.5cqh, 27px);
   overflow-y: auto;
-  padding: 118px 22px 20px 22px;
+  padding: 48px 16px 14px;
   scrollbar-width: thin;
   scrollbar-color: #8d89b9 transparent;
 }
@@ -664,7 +772,7 @@
 
 .chatMessageOther {
   justify-content: flex-start;
-  gap: 17px;
+  gap: 10px;
 }
 
 .chatMessageOwn {
@@ -672,23 +780,31 @@
 }
 
 .chatAvatar {
-  width: 39px;
-  height: 39px;
-  flex: 0 0 39px;
-  border: 4px solid #ffffff;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border: 3px solid #ffffff;
   border-radius: 50%;
   background: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.chatAvatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .chatBubble {
   position: relative;
-  min-height: 47px;
+  min-height: 38px;
   max-width: min(75%, 278px);
   margin: 0;
   display: flex;
   align-items: center;
-  padding: 13px 22px;
+  padding: 9px 14px;
   color: #11111a;
   font-size: clamp(13px, 3.2cqw, 15px);
   line-height: 1.35;
@@ -738,11 +854,11 @@
 
 .chatComposer {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 49px;
+  grid-template-columns: minmax(0, 1fr) 40px;
   align-items: center;
   gap: 8px;
-  margin: 0 17px 15px 17px;
-  padding: 5px 8px 5px 27px;
+  margin: 0 12px 8px;
+  padding: 4px 6px 4px 12px;
   border: 2px solid #56536f;
   border-radius: 17px;
   background: #3d3b53;
@@ -759,7 +875,7 @@
 .chatComposer textarea {
   width: 100%;
   min-width: 0;
-  max-height: 78px;
+  max-height: 58px;
   border: 0;
   outline: 0;
   resize: none;
@@ -778,8 +894,8 @@
 }
 
 .chatComposer button {
-  width: 49px;
-  height: 49px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   border: 1px solid transparent;
@@ -897,37 +1013,40 @@
   justify-content: center;
   flex-direction: column;
   border: 1px solid #363547;
-  padding: 10px;
+  gap: 2px;
+  padding: 6px;
   border-radius: 7px;
-  margin-top: 9px;
-  margin-bottom: 9px;
+  margin-top: 4px;
+  margin-bottom: 4px;
 
-  width: 200px;
+  width: min(176px, 100%);
   
-  p{
-    margin-block-end: 0;
-  };
+  p { margin: 0; }
 
   header{
-    position: relative;
     display: flex;
-    justify-content: center;
     align-items: center;
+    gap: 5px;
     width: 100%;
+    min-height: 20px;
+
+    p { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 12px; text-align: center; overflow-wrap: anywhere; }
   }
 }
 
 .headerRollResult {
-  position: absolute;
-  left: 0;
+  position: static;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
 }
 
 .rollLine {
   width: 100%;
   height: 0.5px;
   background-color: #363547;
-  margin-top: 5px;
-  margin-bottom: 5px;
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
 
 .rollNumberContainer {
@@ -935,8 +1054,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 90px;
-  height: 90px;
+  width: 52px;
+  height: 52px;
 }
 
 .rollDiceBackground {
@@ -952,22 +1071,28 @@
   position: relative;
   z-index: 1;
   margin: 0;
-  font-size: clamp(18px, 9cqw, 50px);
+  font-size: 30px;
 }
+
+.rollDiceDetails { display: grid; justify-items: center; gap: 3px; width: 100%; }
+.rollDiceValues { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; }
+.rollDieValue { min-width: 18px; padding: 2px 5px; border-radius: 5px; background: rgba(54, 53, 71, .12); color: #22212e; font-size: 11px; font-weight: 700; line-height: 1.1; text-align: center; }
+.rollBonusValue { color: #56536f; font-size: 10px; line-height: 1.1; }
 
 .diceMenuPanel {
   position: absolute;
   top: 0;
   left: 0;
   z-index: 9;
-  width: 670px;
-  height: 270px;
+  width: min(520px, calc(100vw - 24px));
+  height: 230px;
+  max-height: calc(100vh - 24px);
 
   display: grid;
-  grid-template-rows: 65px 101px 1fr;
+  grid-template-rows: 50px 82px 1fr;
 
-  overflow: hidden;
-  border-radius: 16px;
+  overflow: auto;
+  border-radius: 13px;
   background: #363547;
   box-shadow: 0 18px 28px rgba(0, 0, 0, 0.26);
   color: #EFE5D5;
@@ -977,25 +1102,25 @@
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   align-items: stretch;
-  gap: 5px;
-  padding: 14px 0 8px;
+  gap: 4px;
+  padding: 8px 0 4px;
 }
 .diceQuickRolls,
 .advancedRoll {
-  width: calc(100% - 62px);
+  width: calc(100% - 36px);
   margin-inline: auto;
 }
 //
 .advancedRoll {
-  padding: 3px 0 24px;
+  padding: 0 0 12px;
 }
 
 .diceMenuHeader {
   display: grid;
-  grid-template-columns: 56px 1fr 56px;
+  grid-template-columns: 38px 1fr 38px;
   align-items: center;
-  gap: 10px;
-  padding: 0 31px;
+  gap: 8px;
+  padding: 0 14px;
   border-bottom: 2px solid rgba(26, 25, 39, 0.34);
   cursor: grab;
   touch-action: none;
@@ -1008,23 +1133,23 @@
 
 .diceMenuHeader strong {
   text-align: center;
-  font-size: 28px;
+  font-size: 22px;
   line-height: 1;
   font-weight: 700;
   color: #EFE5D5;
 }
 
 .diceMenuHeaderIcon {
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
   color: #9290B2;
 }
 
 .diceMenuHeaderIcon svg {
-  width: 34px;
-  height: 34px;
+  width: 27px;
+  height: 27px;
 }
 
 .diceMenuHeaderIcon path {
@@ -1032,8 +1157,8 @@
 }
 
 .diceMenuCloseButton {
-  width: 44px;
-  height: 44px;
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
   justify-self: end;
@@ -1046,8 +1171,8 @@
 }
 
 .diceMenuCloseButton svg {
-  width: 42px;
-  height: 42px;
+  width: 27px;
+  height: 27px;
 }
 
 // .diceQuickRolls {
@@ -1059,9 +1184,9 @@
 // }
 
 .diceQuickButton {
-  height: 78px;
+  height: 64px;
   display: grid;
-  grid-template-rows: 48px 22px;
+  grid-template-rows: 38px 18px;
   justify-items: center;
   align-items: center;
   border: 0;
@@ -1093,14 +1218,14 @@
 }
 
 .diceQuickButton img {
-  width: 48px;
-  height: 48px;
+  width: 38px;
+  height: 38px;
   object-fit: contain;
   pointer-events: none;
 }
 
 .diceQuickButton span {
-  font-size: 16px;
+  font-size: 13px;
   line-height: 1;
   font-weight: 400;
   letter-spacing: 0;
@@ -1111,31 +1236,31 @@
 // }
 
 .advancedRoll h2 {
-  margin: 0 0 12px;
+  margin: 0 0 7px;
   color: #EFE5D5;
-  font-size: 20px;
+  font-size: 16px;
   line-height: 1;
   font-weight: 700;
 }
 
 .advancedRollControls {
-  display: grid;
-  grid-template-columns: 90px 112px 34px 90px 1fr 150px;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 
 .advancedRollControls input,
 .advancedRollControls select {
   width: 100%;
-  height: 38px;
+  height: 32px;
   border: 2px solid #529692;
   border-radius: 8px;
   outline: 0;
   background: #363547;
   color: #EFE5D5;
   font: inherit;
-  font-size: 17px;
+  font-size: 14px;
   line-height: 1;
 }
 
@@ -1154,8 +1279,8 @@ input[type='number'] {
 
 .numberInput {
   position: relative;
-  width: 100%;
-  height: 38px;
+  flex: 0 0 auto;
+  height: 32px;
 
   input {
     width: 100%;
@@ -1208,6 +1333,7 @@ input[type='number'] {
 }
 
 .advancedRollControls select {
+  flex: 0 0 auto;
   padding: 0 35px 0 14px;
   appearance: none;
   cursor: pointer;
@@ -1215,15 +1341,15 @@ input[type='number'] {
     linear-gradient(45deg, transparent 50%, #EFE5D5 50%),
     linear-gradient(135deg, #EFE5D5 50%, transparent 50%),
     linear-gradient(#529692, #529692);
-  background-position:
-    calc(100% - 18px) 15px,
-    calc(100% - 10px) 15px,
-    right top;
   background-size:
     8px 8px,
     8px 8px,
     37px 100%;
   background-repeat: no-repeat;
+  background-position:
+    calc(100% - 18px) center,
+    calc(100% - 10px) center,
+    right center;
 }
 
 .advancedRollControls input:focus,
@@ -1233,18 +1359,20 @@ input[type='number'] {
 
 .advancedRollPlus {
   color: #EFE5D5;
-  font-size: 31px;
+  font-size: 24px;
   line-height: 1;
   text-align: center;
 }
 
 .dmToggle {
   display: flex;
+  flex: 1 1 52px;
+  min-width: 52px;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
   color: #EFE5D5;
-  font-size: 20px;
+  font-size: 15px;
   line-height: 1;
 }
 
@@ -1268,14 +1396,15 @@ input[type='number'] {
 }
 
 .rollButton {
-  width: 100%;
-  height: 38px;
+  flex: 1 1 102px;
+  min-width: 92px;
+  height: 32px;
   border: 0;
   border-radius: 8px;
   background: #529692;
   color: #EFE5D5;
   font: inherit;
-  font-size: 21px;
+  font-size: 16px;
   line-height: 1;
   font-weight: 700;
   cursor: pointer;
@@ -1310,16 +1439,20 @@ input[type='number'] {
   }
 
   .diceMenuPanel {
-    width: min(592px, calc(100vw - 88px));
+    width: min(520px, calc(100vw - 24px));
   }
 
   .advancedRollControls {
-    grid-template-columns: 78px 102px 24px 78px 1fr 112px;
-    gap: 8px;
+    gap: 5px;
   }
 }
 
 @media screen and (max-width: 620px) {
+  .chatPanel {
+    min-width: min(240px, calc(100vw - 24px));
+    min-height: min(300px, calc(100vh - 24px));
+  }
+
   .chatButton {
     top: 14px;
     left: 14px;
@@ -1344,38 +1477,47 @@ input[type='number'] {
   }
 
   .diceMenuPanel {
-    width: calc(100vw - 28px);
+    width: calc(100vw - 24px);
     height: auto;
-    grid-template-rows: 62px auto auto;
-    border-radius: 18px;
+    grid-template-rows: 50px auto auto;
+    border-radius: 14px;
   }
 
   .diceMenuHeader {
-    padding: 0 18px;
+    padding: 0 12px;
   }
 
   .diceMenuHeader strong {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .diceQuickRolls {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    padding: 12px 16px 8px;
+    padding: 8px 10px 4px;
   }
 
   .advancedRoll {
-    padding: 5px 16px 18px;
+    padding: 2px 10px 12px;
   }
 
   .advancedRollControls {
-    grid-template-columns: 1fr 1fr 24px 1fr;
+    gap: 5px;
   }
+
+  .advancedRollControls input,
+  .advancedRollControls select { height: 30px; font-size: 13px; }
+
+  .advancedRollControls select { padding: 0 24px 0 8px; background-position: calc(100% - 14px) center, calc(100% - 7px) center, right center; background-size: 7px 7px, 7px 7px, 28px 100%; }
+
+  .numberInput { height: 30px; }
+
+  .advancedRollControls .dmToggle { flex: 1 1 72px; }
 
   .dmToggle {
     justify-content: flex-start;
   }
 
   .rollButton {
-    grid-column: span 2;
+    flex: 1 1 110px;
   }
 }
