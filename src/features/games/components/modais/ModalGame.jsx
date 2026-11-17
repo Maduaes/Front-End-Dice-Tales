@@ -1,6 +1,7 @@
 import cn from 'classnames/bind'
 import s from './ModalGame.module.scss'
 import Input from "@/shared/forms/Input"
+import { SelectOption } from "@/shared/forms/SelectOption"
 import { useState, useEffect } from 'react'
 import pencilModalIcon from '@/assets/pencil_modal_icon.png'
 import { Icon } from '../../../../shared/icones/Icon'
@@ -14,9 +15,10 @@ import {
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"]
+const gameOptions = [{ id: 1, descricao: "D&D5e" }, { id: 2, descricao: "T20" }]
 
 export const ModalGame = ({ type, atualizaGames, dados }) => {
-  const [formGame, setFormGame] = useState({ id: null, name: '' })
+  const [formGame, setFormGame] = useState({ id: null, name: '', game_system: 'D&D5e' })
   const [formJoin, setFormJoin] = useState({ code: '' })
   const [coverFile, setCoverFile] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -53,6 +55,7 @@ export const ModalGame = ({ type, atualizaGames, dados }) => {
       setFormGame({
         id: null,
         name: '',
+        game_system: 'D&D5e',
       })
     }
     setCoverFile(null)
@@ -110,7 +113,7 @@ export const ModalGame = ({ type, atualizaGames, dados }) => {
 
       if (isNewGame || isEditGame) {
         response = isNewGame
-          ? await createGame(formGame.name)
+          ? await createGame(formGame.name, formGame.game_system)
           : await editGame(formGame.id, formGame.name)
 
         if (isEditGame && coverFile) {
@@ -155,6 +158,17 @@ export const ModalGame = ({ type, atualizaGames, dados }) => {
               nameIcon="feather"
               className="col-12"
             />
+            {isNewGame && (
+              <SelectOption
+                label="Game"
+                name="game_system"
+                value={formGame.game_system}
+                handleChange={handleChange}
+                listaOpcoes={gameOptions}
+                theme="ipt-second"
+                className="col-12"
+              />
+            )}
             {isEditGame && (
               <div className={cn("col-12", s.coverField)}>
                 <label className={s.coverLabel} htmlFor={`${id}CoverUpload`}>

@@ -22,6 +22,17 @@ export const Register = () => {
     setFormRegister({ ...formRegister, [name]: value })
   }
 
+  const password = formRegister.password.trim()
+  const passwordRequirements = [
+    { label: "At least 8 characters", valid: password.length >= 8 },
+    { label: "At most 50 characters", valid: password.length <= 50 },
+    { label: "At least one uppercase letter", valid: /\p{Lu}/u.test(password) },
+    { label: "At least one lowercase letter", valid: /\p{Ll}/u.test(password) },
+    { label: "At least one number", valid: /\p{N}/u.test(password) },
+  ]
+  const passwordsMatch = formRegister.confirmPassword.length > 0 &&
+    formRegister.password === formRegister.confirmPassword
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -64,7 +75,6 @@ export const Register = () => {
                 value={formRegister.email}
                 handleChange={handleChange}
               />
-
               <Input
                 label="Password"
                 name="password"
@@ -73,6 +83,15 @@ export const Register = () => {
                 value={formRegister.password}
                 handleChange={handleChange}
               />
+              {formRegister.password.length > 0 && (
+                <ul className={styles.passwordRequirements} aria-live="polite">
+                  {passwordRequirements.map(({ label, valid }) => (
+                    <li key={label} className={valid ? styles.requirementMet : styles.requirementPending}>
+                      <span aria-hidden="true">{valid ? "✓" : "○"}</span> {label}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <div className="col-6 pe-5">
@@ -92,6 +111,11 @@ export const Register = () => {
                 value={formRegister.confirmPassword}
                 handleChange={handleChange}
               />
+              {formRegister.confirmPassword.length > 0 && (
+                <p className={`${styles.passwordMatch} ${passwordsMatch ? styles.requirementMet : styles.requirementPending}`} aria-live="polite">
+                  {passwordsMatch ? "Passwords match" : "Passwords do not match"}
+                </p>
+              )}
             </div>
 
             <button type="submit" className={styles.btnLogin}>

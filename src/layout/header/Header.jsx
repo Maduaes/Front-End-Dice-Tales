@@ -13,8 +13,8 @@ const Header = () => {
     <header className='header-layout shadow'>
       <nav className="navbar-expand-lg bg-gray py-2 mb-height">
         <div className="container">
-          <div className="row">
-            <div className="col-2">
+          <div className="header-row">
+            <div className="header-brand">
               <div className="logo-box">
                 <img
                   src="Logotipo_Dice_Tales.png" // logo à fazer
@@ -29,12 +29,12 @@ const Header = () => {
                 />
               </div>
             </div>
-            <div className="col-8 menu-box">
+            <div className="menu-box">
               <div
                 className="collapse navbar-collapse"
                 id="navbarSupportedContent"
               >
-                <ul className="navbar-nav me-auto mb-2 mb-lg-0 menu-items container">
+                <ul className="navbar-nav me-auto mb-2 mb-lg-0 menu-items">
                   <li className="nav-item">
                     <NavLink
                       className={({ isActive }) =>
@@ -54,7 +54,7 @@ const Header = () => {
                         ${isActive ? "active-item" : ""}`
                       }
                       aria-current="page"
-                      to="/teste"
+                      to="/games"
                     >
                       Games
                     </NavLink>
@@ -86,7 +86,7 @@ const Header = () => {
                 </ul>
               </div>
             </div>
-            <div className="col-2 d-flex justify-content-end align-items-center gap-3 header-actions">
+            <div className="header-actions">
               <ProfileMenu />
               <div className="mb-menu" onClick={expand}>
                 <div className="menu-icon"></div>
@@ -99,7 +99,7 @@ const Header = () => {
       </nav>
       <div className="expanded-menu" id="mb-nav">
         <NavLink to="/" className="menu-mb-text bg-gray">Home</NavLink>
-        <NavLink to="/teste" className="menu-mb-text bg-gray">Games</NavLink>
+        <NavLink to="/games" className="menu-mb-text bg-gray">Games</NavLink>
         <NavLink to="/sheets" className="menu-mb-text bg-gray">Sheets</NavLink>
         <NavLink to="/community" className="menu-mb-text bg-gray">Community</NavLink>
       </div>

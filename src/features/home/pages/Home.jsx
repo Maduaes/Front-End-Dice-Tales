@@ -1,5 +1,5 @@
 import { Game } from '../../games/components/Game'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getRecentGames } from '../../../services/gamesService'
 import cn from 'classnames/bind'
 import s from './Home.module.scss'
@@ -7,12 +7,21 @@ import { BtnModalGame } from '../../games/components/buttons/BtnModalGame'
 import { Icon } from '../../../shared/icones/Icon'
 import { SheetsContainer } from '../../sheets/components/SheetsContainerHome'
 import { ModalGame } from '../../games/components/modais/ModalGame'
+import { useNavigate } from 'react-router-dom'
 
 const RECENT_ROOMS_LIMIT = 9
 
 const Home = () => {
   const [gamesList, setGamesList] = useState([])
   const [selectedGame, setSelectedGame] = useState(null)
+  const [searchText, setSearchText] = useState('')
+  const navigate = useNavigate()
+  const filteredGames = useMemo(() => {
+    const query = searchText.trim().toLocaleLowerCase()
+    return query
+      ? gamesList.filter((game) => (game.room_name ?? game.name ?? '').toLocaleLowerCase().includes(query))
+      : gamesList
+  }, [gamesList, searchText])
 
   const atualizaGames = (response, actionUpdate) => {
     if (!response && actionUpdate !== 'delete') {
@@ -64,15 +73,21 @@ const Home = () => {
               </div>
             </div>
             <div className={cn('col-7', s.search)}>
-              <input type="search" placeholder="Search for your rooms" />
+              <input
+                type="search"
+                placeholder="Search for your rooms"
+                aria-label="Search for your rooms"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+              />
               <Icon name="search" />
             </div>
           </header>
 
           <main className={cn('container pb-3')}>
-            {hasItems(gamesList) ? (
+            {hasItems(filteredGames) ? (
               <div className="row ps-3 pe-3">
-                {gamesList.map(game => (
+                {filteredGames.map(game => (
                   <Game
                     key={game.id}
                     game={game}
@@ -83,7 +98,9 @@ const Home = () => {
             ) : (
               <div className="p-4 container">
                 <p className="text-center">
-                  It looks like you don&apos;t have any rooms yet!
+                  {gamesList.length > 0 && searchText.trim()
+                    ? 'No rooms match your search.'
+                    : "It looks like you don't have any rooms yet!"}
                 </p>
               </div>
             )}
@@ -95,6 +112,7 @@ const Home = () => {
                 className={cn(s.btnMore, 'col-4')}
                 type="button"
                 value="More"
+                onClick={() => navigate('/games')}
               />
             </footer>
           )}

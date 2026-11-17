@@ -6,8 +6,11 @@
 
 .trigger{
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.35rem;
+  min-width: 0;
+  white-space: nowrap;
   padding: 0;
   border: 0;
   background: transparent;
@@ -40,9 +43,12 @@
 
 .username{
   max-width: 8.5rem;
+  min-width: 0;
+  flex: 0 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.1;
 }
 
 .chevron{

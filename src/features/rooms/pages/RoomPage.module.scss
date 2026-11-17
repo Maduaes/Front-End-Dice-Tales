@@ -31,6 +31,7 @@
 .textToolActive { cursor: text; }
 .textToolActive .tabletopAsset { cursor: text !important; }
 .drawToolActive, .drawToolActive * { cursor: crosshair; }
+.maskToolActive, .maskToolActive * { cursor: crosshair; }
 
 .isPanning .tabletop {
   transition: none;
@@ -51,6 +52,8 @@
 .tabletopGridOverlay { position: absolute; inset: 0; pointer-events: none; }
 .measureOverlay { position: absolute; z-index: 300001; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .drawPreview { position: absolute; z-index: 300000; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.maskOverlay { position: absolute; z-index: 300002; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.maskPreviewOverlay { position: absolute; z-index: 300005; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .tabletopDrawing { position: absolute; touch-action: none; }
 .tabletopDrawingSelected { filter: drop-shadow(0 0 2px rgba(80, 120, 255, .9)); }
 .drawingSelectionBorder { fill: rgba(100, 145, 255, .08); stroke: #477bff; stroke-width: 1; stroke-dasharray: 5 4; pointer-events: none; }
@@ -101,6 +104,25 @@
 .drawWidthField input { width: clamp(90px, 18vw, 170px); accent-color: #a7a5d3; }
 .drawToolbar output { min-width: 32px; padding-bottom: 6px; color: #DCD4FA; font-size: 12px; }
 @media (max-width: 520px) { .drawToolbar { gap: 8px; padding: 7px 9px; } .drawWidthField input { width: 90px; } }
+.maskPanel { width: min(400px, calc(100vw - 24px)); }
+.maskPanel .measurePanelHeader strong { font-size: clamp(16px, 4vw, 21px); white-space: nowrap; }
+.maskPanelContent { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 10px; padding: 16px; }
+.maskOpacityHeading { grid-column: 1 / -1; color: #EFE5D5; font-size: 15px; font-weight: 600; }
+.maskOpacityControl { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) 62px; align-items: center; gap: 8px; }
+.maskOpacityControl input[type="range"] { width: 100%; accent-color: #DCD4FA; }
+.maskOpacityControl output { display: flex; align-items: center; justify-content: space-between; min-height: 42px; padding: 0 12px; border-radius: 9px; background: #414052; box-shadow: 0 4px 7px rgba(0, 0, 0, .24); color: #DCD4FA; font-size: 16px; font-weight: 700; }
+.maskOpacityControl output span { font-size: 13px; }
+.maskSelectLabel { display: grid; gap: 6px; min-width: 0; color: #EFE5D5; font-size: 14px; font-weight: 600; }
+.maskSelectLabel .measureSelectValue { overflow: hidden; text-overflow: ellipsis; }
+.maskPanelContent .measureCheckbox { grid-column: 1 / -1; }
+.maskPageAction { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 42px; border: 1px solid rgba(220, 212, 250, .24); border-radius: 9px; padding: 0 12px; background: #414052; box-shadow: 0 4px 7px rgba(0, 0, 0, .24); color: #EFE5D5; font: inherit; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; transition: background 120ms ease, border-color 120ms ease, transform 120ms ease; }
+.maskPageAction svg { flex: 0 0 24px; }
+.maskPageAction:hover { border-color: rgba(220, 212, 250, .55); background: #4b4a5f; }
+.maskPageAction:active { transform: translateY(1px); background: #514f64; }
+.maskPageAction:focus-visible { outline: 2px solid #DCD4FA; outline-offset: 2px; }
+.finishMaskPolygon { grid-column: 1 / -1; min-height: 36px; border: 1px solid rgba(220, 212, 250, .2); border-radius: 8px; background: #414052; color: #DCD4FA; cursor: pointer; }
+.finishMaskPolygon:disabled { opacity: .55; cursor: not-allowed; }
+@media screen and (max-width: 620px) { .maskPanelContent { grid-template-columns: 1fr; gap: 12px; padding: 14px; } .maskOpacityHeading, .maskOpacityControl, .maskPanelContent .measureCheckbox, .finishMaskPolygon { grid-column: 1; } }
 
 .assetSelectionBorder { position: absolute; z-index: 4; inset: 0; border: 2px solid #c5a3ed; pointer-events: none; }
 
@@ -606,6 +628,7 @@
 .bottomMenu .iconButton { cursor: pointer; }
 .bottomMenu .iconButton[aria-pressed="true"] { background: #514661; }
 .bottomMenu .iconButton[aria-pressed="true"] svg path { stroke: #c9a4ef; }
+.bottomMenu .iconButton.maskToolButton svg path { stroke: #fff; }
 
 .measurePanel {
   position: absolute;
