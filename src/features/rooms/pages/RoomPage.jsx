@@ -72,6 +72,20 @@ const clearTabletopFields = (asset) => ({
   visible: null,
 })
 const drawingPath = (points, padding = 0) => points.map((point, index) => `${index ? 'L' : 'M'} ${Number(point.x) + padding} ${Number(point.y) + padding}`).join(' ')
+const maskAreaElement = (mask, fill, pageSizeX, pageSizeY, key) => {
+  const points = mask.points || []
+  if (mask.shape === 'full_page') return <rect key={key} x="0" y="0" width={pageSizeX} height={pageSizeY} fill={fill} />
+  if (mask.shape === 'rectangle' && points.length >= 2) {
+    return <rect key={key} x={Math.min(points[0].x, points[1].x)} y={Math.min(points[0].y, points[1].y)} width={Math.abs(points[1].x - points[0].x)} height={Math.abs(points[1].y - points[0].y)} fill={fill} />
+  }
+  if (mask.shape === 'circle' && points.length >= 2) {
+    return <circle key={key} cx={points[0].x} cy={points[0].y} r={Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y)} fill={fill} />
+  }
+  if (mask.shape === 'polygon' && points.length >= 3) {
+    return <polygon key={key} points={points.map((point) => `${point.x},${point.y}`).join(' ')} fill={fill} />
+  }
+  return null
+}
 
 const buildWebSocketUrl = (roomCode) => {
   const apiUrl = import.meta.env.VITE_API_URL
@@ -200,6 +214,26 @@ const icons = {
       <path d="M14 3H15M16 16L18.5 18.5M18.5 18.5L21 21M18.5 18.5L21 16M18.5 18.5L16 21M19 3C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5M21 9V10M3 14V15M3 9V10M5 21C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19M5 3C4.46957 3 3.96086 3.21071 3.58579 3.58579C3.21071 3.96086 3 4.46957 3 5M9 21H10M9 3H10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#DCD4FA"/>
     </svg>
   ),
+  opacity: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 3H12.01M12 9H12.01M15 6H15.01M18 3H18.01M21 6V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H6M3 12H3.01M3 18H3.01M3 6H3.01M6 15H6.01M6 3H6.01M6 9H6.01M9 12H9.01M9 6H9.01" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#9290B2"/>
+    </svg>
+  ),
+  eye: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2.06202 12.3481C1.97868 12.1236 1.97868 11.8766 2.06202 11.6521C2.87372 9.68397 4.25153 8.00116 6.02079 6.81701C7.79004 5.63287 9.87106 5.00073 12 5.00073C14.129 5.00073 16.21 5.63287 17.9792 6.81701C19.7485 8.00116 21.1263 9.68397 21.938 11.6521C22.0214 11.8766 22.0214 12.1236 21.938 12.3481C21.1263 14.3163 19.7485 15.9991 17.9792 17.1832C16.21 18.3674 14.129 18.9995 12 18.9995C9.87106 18.9995 7.79004 18.3674 6.02079 17.1832C4.25153 15.9991 2.87372 14.3163 2.06202 12.3481ZM15 12.0001C15 13.657 13.6569 15.0001 12 15.0001C10.3432 15.0001 9.00002 13.657 9.00002 12.0001C9.00002 10.3433 10.3432 9.00012 12 9.00012C13.6569 9.00012 15 10.3433 15 12.0001Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#DCD4FA"/>
+    </svg>
+  ),
+  eyeClosed: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 18L14.278 14.75M2 8C2.72416 9.98447 4.02178 11.7071 5.72575 12.9503M5.72575 12.9503C5.78268 12.9918 5.84007 13.0328 5.8979 13.0733C7.68667 14.3247 9.81695 14.9959 12 14.9959C14.1831 14.9959 16.3133 14.3247 18.1021 13.0733C18.1599 13.0328 18.2173 12.9918 18.2743 12.9503M5.72575 12.9503L4 15M5.72575 12.9503L5.726 12.95M18.2743 12.9503C19.9782 11.7071 21.2758 9.98447 22 8M18.2743 12.9503L20 15M18.2743 12.9503L18.274 12.95M9 18L9.722 14.75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#DCD4FA"/>
+    </svg>
+  ),
+  polygon: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12.828 4.813L18.172 7.188M15.769 18.153L19.23 9.847M5.687 14.074L13.312 18.926M9.772 5.579L5.228 11.42M13 4C13 5.10457 12.1046 6 11 6C9.89543 6 9 5.10457 9 4C9 2.89543 9.89543 2 11 2C12.1046 2 13 2.89543 13 4ZM17 20C17 21.1046 16.1046 22 15 22C13.8954 22 13 21.1046 13 20C13 18.8954 13.8954 18 15 18C16.1046 18 17 18.8954 17 20ZM22 8C22 9.10457 21.1046 10 20 10C18.8954 10 18 9.10457 18 8C18 6.89543 18.8954 6 20 6C21.1046 6 22 6.89543 22 8ZM6 13C6 14.1046 5.10457 15 4 15C2.89543 15 2 14.1046 2 13C2 11.8954 2.89543 11 4 11C5.10457 11 6 11.8954 6 13Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#DCD4FA"/>
+    </svg>
+  ),
 }
 
 const IconButton = ({ label, icon, className = '', onClick, pressed }) => (
@@ -239,6 +273,18 @@ const RoomPage = () => {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isDiceMenuOpen, setIsDiceMenuOpen] = useState(false)
   const [activeTool, setActiveTool] = useState('select')
+  const [isMaskPanelOpen, setIsMaskPanelOpen] = useState(false)
+  const [tabletopMasks, setTabletopMasks] = useState([])
+  const tabletopMasksRef = useRef([])
+  const cancelledMaskCreatesRef = useRef(new Set())
+  const [maskOpacity, setMaskOpacity] = useState(45)
+  const [maskOperation, setMaskOperation] = useState('hide')
+  const [maskArea, setMaskArea] = useState('rectangle')
+  const [maskDropdown, setMaskDropdown] = useState(null)
+  const [maskPreview, setMaskPreview] = useState(null)
+  const [maskPolygonPoints, setMaskPolygonPoints] = useState([])
+  const [maskPolygonCursor, setMaskPolygonCursor] = useState(null)
+  const maskDragRef = useRef(null)
   const [tabletopTexts, setTabletopTexts] = useState([])
   const [tabletopDrawings, setTabletopDrawings] = useState([])
   const tabletopDrawingsRef = useRef([])
@@ -354,6 +400,7 @@ const RoomPage = () => {
 
   useEffect(() => { tabletopTextsRef.current = tabletopTexts }, [tabletopTexts])
   useEffect(() => { tabletopDrawingsRef.current = tabletopDrawings }, [tabletopDrawings])
+  useEffect(() => { tabletopMasksRef.current = tabletopMasks }, [tabletopMasks])
 
   useEffect(() => {
     if (!isRoomMaster && ['Maps', 'Pages'].includes(activeSidePanel)) {
@@ -471,6 +518,11 @@ const RoomPage = () => {
     setTabletopAssets(content.assets || [])
     setTabletopTexts(content.texts || [])
     setTabletopDrawings(content.drawings || [])
+    setTabletopMasks(content.masks || [])
+    tabletopMasksRef.current = content.masks || []
+    setMaskOpacity(content.dm_darkness_opacity ?? 45)
+    setMaskPolygonPoints([])
+    setMaskPreview(null)
     setSelectedTextId(null)
     setEditingTextId(null)
     selectedTextIdRef.current = null
@@ -1017,6 +1069,26 @@ const RoomPage = () => {
           setSelectedDrawingIds((current) => { const next = current.filter((id) => id !== payload.drawing_id); selectedDrawingIdsRef.current = next; return next })
           return
         }
+        if (payload?.type === 'mask.create') {
+          if (cancelledMaskCreatesRef.current.has(payload.client_id)) {
+            cancelledMaskCreatesRef.current.delete(payload.client_id)
+            sendRoomMessage({ type: 'mask.delete', page_id: payload.page_id, mask_id: payload.mask_id })
+            return
+          }
+          const mask = { id: payload.mask_id, client_id: payload.client_id, page_id: payload.page_id, operation: payload.operation, shape: payload.shape, points: payload.points || [] }
+          setTabletopMasks((current) => current.some((item) => item.client_id === payload.client_id)
+            ? current.map((item) => item.client_id === payload.client_id ? mask : item)
+            : current.some((item) => item.id === payload.mask_id) ? current.map((item) => item.id === payload.mask_id ? { ...item, ...mask } : item) : [...current, mask])
+          return
+        }
+        if (payload?.type === 'mask.delete') {
+          setTabletopMasks((current) => current.filter((item) => item.id !== payload.mask_id))
+          return
+        }
+        if (payload?.type === 'mask.opacity') {
+          setMaskOpacity(payload.opacity)
+          return
+        }
         const isChatMessage = payload?.type === 'chat.message'
         const isDiceRoll = payload?.type === 'dice.roll'
 
@@ -1173,7 +1245,7 @@ const RoomPage = () => {
     const handleWindowResize = () => {
       setChatBox((current) => keepChatInsideScreen(current))
       setDiceMenuPosition((current) => keepDiceMenuInsideScreen(current))
-      const measurePanel = document.querySelector('[data-measure-panel]')
+      const measurePanel = document.querySelector('[data-measure-panel], [data-mask-panel]')
       const panelWidth = measurePanel?.offsetWidth || Math.min(560, window.innerWidth - 24)
       setMeasurePanelPosition((current) => ({
         x: Math.max(8, Math.min(window.innerWidth - panelWidth - 8, current.x)),
@@ -1191,6 +1263,20 @@ const RoomPage = () => {
   }
 
   const handlePointerDown = (event) => {
+    if (activeTool === 'mask' && event.button === 0) {
+      if (!isRoomMaster || maskArea === 'polygon' || !event.target.closest?.('[data-tabletop]')) return
+      const point = getTabletopPoint(event.clientX, event.clientY)
+      if (!point || currentPageIdRef.current == null) return
+      event.preventDefault()
+      event.stopPropagation()
+      setMaskPolygonPoints([])
+      setMaskPolygonCursor(null)
+      maskDragRef.current = { pointerId: event.pointerId, start: point, end: point, operation: maskOperation, shape: maskArea }
+      event.currentTarget.setPointerCapture(event.pointerId)
+      setMaskPreview({ shape: maskArea, points: [point, point], operation: maskOperation })
+      return
+    }
+    if (activeTool === 'mask' && event.button !== 2) return
     if (activeTool === 'draw') {
       if (event.button !== 0 || !event.target.closest?.('[data-tabletop]')) return
       const point = getTabletopPoint(event.clientX, event.clientY)
@@ -1275,6 +1361,20 @@ const RoomPage = () => {
   }
 
   const handlePointerMove = (event) => {
+    if (maskDragRef.current?.pointerId === event.pointerId) {
+      const point = getTabletopPoint(event.clientX, event.clientY)
+      if (!point) return
+      maskDragRef.current.end = point
+      setMaskPreview({ shape: maskDragRef.current.shape, points: [maskDragRef.current.start, point], operation: maskDragRef.current.operation })
+      return
+    }
+    if (activeTool === 'mask' && maskArea === 'polygon' && maskPolygonPoints.length) {
+      const point = getTabletopPoint(event.clientX, event.clientY)
+      if (point) {
+        setMaskPolygonCursor(point)
+        setMaskPreview({ shape: 'polygon', points: maskPolygonPoints, cursor: point, operation: maskOperation })
+      }
+    }
     if (drawDragRef.current?.pointerId === event.pointerId) {
       const active = drawDragRef.current
       const dx = event.clientX - active.lastClientX
@@ -1345,6 +1445,16 @@ const RoomPage = () => {
   }
 
   const handlePointerUp = (event) => {
+    if (maskDragRef.current?.pointerId === event.pointerId) {
+      const active = maskDragRef.current
+      maskDragRef.current = null
+      const point = getTabletopPoint(event.clientX, event.clientY) || active.end
+      const distance = Math.hypot(point.x - active.start.x, point.y - active.start.y)
+      if (distance > 2) createMask(active.operation, active.shape, [active.start, point])
+      setMaskPreview(null)
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+      return
+    }
     if (drawDragRef.current?.pointerId === event.pointerId) {
       const active = drawDragRef.current
       drawDragRef.current = null
@@ -1702,6 +1812,61 @@ const RoomPage = () => {
       x: (clientX - bounds.left) / (bounds.width / backgroundSettings.pageSizeX),
       y: (clientY - bounds.top) / (bounds.height / backgroundSettings.pageSizeY),
     }
+  }
+
+  const createMask = (operation, shape, points) => {
+    const clientId = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const payload = { type: 'mask.create', page_id: currentPageIdRef.current, client_id: clientId, operation, shape, points }
+    if (!sendRoomMessage(payload)) return false
+    const optimistic = { id: `draft-${clientId}`, client_id: clientId, page_id: currentPageIdRef.current, operation, shape, points }
+    tabletopMasksRef.current = [...tabletopMasksRef.current, optimistic]
+    setTabletopMasks((current) => [...current, optimistic])
+    return true
+  }
+
+  const removeMasks = (masks) => {
+    masks.forEach((mask) => {
+      if (String(mask.id).startsWith('draft-')) cancelledMaskCreatesRef.current.add(mask.client_id)
+      else sendRoomMessage({ type: 'mask.delete', page_id: currentPageIdRef.current, mask_id: mask.id })
+    })
+    const removedIds = new Set(masks.map((mask) => mask.id))
+    tabletopMasksRef.current = tabletopMasksRef.current.filter((mask) => !removedIds.has(mask.id))
+    setTabletopMasks((current) => current.filter((mask) => !removedIds.has(mask.id)))
+  }
+
+  const applyFullPageMask = (operation) => {
+    const existingMasks = [...tabletopMasksRef.current]
+    if (existingMasks.length) removeMasks(existingMasks)
+    createMask(operation, 'full_page', [])
+  }
+
+  const finishMaskPolygon = (points = maskPolygonPoints) => {
+    if (points.length >= 3) createMask(maskOperation, 'polygon', points)
+    setMaskPolygonPoints([])
+    setMaskPolygonCursor(null)
+    setMaskPreview(null)
+  }
+
+  const handleMaskCanvasClick = (event) => {
+    if (activeTool !== 'mask' || maskArea !== 'polygon' || !isRoomMaster) return
+    const point = getTabletopPoint(event.clientX, event.clientY)
+    if (!point) return
+    const points = maskPolygonPoints
+    const first = points[0]
+    const closesAtStart = points.length >= 3 && first && Math.hypot(first.x - point.x, first.y - point.y) <= 14
+    if (closesAtStart) {
+      finishMaskPolygon(points)
+      return
+    }
+    const last = points[points.length - 1]
+    const nextPoints = last && Math.hypot(last.x - point.x, last.y - point.y) < 1 ? points : [...points, point]
+    if (event.detail >= 2) {
+      finishMaskPolygon(nextPoints)
+      return
+    }
+    setMaskPolygonPoints(nextPoints)
+    setMaskPolygonCursor(point)
+    setMaskPreview({ shape: 'polygon', points: nextPoints, cursor: point, operation: maskOperation })
   }
 
   const persistText = (textId, changes) => {
@@ -2214,7 +2379,7 @@ const RoomPage = () => {
 
       <section
         ref={tabletopFrameRef}
-        className={cx('tabletopFrame', { isPanning: Boolean(drag), selectToolActive: activeTool === 'select', moveToolActive: activeTool === 'move', measureToolActive: activeTool === 'measure', textToolActive: activeTool === 'text', drawToolActive: activeTool === 'draw' })}
+        className={cx('tabletopFrame', { isPanning: Boolean(drag), selectToolActive: activeTool === 'select', moveToolActive: activeTool === 'move', measureToolActive: activeTool === 'measure', textToolActive: activeTool === 'text', drawToolActive: activeTool === 'draw', maskToolActive: activeTool === 'mask' })}
         aria-label="Tabletop"
         data-tabletop-frame
         onWheel={handleWheel}
@@ -2225,6 +2390,7 @@ const RoomPage = () => {
         onDragOver={handleTabletopDragOver}
         onDrop={handleTabletopDrop}
         onClick={(event) => {
+          handleMaskCanvasClick(event)
           if (activeTool !== 'select') return
           if (event.target === tabletopRef.current || event.target === tabletopFrameRef.current) {
             if (marqueeCompletedRef.current) {
@@ -2424,6 +2590,19 @@ const RoomPage = () => {
               onPointerDown={(event) => startGroupResize(event, direction, selectedMovableAssets, selectedGroupBounds)}
             />)}
           </div>}
+          <svg className={s.maskOverlay} viewBox={`0 0 ${backgroundSettings.pageSizeX} ${backgroundSettings.pageSizeY}`} aria-hidden="true">
+            <defs><mask id="tabletop-fog-mask" maskUnits="userSpaceOnUse" x="0" y="0" width={backgroundSettings.pageSizeX} height={backgroundSettings.pageSizeY}>
+              <rect x="0" y="0" width={backgroundSettings.pageSizeX} height={backgroundSettings.pageSizeY} fill="black" />
+              {tabletopMasks.map((mask) => mask.shape === 'full_page'
+                ? <rect key={`full-${mask.id}`} x="0" y="0" width={backgroundSettings.pageSizeX} height={backgroundSettings.pageSizeY} fill={mask.operation === 'hide' ? 'white' : 'black'} />
+                : maskAreaElement(mask, mask.operation === 'hide' ? 'white' : 'black', backgroundSettings.pageSizeX, backgroundSettings.pageSizeY, `mask-${mask.id}`))}
+            </mask></defs>
+            <rect x="0" y="0" width={backgroundSettings.pageSizeX} height={backgroundSettings.pageSizeY} fill="black" opacity={isRoomMaster ? maskOpacity / 100 : 1} mask="url(#tabletop-fog-mask)" />
+          </svg>
+          {maskPreview && <svg className={s.maskPreviewOverlay} viewBox={`0 0 ${backgroundSettings.pageSizeX} ${backgroundSettings.pageSizeY}`} aria-hidden="true">
+            {maskPreview.shape === 'polygon' && maskPreview.points.length >= 2 && <polyline points={[...maskPreview.points, ...(maskPreview.cursor ? [maskPreview.cursor] : [])].map((point) => `${point.x},${point.y}`).join(' ')} fill="rgba(0,0,0,.18)" stroke="#111" strokeWidth="3" strokeDasharray="8 5" />}
+            {maskPreview.shape !== 'polygon' && maskAreaElement(maskPreview, 'rgba(0,0,0,.3)', backgroundSettings.pageSizeX, backgroundSettings.pageSizeY, 'mask-preview')}
+          </svg>}
         </div>
         {mapContextMenu && <div
           className={s.mapContextMenu}
@@ -2679,9 +2858,9 @@ const RoomPage = () => {
       )}
 
       <nav className={s.bottomMenu} aria-label="Tabletop tools">
-        <IconButton label="Select" icon="cursor" pressed={activeTool === 'select'} onClick={() => { setActiveTool('select'); setIsMeasurePanelOpen(false) }} />
-        <IconButton label="Move" icon="hand" pressed={activeTool === 'move'} onClick={() => { setActiveTool('move'); setIsMeasurePanelOpen(false) }} />
-        <IconButton label="Draw" icon="brush" pressed={activeTool === 'draw'} onClick={() => { setActiveTool((current) => current === 'draw' ? 'select' : 'draw'); setIsMeasurePanelOpen(false) }} />
+        <IconButton label="Select" icon="cursor" pressed={activeTool === 'select'} onClick={() => { setActiveTool('select'); setIsMeasurePanelOpen(false); setIsMaskPanelOpen(false); setMaskPolygonPoints([]); setMaskPreview(null) }} />
+        <IconButton label="Move" icon="hand" pressed={activeTool === 'move'} onClick={() => { setActiveTool('move'); setIsMeasurePanelOpen(false); setIsMaskPanelOpen(false); setMaskPolygonPoints([]); setMaskPreview(null) }} />
+        <IconButton label="Draw" icon="brush" pressed={activeTool === 'draw'} onClick={() => { setActiveTool((current) => current === 'draw' ? 'select' : 'draw'); setIsMeasurePanelOpen(false); setIsMaskPanelOpen(false); setMaskPolygonPoints([]); setMaskPreview(null) }} />
         <IconButton label="Text" icon="text" pressed={activeTool === 'text'} onClick={() => {
           if (activeTool === 'text') {
             const editing = tabletopTextsRef.current.find((item) => item.id === selectedTextIdRef.current)
@@ -2692,8 +2871,10 @@ const RoomPage = () => {
             setActiveTool('text')
           }
           setIsMeasurePanelOpen(false)
+          setIsMaskPanelOpen(false)
         }} />
-        <IconButton label="Measure" icon="ruler" pressed={activeTool === 'measure'} onClick={() => { setActiveTool('measure'); setIsMeasurePanelOpen((open) => !open) }} />
+        <IconButton label="Measure" icon="ruler" pressed={activeTool === 'measure'} onClick={() => { setActiveTool('measure'); setIsMaskPanelOpen(false); setMaskPolygonPoints([]); setMaskPreview(null); setIsMeasurePanelOpen((open) => !open) }} />
+        {isRoomMaster && <IconButton className={s.maskToolButton} label="Hide/Reveal Mask" icon="opacity" pressed={activeTool === 'mask'} onClick={() => { setActiveTool('mask'); setIsMeasurePanelOpen(false); setIsMaskPanelOpen((open) => !open) }} />}
         <span className={s.separator} aria-hidden="true" />
         <IconButton
           label="Dice"
@@ -2777,6 +2958,49 @@ const RoomPage = () => {
           <label className={s.measureCheckbox}><span>Always measure token movement</span><input type="checkbox" checked={measureTokenMovement} onChange={(event) => setMeasureTokenMovement(event.target.checked)} /></label>
           <label className={s.measureCheckbox}><span>Broadcast to others</span><input type="checkbox" checked={broadcastMeasure} onChange={(event) => setBroadcastMeasure(event.target.checked)} /></label>
           <div className={s.measureScale}>1 Cell = {backgroundSettings.mapScaleValue || 0} {backgroundSettings.mapScaleUnity}</div>
+        </div>
+      </section>}
+
+      {isMaskPanelOpen && isRoomMaster && <section className={cx('measurePanel', 'maskPanel', { measurePanelWithShapeDropdown: maskDropdown === 'area' })} data-mask-panel style={{ left: measurePanelPosition.x, top: measurePanelPosition.y }} aria-label="Hide/Reveal Mask settings">
+        <header className={s.measurePanelHeader} onPointerDown={startMeasurePanelDrag} onPointerMove={moveMeasurePanelDrag} onPointerUp={stopMeasurePanelDrag} onPointerCancel={stopMeasurePanelDrag}>
+          <span className={s.measurePanelIcon}>{icons.opacity}</span>
+          <strong>Hide/Reveal Mask</strong>
+          <button className={s.measureCloseButton} type="button" aria-label="Close mask panel" title="Close mask panel" onPointerDown={(event) => event.stopPropagation()} onClick={() => setIsMaskPanelOpen(false)}>{icons.quit}</button>
+        </header>
+        <div className={s.maskPanelContent}>
+          <label className={s.maskOpacityHeading}>DM Darkness Opacity</label>
+          <div className={s.maskOpacityControl}>
+            <input type="range" min="0" max="100" value={maskOpacity} aria-label="DM Darkness Opacity" onChange={(event) => setMaskOpacity(Number(event.target.value))} onPointerUp={() => sendRoomMessage({ type: 'mask.opacity', page_id: currentPageIdRef.current, opacity: maskOpacity })} onKeyUp={() => sendRoomMessage({ type: 'mask.opacity', page_id: currentPageIdRef.current, opacity: maskOpacity })} />
+            <output>{maskOpacity}<span>%</span></output>
+          </div>
+          <div className={s.maskSelectLabel}><span>Draw Mask</span>
+            <div className={s.measureSelectWrap}>
+              <button type="button" className={s.measureSelectTrigger} aria-expanded={maskDropdown === 'operation'} onClick={() => setMaskDropdown((current) => current === 'operation' ? null : 'operation')}>
+                {maskOperation === 'hide' ? icons.eyeClosed : icons.eye}
+                <span className={s.measureSelectValue}>{maskOperation === 'hide' ? 'Hide' : 'Reveal'}</span><Icon name="chevronDown" size={20} color="#DCD4FA" />
+              </button>
+              {maskDropdown === 'operation' && <div className={s.measureDropdown}>{[
+                { value: 'hide', label: 'Hide', icon: icons.eyeClosed },
+                { value: 'reveal', label: 'Reveal', icon: icons.eye },
+              ].map((option) => <button type="button" key={option.value} aria-pressed={maskOperation === option.value} onClick={() => { setMaskOperation(option.value); setMaskDropdown(null); setMaskPolygonPoints([]); setMaskPreview(null) }}>{option.icon}<span>{option.label}</span></button>)}</div>}
+            </div>
+          </div>
+          <div className={s.maskSelectLabel}><span>Area</span>
+            <div className={s.measureSelectWrap}>
+              <button type="button" className={s.measureSelectTrigger} aria-expanded={maskDropdown === 'area'} onClick={() => setMaskDropdown((current) => current === 'area' ? null : 'area')}>
+                {maskArea === 'rectangle' ? <Icon name="shapeSquare" size={24} color="#DCD4FA" /> : maskArea === 'circle' ? <Icon name="shapeCircle" size={24} color="#DCD4FA" /> : icons.polygon}
+                <span className={s.measureSelectValue}>{maskArea === 'rectangle' ? 'Rectangle' : maskArea === 'circle' ? 'Circle' : 'Polygon'}</span><Icon name="chevronDown" size={20} color="#DCD4FA" />
+              </button>
+              {maskDropdown === 'area' && <div className={s.measureDropdown}>{[
+                { value: 'rectangle', label: 'Rectangle', icon: <Icon name="shapeSquare" size={23} color="#DCD4FA" /> },
+                { value: 'polygon', label: 'Polygon', icon: icons.polygon },
+                { value: 'circle', label: 'Circle', icon: <Icon name="shapeCircle" size={23} color="#DCD4FA" /> },
+              ].map((option) => <button type="button" key={option.value} aria-pressed={maskArea === option.value} onClick={() => { setMaskArea(option.value); setMaskDropdown(null); setMaskPolygonPoints([]); setMaskPreview(null) }}>{option.icon}<span>{option.label}</span></button>)}</div>}
+            </div>
+          </div>
+          <button className={s.maskPageAction} type="button" onClick={() => applyFullPageMask('hide')}>{icons.eyeClosed}<span>Hide full page</span></button>
+          <button className={s.maskPageAction} type="button" onClick={() => applyFullPageMask('reveal')}>{icons.eye}<span>Reveal full page</span></button>
+          {maskArea === 'polygon' && maskPolygonPoints.length > 0 && <button className={s.finishMaskPolygon} type="button" disabled={maskPolygonPoints.length < 3} onClick={() => finishMaskPolygon()}>Finish polygon ({maskPolygonPoints.length} points)</button>}
         </div>
       </section>}
 
