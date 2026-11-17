@@ -15,6 +15,24 @@ body.modal-open .header-layout {
   background-color: #363547;
 }
 
+.header-row {
+  display: grid;
+  grid-template-columns: minmax(185px, max-content) minmax(0, 1fr) minmax(185px, max-content);
+  align-items: center;
+  width: 100%;
+  margin: 0;
+}
+
+.header-brand,
+.menu-box,
+.header-actions {
+  min-width: 0;
+}
+
+.header-brand {
+  padding: 0;
+}
+
 .menu-user-decor,
 .menu-txt-decor {
   font-size: 18.24px;
@@ -30,10 +48,19 @@ body.modal-open .header-layout {
 
 .menu-box {
   display: flex;
+  justify-content: center;
+}
+
+.menu-box .navbar-collapse {
+  min-width: 0;
+  width: 100%;
 }
 
 .menu-items {
-  justify-content: space-around;
+  width: 100%;
+  justify-content: space-evenly;
+  margin-right: 0 !important;
+  margin-left: 0 !important;
 }
 
 
@@ -47,7 +74,14 @@ body.modal-open .header-layout {
 }
 
 .header-actions{
-  min-width: max-content;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mb-menu {
+  display: none;
 }
 
 
@@ -118,8 +152,21 @@ body.modal-open .header-layout {
 }
 
 @media screen and (max-width: 990px) {
+  .header-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .menu-box {
+    display: none;
+  }
+
   .user-area {
     display: none;
+  }
+
+  .mb-menu {
+    display: block;
+    cursor: pointer;
   }
 
   .menu-icon {
@@ -127,5 +174,15 @@ body.modal-open .header-layout {
     height: 4px;
     background-color: white;
     margin: 6px 0;
+  }
+}
+
+@media screen and (min-width: 991px) and (max-width: 1199px) {
+  .header-row {
+    grid-template-columns: minmax(145px, max-content) minmax(0, 1fr) minmax(165px, max-content);
+  }
+
+  .menu-txt-decor {
+    font-size: 1rem;
   }
 }

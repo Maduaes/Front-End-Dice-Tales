@@ -129,7 +129,13 @@ export const ProfileMenu = () => {
               <Icon name="user" size="25" />
             )}
           </div>
-          <span className={s.username}>{displayName}</span>
+          <span
+            className={s.username}
+            style={{ fontSize: `${Math.max(0.72, 1.05 - Math.max(0, displayName.length - 8) * 0.035)}rem` }}
+            title={displayName}
+          >
+            {displayName}
+          </span>
           <Icon
             name="chevronDown"
             className={cx(s.chevron, {

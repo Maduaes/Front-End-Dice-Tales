@@ -36,9 +36,14 @@ export const getRecentGames = async () => {
   }
 }
 
-export const createGame = async (name) => {
+export const getAllGames = async () => {
+  const response = await api.get('/rooms/all/')
+  return Array.isArray(response.data) ? response.data.map(normalizeRoom) : []
+}
+
+export const createGame = async (name, gameSystem = 'D&D5e') => {
   try{
-    const response = await api.post('/rooms/', { room_name: name })
+    const response = await api.post('/rooms/', { room_name: name, game_system: gameSystem })
     return normalizeRoom(response.data)
   }catch (error) {
     console.error(error || 'Erro ao criar a sala!')

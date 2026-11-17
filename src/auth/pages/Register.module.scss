@@ -17,6 +17,30 @@
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
+.passwordRequirements {
+  list-style: none;
+  margin: 0.35rem 0 0.75rem;
+  padding: 0;
+  font-size: 0.78rem;
+}
+
+.passwordRequirements li {
+  margin: 0.15rem 0;
+}
+
+.requirementMet {
+  color: #78dfad;
+}
+
+.requirementPending {
+  color: #ff9da5;
+}
+
+.passwordMatch {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+}
+
 .leftSide {
   flex: 1;
   background-color: #e8e4d6;
