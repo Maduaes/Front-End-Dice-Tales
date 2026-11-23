@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import cn from 'classnames/bind'
 import { useParams } from 'react-router-dom'
 import { getGameById } from '../../../services/gamesService'
 import { getUser } from '../../../services/usersService'
 import { getRoomAssets, getRoomTabletop, uploadRoomAsset } from '../../../services/roomAssetsService'
+import { createRoomNote, createRoomNoteFolder, deleteRoomNote, updateRoomNote, renameRoomNoteFolder } from '../../../services/notesService'
 import { Icon } from '../../../shared/icones/Icon'
 import diceD4 from '../../../assets/dice-d4.png'
 import diceD6 from '../../../assets/dice-d6.png'
@@ -28,6 +29,7 @@ const diceMenuHeight = 230
 const diceMenuSafeArea = 12
 const gridCellSize = 70
 const defaultTokenSize = 70
+const noteColors = ['#48485B', '#EEC882', '#ED9CB0', '#BB97EE', '#7DDAEF', '#8FCF6D', '#FA9570', '#CA2A3F', '#342A59', '#E1EDF3']
 const diceOptions = [
   { sides: 4, label: 'D4', image: diceD4 },
   { sides: 6, label: 'D6', image: diceD6 },
@@ -71,6 +73,19 @@ const clearTabletopFields = (asset) => ({
   height: null,
   visible: null,
 })
+const normalizeRoomNote = (note) => ({
+  ...note,
+  title: note.tittle ?? note.title ?? '',
+  description: note.content ?? note.description ?? '',
+  x: note.position_x == null ? 120 : Number(note.position_x),
+  y: note.position_y == null ? 120 : Number(note.position_y),
+  width: note.width == null ? 378 : Math.max(216, Number(note.width) || 378),
+  height: note.height == null ? 205 : Math.max(135, Number(note.height) || 205),
+  folder_id: note.folder_id ?? null,
+  colors_hidden: Boolean(note.colors_hidden),
+  colors_centered: Boolean(note.colors_centered),
+})
+const noteTextColor = (hex) => ['#342A59', '#CA2A3F', '#48485B'].includes(hex.toUpperCase()) ? '#EFE5D5' : '#36363F'
 const drawingPath = (points, padding = 0) => points.map((point, index) => `${index ? 'L' : 'M'} ${Number(point.x) + padding} ${Number(point.y) + padding}`).join(' ')
 const maskAreaElement = (mask, fill, pageSizeX, pageSizeY, key) => {
   const points = mask.points || []
@@ -158,6 +173,13 @@ const icons = {
   notes: (
     <svg width="30" height="30" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M11.6667 2.91675V8.75008M17.5 2.91675V8.75008M23.3334 2.91675V8.75008M11.6667 14.5834H20.4167M11.6667 20.4167H23.3334M11.6667 26.2501H18.9584M8.75004 5.83341H26.25C27.8609 5.83341 29.1667 7.13925 29.1667 8.75008V29.1667C29.1667 30.7776 27.8609 32.0834 26.25 32.0834H8.75004C7.13921 32.0834 5.83337 30.7776 5.83337 29.1667V8.75008C5.83337 7.13925 7.13921 5.83341 8.75004 5.83341Z" stroke="white" strokeWidth="2.1875" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
+  notePoint: (
+    <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="21" cy="21" r="18" fill="#CA2A3F" stroke="#7C1426" strokeWidth="3" />
+      <circle cx="21" cy="21" r="14" fill="#DA3048" />
+      <ellipse cx="15" cy="13" rx="4.5" ry="2.5" transform="rotate(-42 15 13)" fill="#FF9AA8" />
     </svg>
   ),
   pages: (
@@ -317,6 +339,20 @@ const RoomPage = () => {
   const [activeSidePanel, setActiveSidePanel] = useState(null)
   const [tokens, setTokens] = useState([])
   const [tabletopAssets, setTabletopAssets] = useState([])
+  const [roomNotes, setRoomNotes] = useState([])
+  const [noteFolders, setNoteFolders] = useState([])
+  const [noteSearch, setNoteSearch] = useState('')
+  const [expandedNoteFolders, setExpandedNoteFolders] = useState({})
+  const [openNoteId, setOpenNoteId] = useState(null)
+  const [noteMenuId, setNoteMenuId] = useState(null)
+  const [renamingNoteFolderId, setRenamingNoteFolderId] = useState(null)
+  const [notesError, setNotesError] = useState('')
+  const noteDragRef = useRef(null)
+  const noteResizeRef = useRef(null)
+  const noteCardDraggingRef = useRef(false)
+  const noteSaveTimersRef = useRef(new Map())
+  const notePendingChangesRef = useRef(new Map())
+  const noteSaveRequestsRef = useRef(new Map())
   const [draggingAssetId, setDraggingAssetId] = useState(null)
   const [resizingAssetId, setResizingAssetId] = useState(null)
   const [selectedAssetId, setSelectedAssetId] = useState(null)
@@ -425,6 +461,22 @@ const RoomPage = () => {
   }, [mapContextMenu])
 
   useEffect(() => {
+    if (noteMenuId == null) return undefined
+    const dismissMenu = (event) => {
+      if (!event.target.closest?.('[data-note-menu]')) setNoteMenuId(null)
+    }
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') setNoteMenuId(null)
+    }
+    document.addEventListener('pointerdown', dismissMenu)
+    window.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('pointerdown', dismissMenu)
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [noteMenuId])
+
+  useEffect(() => {
     const handleGlobalKeyDown = (event) => {
       const target = event.target
       const isEditable = target instanceof HTMLElement && (
@@ -516,6 +568,8 @@ const RoomPage = () => {
     setPages(content.pages || [])
     setFolders(content.folders || [])
     setTabletopAssets(content.assets || [])
+    setRoomNotes((content.notes || []).map(normalizeRoomNote))
+    setNoteFolders(content.note_folders || [])
     setTabletopTexts(content.texts || [])
     setTabletopDrawings(content.drawings || [])
     setTabletopMasks(content.masks || [])
@@ -1814,6 +1868,237 @@ const RoomPage = () => {
     }
   }
 
+  const persistNoteChanges = async (noteId, changes) => {
+    const timer = noteSaveTimersRef.current.get(noteId)
+    if (timer) window.clearTimeout(timer)
+    noteSaveTimersRef.current.delete(noteId)
+    const pendingChanges = notePendingChangesRef.current.get(noteId) || {}
+    notePendingChangesRef.current.delete(noteId)
+    const payload = { ...pendingChanges, ...changes }
+    const previousRequest = noteSaveRequestsRef.current.get(noteId) || Promise.resolve()
+    const request = previousRequest.catch(() => null).then(async () => {
+      const saved = normalizeRoomNote(await updateRoomNote(noteId, payload))
+      setRoomNotes((current) => current.map((note) => note.id === noteId ? { ...note, ...saved } : note))
+      setNotesError('')
+      return saved
+    })
+    noteSaveRequestsRef.current.set(noteId, request)
+    try {
+      return await request
+    } catch (error) {
+      setNotesError(error.response?.data?.detail || 'Não foi possível salvar a note.')
+      return null
+    } finally {
+      if (noteSaveRequestsRef.current.get(noteId) === request) noteSaveRequestsRef.current.delete(noteId)
+    }
+  }
+
+  const scheduleNoteChanges = (noteId, changes) => {
+    notePendingChangesRef.current.set(noteId, {
+      ...(notePendingChangesRef.current.get(noteId) || {}),
+      ...changes,
+    })
+    const timer = noteSaveTimersRef.current.get(noteId)
+    if (timer) window.clearTimeout(timer)
+    noteSaveTimersRef.current.set(noteId, window.setTimeout(() => {
+      const pending = notePendingChangesRef.current.get(noteId)
+      if (pending) persistNoteChanges(noteId, pending)
+    }, 500))
+  }
+
+  const createNote = async () => {
+    const note = {
+      color: noteColors[0],
+      title: '',
+      description: '',
+      pageId: currentPageIdRef.current,
+      x: Math.round(backgroundSettings.pageSizeX / 2),
+      y: Math.round(backgroundSettings.pageSizeY / 2),
+    }
+    try {
+      const created = normalizeRoomNote(await createRoomNote(roomId, note))
+      setRoomNotes((current) => [...current, created])
+      setOpenNoteId(created.id)
+      setNoteMenuId(null)
+      setNotesError('')
+    } catch (error) {
+      setNotesError(error.response?.data?.detail || 'Não foi possível criar a note.')
+    }
+  }
+
+  const createNoteFolder = async () => {
+    try {
+      const folder = await createRoomNoteFolder(roomId)
+      setNoteFolders((current) => [...current, folder])
+      setExpandedNoteFolders((current) => ({ ...current, [folder.id]: true }))
+      setNotesError('')
+    } catch (error) {
+      setNotesError(error.response?.data?.detail || 'Não foi possível criar a pasta.')
+    }
+  }
+
+  const renameNoteFolder = async (folderId, name) => {
+    setRenamingNoteFolderId(null)
+    if (!name.trim()) return
+    try {
+      const folder = await renameRoomNoteFolder(folderId, name.trim())
+      setNoteFolders((current) => current.map((item) => item.id === folder.id ? folder : item))
+    } catch (error) {
+      setNotesError(error.response?.data?.detail || 'Não foi possível renomear a pasta.')
+    }
+  }
+
+  const moveNoteToFolder = (event, folderId) => {
+    event.preventDefault()
+    const noteId = Number(event.dataTransfer.getData('application/x-room-note-id'))
+    if (!noteId) return
+    setRoomNotes((current) => current.map((note) => note.id === noteId ? { ...note, folder_id: folderId } : note))
+    persistNoteChanges(noteId, { folder_id: folderId })
+  }
+
+  const removeNote = async (noteId) => {
+    try {
+      await deleteRoomNote(noteId)
+      setRoomNotes((current) => current.filter((note) => note.id !== noteId))
+      if (openNoteId === noteId) setOpenNoteId(null)
+      setNoteMenuId(null)
+      setNotesError('')
+    } catch (error) {
+      setNotesError(error.response?.data?.detail || 'Não foi possível apagar a note.')
+    }
+  }
+
+  const startNotePointDrag = (event, note) => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    event.stopPropagation()
+    noteDragRef.current = { noteId: note.id, pointerId: event.pointerId, moved: false, x: note.x, y: note.y }
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  const moveNotePoint = (event) => {
+    event.stopPropagation()
+    const dragState = noteDragRef.current
+    if (!dragState || dragState.pointerId !== event.pointerId) return
+    const point = getTabletopPoint(event.clientX, event.clientY)
+    if (!point) return
+    setRoomNotes((current) => current.map((note) => {
+      if (note.id !== dragState.noteId) return note
+      if (Math.abs(note.x - point.x) + Math.abs(note.y - point.y) > 3) dragState.moved = true
+      const nextX = Math.max(0, Math.min(backgroundSettings.pageSizeX, point.x))
+      const nextY = Math.max(0, Math.min(backgroundSettings.pageSizeY, point.y))
+      dragState.x = nextX
+      dragState.y = nextY
+      return {
+        ...note,
+        x: nextX,
+        y: nextY,
+      }
+    }))
+  }
+
+  const finishNotePointDrag = (event) => {
+    event.stopPropagation()
+    const dragState = noteDragRef.current
+    if (!dragState || dragState.pointerId !== event.pointerId) return
+    noteDragRef.current = null
+    if (!dragState.moved) {
+      toggleNoteOpen(dragState.noteId)
+      return
+    }
+    persistNoteChanges(dragState.noteId, { x: dragState.x, y: dragState.y })
+  }
+
+  const calculateNoteResize = (event, resize) => {
+    const scale = zoom / 100
+    const deltaX = (event.clientX - resize.startX) / scale
+    const deltaY = (event.clientY - resize.startY) / scale
+    let { left, top, right, bottom } = resize.origin
+    const { direction } = resize
+    if (direction.includes('w')) left += deltaX
+    if (direction.includes('e')) right += deltaX
+    if (direction.includes('n')) top += deltaY
+    if (direction.includes('s')) bottom += deltaY
+
+    if (right - left < 216) {
+      if (direction.includes('w')) left = right - 216
+      else right = left + 216
+    }
+    if (bottom - top < 135) {
+      if (direction.includes('n')) top = bottom - 135
+      else bottom = top + 135
+    }
+    if (right - left > backgroundSettings.pageSizeX) {
+      if (direction.includes('w')) left = right - backgroundSettings.pageSizeX
+      else right = left + backgroundSettings.pageSizeX
+    }
+    if (bottom - top > backgroundSettings.pageSizeY) {
+      if (direction.includes('n')) top = bottom - backgroundSettings.pageSizeY
+      else bottom = top + backgroundSettings.pageSizeY
+    }
+    if (left < 0) { right -= left; left = 0 }
+    if (top < 0) { bottom -= top; top = 0 }
+    if (right > backgroundSettings.pageSizeX) { left -= right - backgroundSettings.pageSizeX; right = backgroundSettings.pageSizeX }
+    if (bottom > backgroundSettings.pageSizeY - 22) { top -= bottom - (backgroundSettings.pageSizeY - 22); bottom = backgroundSettings.pageSizeY - 22 }
+    return {
+      x: (left + right) / 2,
+      y: bottom + 22,
+      width: Math.max(216, right - left),
+      height: Math.max(135, bottom - top),
+    }
+  }
+
+  const startNoteResize = (event, note, direction) => {
+    event.preventDefault()
+    event.stopPropagation()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    const width = Number(note.width) || 378
+    const height = Number(note.height) || 205
+    const left = note.x - width / 2
+    const bottom = note.y - 22
+    noteResizeRef.current = {
+      noteId: note.id,
+      pointerId: event.pointerId,
+      captureTarget: event.currentTarget,
+      direction,
+      startX: event.clientX,
+      startY: event.clientY,
+      origin: { left, top: bottom - height, right: left + width, bottom },
+      original: { x: note.x, y: note.y, width, height },
+    }
+  }
+
+  const moveNoteResize = (event) => {
+    event.stopPropagation()
+    const resize = noteResizeRef.current
+    if (!resize || resize.pointerId !== event.pointerId) return
+    const size = calculateNoteResize(event, resize)
+    setRoomNotes((current) => current.map((note) => note.id === resize.noteId ? { ...note, ...size } : note))
+  }
+
+  const finishNoteResize = (event) => {
+    event.stopPropagation()
+    const resize = noteResizeRef.current
+    if (!resize || resize.pointerId !== event.pointerId) return
+    resize.captureTarget.releasePointerCapture(event.pointerId)
+    noteResizeRef.current = null
+    const size = calculateNoteResize(event, resize)
+    setRoomNotes((current) => current.map((note) => note.id === resize.noteId ? { ...note, ...size } : note))
+    persistNoteChanges(resize.noteId, size).then((saved) => {
+      if (!saved) setRoomNotes((current) => current.map((note) => note.id === resize.noteId ? { ...note, ...resize.original } : note))
+    })
+  }
+
+  const toggleNoteOpen = (noteId) => {
+    if (openNoteId === noteId) persistNoteChanges(noteId, {})
+    setOpenNoteId((current) => current === noteId ? null : noteId)
+    setNoteMenuId(null)
+  }
+
+  const filteredNotes = roomNotes.filter((note) =>
+    `${note.title} ${note.description}`.toLowerCase().includes(noteSearch.trim().toLowerCase())
+  )
+
   const createMask = (operation, shape, points) => {
     const clientId = `${Date.now()}-${Math.random().toString(36).slice(2)}`
     const payload = { type: 'mask.create', page_id: currentPageIdRef.current, client_id: clientId, operation, shape, points }
@@ -2603,6 +2888,94 @@ const RoomPage = () => {
             {maskPreview.shape === 'polygon' && maskPreview.points.length >= 2 && <polyline points={[...maskPreview.points, ...(maskPreview.cursor ? [maskPreview.cursor] : [])].map((point) => `${point.x},${point.y}`).join(' ')} fill="rgba(0,0,0,.18)" stroke="#111" strokeWidth="3" strokeDasharray="8 5" />}
             {maskPreview.shape !== 'polygon' && maskAreaElement(maskPreview, 'rgba(0,0,0,.3)', backgroundSettings.pageSizeX, backgroundSettings.pageSizeY, 'mask-preview')}
           </svg>}
+          {roomNotes.map((note) => <Fragment key={note.id}>
+            <button
+              type="button"
+              className={s.notePointMarker}
+              style={{ left: `${note.x}px`, top: `${note.y}px`, zIndex: 500000 }}
+              aria-label={`${openNoteId === note.id ? 'Fechar' : 'Abrir'} note ${note.title || ''}`}
+              onPointerDown={(event) => startNotePointDrag(event, note)}
+              onPointerMove={moveNotePoint}
+              onPointerUp={finishNotePointDrag}
+              onPointerCancel={finishNotePointDrag}
+              onClick={(event) => { if (event.detail === 0) toggleNoteOpen(note.id) }}
+            >{icons.notePoint}</button>
+            {openNoteId === note.id && <article
+              className={s.noteEditorCard}
+              data-note-menu
+              style={{ left: `${note.x}px`, top: `${note.y}px`, width: `${note.width}px`, height: `${note.height}px`, zIndex: 500001, '--note-card-background': note.color, color: noteTextColor(note.color) }}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
+            >
+              {!note.colors_hidden && <div className={cx('noteColorRail', { noteColorRailCentered: note.colors_centered })} aria-label="Cor da note">
+                {noteColors.map((color) => <button
+                  key={color}
+                  type="button"
+                  aria-label={`Cor ${color}`}
+                  aria-pressed={note.color === color}
+                  className={cx('noteColorOption', { noteColorOptionSelected: note.color === color })}
+                  style={{ backgroundColor: color }}
+                  onClick={() => {
+                    setRoomNotes((current) => current.map((item) => item.id === note.id ? { ...item, color } : item))
+                    persistNoteChanges(note.id, { color })
+                  }}
+                />)}
+              </div>}
+              <header className={s.noteEditorHeader}>
+                <input
+                  value={note.title}
+                  placeholder="Título"
+                  aria-label="Título da note"
+                  onChange={(event) => {
+                    const title = event.target.value
+                    setRoomNotes((current) => current.map((item) => item.id === note.id ? { ...item, title } : item))
+                    scheduleNoteChanges(note.id, { title })
+                  }}
+                  onBlur={(event) => persistNoteChanges(note.id, { title: event.target.value })}
+                />
+                <div className={s.noteMenuContainer} data-note-menu>
+                  <button type="button" className={s.noteMenuTrigger} aria-label="Opções da note" aria-expanded={noteMenuId === note.id} onClick={() => setNoteMenuId((current) => current === note.id ? null : note.id)}>•••</button>
+                  {noteMenuId === note.id && <div className={s.noteOptionsMenu}>
+                    <button type="button" onClick={() => {
+                      const colorsHidden = !note.colors_hidden
+                      setRoomNotes((current) => current.map((item) => item.id === note.id ? { ...item, colors_hidden: colorsHidden } : item))
+                      persistNoteChanges(note.id, { colors_hidden: colorsHidden })
+                      setNoteMenuId(null)
+                    }}>{note.colors_hidden ? 'Mostrar seleção de cores' : 'Ocultar seleção de cores'}</button>
+                    <button type="button" onClick={() => {
+                      const colorsCentered = !note.colors_centered
+                      setRoomNotes((current) => current.map((item) => item.id === note.id ? { ...item, colors_centered: colorsCentered } : item))
+                      persistNoteChanges(note.id, { colors_centered: colorsCentered })
+                      setNoteMenuId(null)
+                    }}>{note.colors_centered ? 'Descentralizar seletores' : 'Centralizar seletores'}</button>
+                    <button type="button" onClick={() => { persistNoteChanges(note.id, {}); setOpenNoteId(null); setNoteMenuId(null) }}>Fechar</button>
+                    <button type="button" onClick={() => removeNote(note.id)}>Apagar</button>
+                  </div>}
+                </div>
+              </header>
+              <textarea
+                value={note.description}
+                placeholder="Descrição..."
+                aria-label="Descrição da note"
+                onChange={(event) => {
+                  const description = event.target.value
+                  setRoomNotes((current) => current.map((item) => item.id === note.id ? { ...item, description } : item))
+                  scheduleNoteChanges(note.id, { description })
+                }}
+                onBlur={(event) => persistNoteChanges(note.id, { description: event.target.value })}
+              />
+              {['e', 'se', 's', 'sw', 'w'].map((direction) => <span
+                key={direction}
+                className={cx('noteResizeHandle', `noteResizeHandle-${direction}`)}
+                role="separator"
+                aria-label={`Redimensionar note ${direction}`}
+                onPointerDown={(event) => startNoteResize(event, note, direction)}
+                onPointerMove={moveNoteResize}
+                onPointerUp={finishNoteResize}
+                onPointerCancel={finishNoteResize}
+              />)}
+            </article>}
+          </Fragment>)}
         </div>
         {mapContextMenu && <div
           className={s.mapContextMenu}
@@ -3226,6 +3599,43 @@ const RoomPage = () => {
                 <div className={s.pageFolderHeading}><span>Unfiled pages</span></div>
                 <ul className={s.pageCardList}>{visiblePages.filter((page) => page.folder_id == null).map((page) => <li key={page.id} draggable={isRoomMaster} onDragStart={(event) => startPageDrag(event, page)} className={s.pageCard}><button type="button" className={s.pagePreview} aria-label={`Abrir ${page.name}`} onClick={() => { if (isRoomMaster || page.id === playersPageId) loadTabletopPage(page.id).catch(console.error) }}>{page.preview_image_url && <img src={page.preview_image_url} alt="" />}</button>{renamingPageId === page.id ? <input autoFocus className={s.pageNameInput} defaultValue={page.name} onBlur={(event) => renamePage(page.id, event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') renamePage(page.id, event.currentTarget.value); if (event.key === 'Escape') setRenamingPageId(null) }} /> : <button type="button" className={s.pageName} onClick={() => isRoomMaster && setRenamingPageId(page.id)}>{page.name}</button>}<button type="button" className={cx('pageBookmark', { pageBookmarkInactive: page.id !== playersPageId })} onClick={() => publishPage(page.id)} disabled={!isRoomMaster} aria-label="Mostrar para os jogadores"><Icon name={page.id === playersPageId ? 'bookmarkCheck' : 'bookmark'} size={20} color="#f4f3fa" /></button></li>)}</ul>
               </section>}
+            </section>
+          </> : activeSidePanel === 'Notes' ? <>
+            <label className={s.tokenSearch}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
+              <input type="search" placeholder="Search..." aria-label="Pesquisar notes" value={noteSearch} onChange={(event) => setNoteSearch(event.target.value)} />
+            </label>
+            <section className={s.notesSection}>
+              <header className={s.mapsSectionHeader}><h3>My Notes &amp; Folders</h3><Icon name="copyPlus" size={18} color="#c9c7e0" /></header>
+              {notesError && <p className={s.tokenMessage} role="alert">{notesError}</p>}
+              <div className={s.noteActions}>
+                <button type="button" onClick={createNote}><Icon name="copyPlus" size={16} color="#c9c7e0" /> New note</button>
+                <button type="button" onClick={createNoteFolder}><Icon name="copyPlus" size={16} color="#c9c7e0" /> New folder</button>
+              </div>
+              {noteFolders.map((folder) => {
+                const folderNotes = filteredNotes.filter((note) => note.folder_id === folder.id)
+                if (noteSearch && !folderNotes.length && !folder.name.toLowerCase().includes(noteSearch.trim().toLowerCase())) return null
+                const expanded = expandedNoteFolders[folder.id] !== false
+                return <section key={folder.id} className={s.noteFolder} onDragOver={(event) => event.preventDefault()} onDrop={(event) => moveNoteToFolder(event, folder.id)}>
+                  <div className={s.noteFolderHeading}>
+                    <button type="button" aria-expanded={expanded} onClick={() => setExpandedNoteFolders((current) => ({ ...current, [folder.id]: !expanded }))}><Icon name="chevronDown" size={15} color="#c9c7e0" /></button>
+                    {renamingNoteFolderId === folder.id
+                      ? <input autoFocus defaultValue={folder.name} onBlur={(event) => renameNoteFolder(folder.id, event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') renameNoteFolder(folder.id, event.currentTarget.value); if (event.key === 'Escape') setRenamingNoteFolderId(null) }} />
+                      : <button type="button" onClick={() => setRenamingNoteFolderId(folder.id)}>{folder.name}</button>}
+                  </div>
+                  {expanded && <ul className={s.noteCardList}>{folderNotes.map((note) => <li key={note.id} draggable onDragStart={(event) => { noteCardDraggingRef.current = true; event.dataTransfer.setData('application/x-room-note-id', String(note.id)); event.dataTransfer.effectAllowed = 'move' }} onDragEnd={() => window.setTimeout(() => { noteCardDraggingRef.current = false }, 80)}>
+                    <button type="button" className={s.noteListCard} onClick={() => { if (!noteCardDraggingRef.current) toggleNoteOpen(note.id) }} aria-expanded={openNoteId === note.id}>
+                      <strong>{note.title || 'Title'}</strong>
+                      <span>{note.description ? `${note.description.slice(0, 110)}${note.description.length > 110 ? '…' : ''}` : 'Description...'}</span>
+                    </button>
+                  </li>)}</ul>}
+                </section>
+              })}
+              {filteredNotes.some((note) => note.folder_id == null) && <section className={s.noteFolder} onDragOver={(event) => event.preventDefault()} onDrop={(event) => moveNoteToFolder(event, null)}>
+                <div className={s.noteFolderHeading}><span>Unfiled notes</span></div>
+                <ul className={s.noteCardList}>{filteredNotes.filter((note) => note.folder_id == null).map((note) => <li key={note.id} draggable onDragStart={(event) => { noteCardDraggingRef.current = true; event.dataTransfer.setData('application/x-room-note-id', String(note.id)); event.dataTransfer.effectAllowed = 'move' }} onDragEnd={() => window.setTimeout(() => { noteCardDraggingRef.current = false }, 80)}><button type="button" className={s.noteListCard} onClick={() => { if (!noteCardDraggingRef.current) toggleNoteOpen(note.id) }} aria-expanded={openNoteId === note.id}><strong>{note.title || 'Title'}</strong><span>{note.description ? `${note.description.slice(0, 110)}${note.description.length > 110 ? '…' : ''}` : 'Description...'}</span></button></li>)}</ul>
+              </section>}
+              {!filteredNotes.length && <p className={s.tokenMessage}>{noteSearch ? 'No notes found.' : 'You have no notes yet.'}</p>}
             </section>
           </> : <p className={s.tokenMessage}>Conteúdo de {activeSidePanel}.</p>}
         </div>}

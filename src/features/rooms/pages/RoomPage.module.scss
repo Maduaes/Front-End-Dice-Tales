@@ -320,6 +320,49 @@
 .pageBookmarkInactive { opacity: .42; }
 .pageCardCurrent { outline: 1px solid rgba(177,151,255,.52); }
 
+.notesSection { margin-top: 20px; }
+.noteActions { display: flex; gap: 8px; margin: 8px 0 10px; }
+.noteActions button { min-height: 29px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,.12); border-radius: 6px; padding: 0 9px; background: #454457; color: #f4f3fa; font: inherit; font-size: 11px; cursor: pointer; }
+.noteFolder { margin-top: 8px; }
+.noteFolderHeading { min-height: 24px; display: flex; align-items: center; gap: 7px; color: #e4e2f3; font-size: 12px; }
+.noteFolderHeading > button:first-child { width: 15px; height: 20px; display: grid; place-items: center; border: 0; padding: 0; background: transparent; color: inherit; cursor: pointer; }
+.noteFolderHeading > button:not(:first-child) { border: 0; padding: 0; background: transparent; color: inherit; font: inherit; cursor: text; }
+.noteFolderHeading input { min-width: 0; border: 0; border-bottom: 1px solid #8885a8; outline: 0; background: transparent; color: #fff; font: inherit; }
+.noteCardList { display: flex; flex-direction: column; gap: 7px; margin: 2px 0 10px 8px; padding: 0 0 0 10px; border-left: 2px solid #625f7c; list-style: none; }
+.noteCardList li { min-width: 0; }
+.noteListCard { width: 100%; min-height: 73px; display: grid; align-content: start; gap: 6px; overflow: hidden; border: 1px solid rgba(220,212,250,.16); border-radius: 6px; padding: 9px; background: transparent; color: #f4f3fa; text-align: left; cursor: pointer; }
+.noteListCard:hover, .noteListCard[aria-expanded="true"] { border-color: rgba(220,212,250,.42); background: rgba(255,255,255,.035); }
+.noteListCard strong { overflow: hidden; font-size: 12px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.noteListCard span { display: -webkit-box; overflow: hidden; color: #d7d5e2; font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.notePointMarker { position: absolute; width: 42px; height: 42px; display: grid; place-items: center; border: 0; border-radius: 50%; padding: 0; background: transparent; transform: translate(-50%, -50%); cursor: grab; touch-action: none; user-select: none; }
+.notePointMarker:active { cursor: grabbing; }
+.notePointMarker svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 3px 4px rgba(0,0,0,.42)); }
+.noteEditorCard { position: absolute; isolation: isolate; box-sizing: border-box; width: min(378px, calc(100vw - 58px)); height: 205px; display: flex; flex-direction: column; border-radius: 13px; padding: 17px 18px 14px; background: transparent; box-shadow: 0 11px 23px rgba(0,0,0,.4); transform: translate(-50%, calc(-100% - 22px)); }
+.noteEditorCard::before { content: ''; position: absolute; z-index: 0; inset: 0; border-radius: inherit; background: var(--note-card-background); }
+.noteColorRail { position: absolute; top: -32px; left: 0; right: 0; z-index: -1; display: grid; grid-template-columns: repeat(10, 28px); justify-content: start; align-items: end; gap: 4.5px; height: 43px; }
+.noteColorRailCentered { justify-content: center; }
+.noteColorOption { width: 28px; height: 31px; border: 0; border-radius: 4.5px 4.5px 0 0; padding: 0; box-shadow: 0 -2px 4px rgba(0,0,0,.12); cursor: pointer; transition: height 130ms ease; }
+.noteColorOptionSelected { height: 36px; }
+.noteEditorHeader { position: relative; z-index: 2; min-height: 46px; display: flex; align-items: center; gap: 9px; border-bottom: 1.8px solid currentColor; }
+.noteEditorHeader > input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: inherit; font: inherit; font-size: 24px; font-weight: 700; }
+.noteEditorHeader > input::placeholder { color: currentColor; opacity: .72; }
+.noteMenuContainer { position: relative; flex: 0 0 auto; }
+.noteMenuTrigger { width: 27px; height: 31px; border: 0; padding: 0; background: transparent; color: inherit; font: inherit; font-size: 17px; font-weight: 700; letter-spacing: 1.8px; cursor: pointer; }
+.noteOptionsMenu { position: absolute; z-index: 10; top: 32px; right: 0; width: max-content; min-width: 171px; display: grid; gap: 2px; border: 1px solid rgba(255,255,255,.12); border-radius: 6px; padding: 4.5px; background: #363547; box-shadow: 0 7px 20px rgba(0,0,0,.35); color: #f4f3fa; }
+.noteOptionsMenu button { min-height: 29px; border: 0; border-radius: 4px; padding: 0 8px; background: transparent; color: inherit; font: inherit; font-size: 11px; text-align: left; white-space: nowrap; cursor: pointer; }
+.noteOptionsMenu button:hover { background: rgba(255,255,255,.1); }
+.noteEditorCard > textarea { position: relative; z-index: 1; flex: 1; min-height: 0; resize: none; border: 0; outline: 0; padding: 13.5px 3px 0; background: transparent; color: inherit; font: inherit; font-size: 16px; line-height: 1.35; }
+.noteEditorCard > textarea::placeholder { color: currentColor; opacity: .68; }
+.noteResizeHandle { position: absolute; z-index: 3; border: 0; background: transparent; touch-action: none; }
+.noteResizeHandle-sw, .noteResizeHandle-se { width: 14px; height: 14px; }
+.noteResizeHandle-sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.noteResizeHandle-se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+.noteResizeHandle-s { right: 11px; left: 11px; bottom: -6px; height: 11px; cursor: ns-resize; }
+.noteResizeHandle-e, .noteResizeHandle-w { top: 11px; bottom: 11px; width: 11px; }
+.noteResizeHandle-e { right: -6px; cursor: ew-resize; }
+.noteResizeHandle-w { left: -6px; cursor: ew-resize; }
+@media (max-width: 520px) { .noteEditorCard { width: min(324px, calc(100vw - 38px)); height: 185px; padding: 13.5px; } .noteColorRail { grid-template-columns: repeat(10, 25px); gap: 3.5px; } .noteColorOption { width: 25px; } .noteEditorHeader { min-height: 41px; } .noteEditorHeader > input { font-size: 20px; } .noteEditorCard > textarea { font-size: 14.5px; } }
+
 .mapsSectionHeader {
   min-height: 28px;
   display: flex;
