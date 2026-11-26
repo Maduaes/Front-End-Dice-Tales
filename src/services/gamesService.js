@@ -14,9 +14,9 @@ const normalizeRoom = (room) => {
   }
 }
 
-export const getGameById = async (id) => {
+export const getGameByPublicId = async (publicId) => {
   try{
-    const response = await api.get(`/rooms/${id}`)
+    const response = await api.get(`/rooms/public/${publicId}`)
     return normalizeRoom(response.data)
   }catch(error) {
     console.error(error || 'Erro ao carregar a sala!')

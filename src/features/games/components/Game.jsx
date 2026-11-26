@@ -39,7 +39,7 @@ export const Game = ({ game, setSelectedGame }) => {
   }, [])
 
   const openRoom = () => {
-    navigate(`/rooms/${game.id}`)
+    navigate(`/rooms/${game.public_id}`)
   }
 
   const copyRoomCode = async (event) => {

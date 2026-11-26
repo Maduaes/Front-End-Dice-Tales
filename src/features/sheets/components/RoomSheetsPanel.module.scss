@@ -1,0 +1,20 @@
+.panel { height: 100%; }
+.search { height: 39px; display: flex; align-items: center; gap: 10px; border-radius: 6px; padding: 0 12px; background: #454457; }
+.search svg { width: 19px; height: 19px; flex: none; fill: none; stroke: #aaa6d1; stroke-width: 1.8; stroke-linecap: round; }
+.search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #fff; font: inherit; font-size: 12px; }
+.search input::placeholder { color: #aaa6d1; opacity: 1; }
+.tabs { display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px; margin-top: 18px; border-bottom: 1px solid rgba(220,212,250,.13); }
+.tabs button { min-height: 34px; border: 0; border-bottom: 2px solid transparent; padding: 0 0 7px; background: transparent; color: #aaa6d1; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.tabs button[aria-selected="true"] { border-bottom-color: #a46be9; color: #fff; }
+.listSection { margin-top: 15px; }
+.listHeading { min-height: 31px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.listHeading h3 { margin: 0; color: #f4f3fa; font-size: 13px; font-weight: 600; }
+.listHeading button { min-height: 29px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid rgba(220,212,250,.15); border-radius: 6px; padding: 0 8px; background: #3b3a4d; color: #f4f3fa; font: inherit; font-size: 11px; cursor: pointer; }
+.listHeading button:disabled { opacity: .65; cursor: wait; }
+.list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.card { height: 56px; display: flex; align-items: center; overflow: hidden; border-radius: 7px; background: #3d3c4e; box-shadow: 0 2px 4px rgba(0,0,0,.16); }
+.art { width: 48px; height: 48px; flex: none; display: grid; place-items: center; overflow: hidden; margin: 4px; border-radius: 3px; }
+.art img { width: 100%; height: 100%; object-fit: cover; }
+.name { position: relative; align-self: stretch; display: flex; align-items: center; min-width: 0; overflow: hidden; padding: 0 13px; color: #f4f3fa; font-size: 12px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.name::before { content: ''; position: absolute; top: 10px; bottom: 10px; left: 4.5px; width: 1.2px; background: rgba(220,212,250,.25); }
+.message { margin: 12px 0; color: #c8c5d8; font-size: 11px; }
