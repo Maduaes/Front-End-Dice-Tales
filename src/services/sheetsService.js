@@ -3,13 +3,15 @@ import api from './api'
 export const createSheet = async ({
   game_system,
   sheet_type,
-  name
+  name,
+  room_id
 }) => {
   try {
     const response = await api.post('/sheets/', {
       game_system,
       sheet_type,
       name,
+      room_id,
     })
 
     return response.data

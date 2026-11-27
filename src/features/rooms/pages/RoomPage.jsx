@@ -1,9 +1,11 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import cn from 'classnames/bind'
 import { useParams } from 'react-router-dom'
-import { getGameById } from '../../../services/gamesService'
+import { getGameByPublicId } from '../../../services/gamesService'
 import { getUser } from '../../../services/usersService'
 import { getRoomAssets, getRoomTabletop, uploadRoomAsset } from '../../../services/roomAssetsService'
+import RoomSheetsPanel from '../../sheets/components/RoomSheetsPanel'
 import { createRoomNote, createRoomNoteFolder, deleteRoomNote, updateRoomNote, renameRoomNoteFolder } from '../../../services/notesService'
 import { Icon } from '../../../shared/icones/Icon'
 import diceD4 from '../../../assets/dice-d4.png'
@@ -50,9 +52,39 @@ const mapScaleUnits = [
   { label: 'Kilometers', value: 'kilometers' },
   { label: 'Miles', value: 'miles' },
 ]
+const defaultTokenSettings = () => ({
+  bars: [
+    { current: '', max: '', component: 'none', visibility: 'owner', location: 'above', color: '#CA2A3F' },
+    { current: '', max: '', component: 'none', visibility: 'owner', location: 'above', color: '#80CDE9' },
+    { current: '', max: '', component: 'none', visibility: 'owner', location: 'above', color: '#8FCF6D' },
+  ],
+  general: { opacity: 100, nameplate: false, nameplateDm: false, showNumbers: true, maskColor: '#CA2A3F', maskOpacity: 0 },
+  auras: [
+    { radius: '', shape: 'circle', visibility: 'owner', opacity: 35, color: '#E1EDF3' },
+    { radius: '', shape: 'circle', visibility: 'owner', opacity: 35, color: '#EEC882' },
+  ],
+})
+const normalizeTokenSettings = (settings) => ({
+  ...defaultTokenSettings(),
+  ...(settings || {}),
+  general: { ...defaultTokenSettings().general, ...(settings?.general || {}) },
+  bars: defaultTokenSettings().bars.map((bar, index) => ({ ...bar, ...(settings?.bars?.[index] || {}) })),
+  auras: defaultTokenSettings().auras.map((aura, index) => ({ ...aura, ...(settings?.auras?.[index] || {}) })),
+})
+const tokenVisibilityOptions = [['invisible', 'Invisible'], ['everyone', 'For everyone'], ['owner', 'Only for owner'], ['dm', 'Only for DM']]
 const getLayerAssets = (assets, layer) => assets
   .filter((asset) => asset.layer === layer)
   .sort((first, second) => (Number(first.layer_order) - Number(second.layer_order)) || (Number(first.id) - Number(second.id)))
+const getNextTabletopLayerOrder = (layer, assets, texts, drawings) => {
+  const orders = [assets, texts, drawings]
+    .flatMap((items) => items.filter((item) => item.layer === layer).map((item) => Number(item.layer_order) || 0))
+  return orders.reduce((maximum, order) => Math.max(maximum, order), -1) + 1
+}
+const getTabletopLayerBase = (layer) => ({ map: 1000, master: 100000, players: 200000 }[layer] || 0)
+const getTabletopStackZIndex = (layer, layerOrder, kind) => {
+  const kindOrder = { asset: 0, text: 2, drawing: 4 }[kind] || 0
+  return getTabletopLayerBase(layer) + (Math.max(0, Number(layerOrder) || 0) * 10) + kindOrder
+}
 const tabletopAssetFields = (asset) => ({
   id: asset.id,
   layer: asset.layer,
@@ -272,7 +304,7 @@ const IconButton = ({ label, icon, className = '', onClick, pressed }) => (
 )
 
 const RoomPage = () => {
-  const { roomId } = useParams()
+  const { publicRoomId } = useParams()
   const websocketRef = useRef(null)
   const messagesEndRef = useRef(null)
   const tabletopFrameRef = useRef(null)
@@ -288,6 +320,7 @@ const RoomPage = () => {
   const diceDragRef = useRef(null)
   const textDragRef = useRef(null)
   const [room, setRoom] = useState(null)
+  const roomId = room?.id
   const [currentUser, setCurrentUser] = useState(null)
   const [zoom, setZoom] = useState(100)
   const [pan, setPan] = useState({ x: 0, y: 0 })
@@ -357,6 +390,12 @@ const RoomPage = () => {
   const [resizingAssetId, setResizingAssetId] = useState(null)
   const [selectedAssetId, setSelectedAssetId] = useState(null)
   const [selectedAssetIds, setSelectedAssetIds] = useState([])
+  const [tokenActionMenuId, setTokenActionMenuId] = useState(null)
+  const [tokenActionMenuPosition, setTokenActionMenuPosition] = useState(null)
+  const [tokenSettingsAssetId, setTokenSettingsAssetId] = useState(null)
+  const [tokenSettingsDropdown, setTokenSettingsDropdown] = useState(null)
+  const [tokenSettingsPanelPosition, setTokenSettingsPanelPosition] = useState(() => ({ x: Math.max(8, window.innerWidth / 2 - 440), y: Math.max(8, window.innerHeight * 0.2) }))
+  const tokenSettingsPanelDragRef = useRef(null)
   const [selectionMarquee, setSelectionMarquee] = useState(null)
   const [mapContextMenu, setMapContextMenu] = useState(null)
   const [workOnLayer, setWorkOnLayer] = useState('players')
@@ -432,7 +471,7 @@ const RoomPage = () => {
     selectedTextIdRef.current = null
     setSelectedTextIds([])
     selectedTextIdsRef.current = []
-  }, [roomId])
+  }, [publicRoomId])
 
   useEffect(() => { tabletopTextsRef.current = tabletopTexts }, [tabletopTexts])
   useEffect(() => { tabletopDrawingsRef.current = tabletopDrawings }, [tabletopDrawings])
@@ -646,6 +685,62 @@ const RoomPage = () => {
     return true
   }
 
+  const saveTokenSettings = (asset, nextSettings) => {
+    if (!sendRoomMessage({
+      type: 'asset.update_token_settings',
+      page_id: currentPageIdRef.current,
+      asset_id: asset.id,
+      token_settings: nextSettings,
+    })) return
+    setTabletopAssets((current) => current.map((item) => item.id === asset.id ? { ...item, token_settings: nextSettings } : item))
+  }
+
+  const changeTokenSetting = (asset, section, index, key, value) => {
+    const settings = normalizeTokenSettings(asset.token_settings)
+    let nextSettings = section === 'general'
+      ? { ...settings, general: { ...settings.general, [key]: value } }
+      : { ...settings, [section]: settings[section].map((item, itemIndex) => itemIndex === index ? { ...item, [key]: value } : item) }
+    if (section === 'bars' && key === 'max' && value !== '' && settings.bars[index].current === '') {
+      nextSettings = { ...nextSettings, bars: nextSettings.bars.map((bar, itemIndex) => itemIndex === index ? { ...bar, current: 0 } : bar) }
+    }
+    saveTokenSettings(asset, nextSettings)
+  }
+
+  const startTokenSettingsPanelDrag = (event) => {
+    if (event.button !== 0 || event.target.closest('button')) return
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    tokenSettingsPanelDragRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, origin: tokenSettingsPanelPosition }
+  }
+  const moveTokenSettingsPanelDrag = (event) => {
+    const dragState = tokenSettingsPanelDragRef.current
+    if (!dragState || dragState.pointerId !== event.pointerId) return
+    const panel = event.currentTarget.closest('[data-token-settings-panel]')
+    const width = panel?.offsetWidth || 780
+    const height = panel?.offsetHeight || 660
+    setTokenSettingsPanelPosition({
+      x: Math.max(8, Math.min(window.innerWidth - width - 8, dragState.origin.x + event.clientX - dragState.x)),
+      y: Math.max(8, Math.min(window.innerHeight - height - 8, dragState.origin.y + event.clientY - dragState.y)),
+    })
+  }
+  const stopTokenSettingsPanelDrag = (event) => {
+    if (tokenSettingsPanelDragRef.current?.pointerId !== event.pointerId) return
+    event.currentTarget.releasePointerCapture(event.pointerId)
+    tokenSettingsPanelDragRef.current = null
+  }
+
+  const duplicateToken = (asset) => {
+    const width = Number(asset.width) || defaultTokenSize
+    const originalX = Number(asset.position_x) || 0
+    const nextX = originalX + width + 12 > backgroundSettings.pageSizeX ? Math.max(0, originalX - width - 12) : originalX + width + 12
+    sendRoomMessage({
+      type: 'asset.duplicate', page_id: currentPageIdRef.current, asset_id: asset.id,
+      position_x: String(nextX), position_y: String(asset.position_y),
+      layer_order: getNextTabletopLayerOrder(asset.layer, tabletopAssets, tabletopTexts, tabletopDrawings),
+    })
+    setTokenActionMenuId(null)
+  }
+
   const applyBackgroundSettings = (settings) => {
     const message = { type: 'background.change_settings', page_id: currentPageIdRef.current, ...settings }
     if (!sendRoomMessage(message)) return false
@@ -676,7 +771,7 @@ const RoomPage = () => {
 
   const removeAssetFromTabletop = (assetIds, recordUndo = true) => {
     const ids = (Array.isArray(assetIds) ? assetIds : [assetIds]).map(Number)
-    const assets = tabletopAssets.filter((item) => ids.includes(item.id) && item.layer != null)
+    const assets = tabletopAssets.filter((item) => ids.includes(item.id) && item.layer != null && canManagePlacedAsset(item))
     if (!assets.length) return false
     const socket = websocketRef.current
     if (socket?.readyState !== WebSocket.OPEN) {
@@ -963,10 +1058,13 @@ const RoomPage = () => {
   useEffect(() => {
     let isMounted = true
 
+    setRoom(null)
+    setCurrentUser(null)
+
     const loadRoomContext = async () => {
       try {
         const [roomData, userData] = await Promise.all([
-          getGameById(roomId),
+          getGameByPublicId(publicRoomId),
           getUser(),
         ])
 
@@ -986,7 +1084,7 @@ const RoomPage = () => {
     return () => {
       isMounted = false
     }
-  }, [roomId])
+  }, [publicRoomId])
 
   useEffect(() => {
     if (!room?.code) {
@@ -1069,7 +1167,7 @@ const RoomPage = () => {
           return
         }
         if (payload?.type === 'text.create') {
-          const text = { id: payload.text_id, page_id: payload.page_id, client_id: payload.client_id, content: payload.content || '', position_x: payload.x, position_y: payload.y, layer: payload.layer, font_family: payload.font_family, font_size: payload.font_size, color: payload.color, bold: payload.bold, italic: payload.italic }
+          const text = { id: payload.text_id, page_id: payload.page_id, client_id: payload.client_id, content: payload.content || '', position_x: payload.x, position_y: payload.y, layer: payload.layer, layer_order: payload.layer_order, font_family: payload.font_family, font_size: payload.font_size, color: payload.color, bold: payload.bold, italic: payload.italic }
           setTabletopTexts((current) => {
             const draft = current.find((item) => item.client_id === payload.client_id)
             return draft
@@ -1103,7 +1201,7 @@ const RoomPage = () => {
           return
         }
         if (payload?.type === 'drawing.create') {
-          const drawing = { id: payload.drawing_id, client_id: payload.client_id, page_id: payload.page_id, position_x: payload.position_x, position_y: payload.position_y, points: payload.points, color: payload.color, stroke_width: payload.stroke_width, layer: payload.layer }
+          const drawing = { id: payload.drawing_id, client_id: payload.client_id, page_id: payload.page_id, position_x: payload.position_x, position_y: payload.position_y, points: payload.points, color: payload.color, stroke_width: payload.stroke_width, layer: payload.layer, layer_order: payload.layer_order }
           setTabletopDrawings((current) => current.some((item) => item.client_id === payload.client_id)
             ? current.map((item) => item.client_id === payload.client_id ? { ...drawing, position_x: item.position_x, position_y: item.position_y } : item)
             : current.some((item) => item.id === payload.drawing_id) ? current.map((item) => item.id === payload.drawing_id ? { ...item, ...drawing } : item) : [...current, drawing])
@@ -1168,6 +1266,13 @@ const RoomPage = () => {
               })
             })
             .catch((error) => console.error('Não foi possível atualizar o asset inserido.', error))
+          return
+        }
+
+        if (payload?.type === 'asset.update_token_settings') {
+          setTabletopAssets((current) => current.map((asset) => asset.id === payload.asset_id
+            ? { ...asset, token_settings: payload.token_settings }
+            : asset))
           return
         }
 
@@ -1362,7 +1467,7 @@ const RoomPage = () => {
       event.preventDefault()
       event.stopPropagation()
       const clientId = `${Date.now()}-${Math.random().toString(36).slice(2)}`
-      const draft = { id: `draft-${clientId}`, client_id: clientId, page_id: currentPageIdRef.current, content: '', position_x: point.x, position_y: point.y, layer: workOnLayer, font_family: textSettings.fontFamily, font_size: textSettings.fontSize, color: textSettings.color, bold: textSettings.bold, italic: textSettings.italic }
+      const draft = { id: `draft-${clientId}`, client_id: clientId, page_id: currentPageIdRef.current, content: '', position_x: point.x, position_y: point.y, layer: workOnLayer, layer_order: getNextTabletopLayerOrder(workOnLayer, tabletopAssets, tabletopTexts, tabletopDrawings), font_family: textSettings.fontFamily, font_size: textSettings.fontSize, color: textSettings.color, bold: textSettings.bold, italic: textSettings.italic }
       tabletopTextsRef.current = [...tabletopTextsRef.current, draft]
       setTabletopTexts((current) => [...current, draft])
       setSelectedTextId(draft.id)
@@ -1405,7 +1510,10 @@ const RoomPage = () => {
 
   const startSelectionMarquee = (event) => {
     if (activeTool !== 'select') return
-    if (event.button !== 0 || event.target.closest?.('[data-asset-id]') || event.target.closest?.('[data-text-id]') || event.target.closest?.('[data-drawing-id]')) return
+    if (event.button !== 0 || event.target.closest?.('[data-text-id]') || event.target.closest?.('[data-drawing-id]')) return
+    const assetElement = event.target.closest?.('[data-asset-id]')
+    const hitAsset = assetElement && tabletopAssets.find((asset) => asset.id === Number(assetElement.dataset.assetId))
+    if (hitAsset && hitAsset.layer === workOnLayer && canManagePlacedAsset(hitAsset)) return
     event.preventDefault()
     const bounds = tabletopFrameRef.current.getBoundingClientRect()
     marqueeRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, frameLeft: bounds.left, frameTop: bounds.top }
@@ -1529,6 +1637,7 @@ const RoomPage = () => {
         color: active.color,
         stroke_width: active.strokeWidth,
         layer: active.layer,
+        layer_order: getNextTabletopLayerOrder(active.layer, tabletopAssets, tabletopTexts, tabletopDrawings),
       }
       setDrawPreview(null)
       if (active.points.length > 0) {
@@ -1536,7 +1645,7 @@ const RoomPage = () => {
         setTabletopDrawings((current) => [...current, drawing])
         setSelectedDrawingIds([drawing.id])
         selectedDrawingIdsRef.current = [drawing.id]
-        const sent = sendRoomMessage({ type: 'drawing.create', page_id: drawing.page_id, client_id: clientId, position_x: drawing.position_x, position_y: drawing.position_y, points: drawing.points, color: drawing.color, stroke_width: drawing.stroke_width, layer: drawing.layer })
+        const sent = sendRoomMessage({ type: 'drawing.create', page_id: drawing.page_id, client_id: clientId, position_x: drawing.position_x, position_y: drawing.position_y, points: drawing.points, color: drawing.color, stroke_width: drawing.stroke_width, layer: drawing.layer, layer_order: drawing.layer_order })
         if (!sent) {
           setTabletopDrawings((current) => current.filter((item) => item.id !== drawing.id))
           tabletopDrawingsRef.current = tabletopDrawingsRef.current.filter((item) => item.id !== drawing.id)
@@ -1600,6 +1709,8 @@ const RoomPage = () => {
       const bottom = Math.max(marquee.startY, event.clientY)
       const selectedIds = [...tabletopRef.current.querySelectorAll('[data-asset-id]')]
         .filter((element) => {
+          const asset = tabletopAssets.find((item) => item.id === Number(element.dataset.assetId))
+          if (!isTokenAsset(asset) || asset.layer !== workOnLayer || !canManagePlacedToken(asset)) return false
           const bounds = element.getBoundingClientRect()
           return bounds.right >= left && bounds.left <= right && bounds.bottom >= top && bounds.top <= bottom
         })
@@ -2170,7 +2281,7 @@ const RoomPage = () => {
         return
       }
       if (text.pending_save) return
-      const sent = sendRoomMessage({ type: 'text.create', page_id: currentPageIdRef.current, client_id: text.client_id, content: text.content, x: text.position_x, y: text.position_y, layer: text.layer, font_family: text.font_family, font_size: text.font_size, color: text.color, bold: text.bold, italic: text.italic })
+      const sent = sendRoomMessage({ type: 'text.create', page_id: currentPageIdRef.current, client_id: text.client_id, content: text.content, x: text.position_x, y: text.position_y, layer: text.layer, layer_order: text.layer_order, font_family: text.font_family, font_size: text.font_size, color: text.color, bold: text.bold, italic: text.italic })
       if (sent) {
         const pending = { ...text, pending_save: true }
         tabletopTextsRef.current = tabletopTextsRef.current.map((item) => item.id === text.id ? pending : item)
@@ -2222,17 +2333,29 @@ const RoomPage = () => {
     }))
   }
 
+  const handleLibraryImageDragStart = (event, asset) => {
+    event.dataTransfer.effectAllowed = 'copy'
+    event.dataTransfer.setData('application/x-room-image-id', String(asset.id))
+    const image = event.currentTarget.querySelector('img')
+    event.dataTransfer.setData('application/x-room-asset-size', JSON.stringify({
+      width: image?.naturalWidth || asset.width || defaultTokenSize,
+      height: image?.naturalHeight || asset.height || defaultTokenSize,
+    }))
+  }
+
   const handleTabletopDragOver = (event) => {
-    if (event.dataTransfer.types.includes('application/x-room-asset-id')) {
+    if (event.dataTransfer.types.includes('application/x-room-asset-id') || event.dataTransfer.types.includes('application/x-room-image-id')) {
       event.preventDefault()
-      event.dataTransfer.dropEffect = 'move'
+      event.dataTransfer.dropEffect = event.dataTransfer.types.includes('application/x-room-image-id') ? 'copy' : 'move'
     }
   }
 
   const handleTabletopDrop = (event) => {
     event.preventDefault()
+    const sourceImageId = Number(event.dataTransfer.getData('application/x-room-image-id'))
     const assetId = Number(event.dataTransfer.getData('application/x-room-asset-id'))
-    const asset = tokens.find((token) => token.id === assetId)
+    const isLibraryImage = Boolean(sourceImageId)
+    const asset = tokens.find((token) => token.id === (isLibraryImage ? sourceImageId : assetId))
     const point = getTabletopPoint(event.clientX, event.clientY)
     const tabletopBounds = tabletopRef.current?.getBoundingClientRect()
     if (!asset || !point || !tabletopBounds) return
@@ -2262,7 +2385,7 @@ const RoomPage = () => {
     const positionY = backgroundSettings.movementAdaptableToGrid
       ? Math.min(Math.floor(maxY / gridCellSize) * gridCellSize, Math.max(0, Math.round(rawY / gridCellSize) * gridCellSize))
       : Math.max(0, Math.min(maxY, rawY))
-    const layerOrder = getLayerAssets(tabletopAssets, workOnLayer).length
+      const layerOrder = getNextTabletopLayerOrder(workOnLayer, tabletopAssets, tabletopTexts, tabletopDrawings)
     const assetData = {
       position_x: String(positionX),
       position_y: String(positionY),
@@ -2270,6 +2393,10 @@ const RoomPage = () => {
       height: String(height),
       layer: workOnLayer,
       layer_order: layerOrder,
+    }
+    if (isLibraryImage) {
+      sendRoomMessage({ type: 'asset.create_from_image', page_id: currentPageIdRef.current, source_asset_id: asset.id, asset_data: assetData })
+      return
     }
     if (!sendRoomMessage({ type: 'asset.insert', page_id: currentPageIdRef.current, asset_id: asset.id, asset_data: assetData })) return
     const currentPlacement = tabletopAssets.find((item) => item.id === asset.id && item.layer != null)
@@ -2321,15 +2448,34 @@ const RoomPage = () => {
     return Math.max(0, Math.min(Math.floor(max / gridCellSize) * gridCellSize, Math.round(value / gridCellSize) * gridCellSize))
   }
 
+  const isTokenAsset = (asset) => asset?.layer === 'players' || asset?.layer === 'master'
+  const canManagePlacedToken = (asset) => Boolean(isTokenAsset(asset) && (
+    isRoomMaster || Number(asset.owner_user_id) === Number(currentUserIdRef.current)
+  ))
+  const canManagePlacedAsset = (asset) => asset?.layer === 'map'
+    ? isRoomMaster
+    : canManagePlacedToken(asset)
+  const changeWorkOnLayer = (layer) => {
+    setWorkOnLayer(layer)
+    setSelectedAssetId(null)
+    selectedAssetIdRef.current = null
+    setSelectedAssetIds([])
+    selectedAssetIdsRef.current = []
+    setTokenSettingsAssetId(null)
+    setTokenActionMenuId(null)
+    setTokenActionMenuPosition(null)
+  }
+
   const startAssetDrag = (event, asset) => {
     if (activeTool !== 'select') return
     if (event.button !== 0) return
+    if (asset.layer !== workOnLayer) return
+    if (!canManagePlacedAsset(asset)) return
     selectedAssetIdRef.current = asset.id
     const currentSelection = selectedAssetIds.includes(asset.id) ? selectedAssetIds : [asset.id]
     setSelectedAssetId(asset.id)
     setSelectedAssetIds(currentSelection)
     selectedAssetIdsRef.current = currentSelection
-    if (asset.layer !== workOnLayer) return
     if (measureTokenMovement) {
       const startX = (Number(asset.position_x) || 0) + (Number(asset.width) || defaultTokenSize) / 2
       const startY = (Number(asset.position_y) || 0) + (Number(asset.height) || defaultTokenSize) / 2
@@ -2341,7 +2487,7 @@ const RoomPage = () => {
     event.stopPropagation()
     event.currentTarget.setPointerCapture(event.pointerId)
     setDraggingAssetId(asset.id)
-    const movableAssets = tabletopAssets.filter((item) => currentSelection.includes(item.id) && item.layer === workOnLayer)
+    const movableAssets = tabletopAssets.filter((item) => currentSelection.includes(item.id) && item.layer === workOnLayer && canManagePlacedAsset(item))
     assetDragRef.current = {
       pointerId: event.pointerId,
       assetId: asset.id,
@@ -2500,12 +2646,13 @@ const RoomPage = () => {
   }
 
   const startAssetResize = (event, asset, direction) => {
+    if (asset.layer !== workOnLayer) return
+    if (!canManagePlacedAsset(asset)) return
     event.preventDefault()
     event.stopPropagation()
     setSelectedAssetId(asset.id)
     setSelectedAssetIds([asset.id])
     selectedAssetIdsRef.current = [asset.id]
-    if (asset.layer !== workOnLayer) return
     event.currentTarget.setPointerCapture(event.pointerId)
     const originWidth = Number(asset.width) || defaultTokenSize
     const originHeight = Number(asset.height) || defaultTokenSize
@@ -2636,7 +2783,7 @@ const RoomPage = () => {
     />
   )
 
-  const selectedMovableAssets = tabletopAssets.filter((asset) => selectedAssetIds.includes(asset.id) && asset.layer === workOnLayer && asset.position_x != null && asset.position_y != null)
+  const selectedMovableAssets = tabletopAssets.filter((asset) => selectedAssetIds.includes(asset.id) && asset.layer === workOnLayer && asset.position_x != null && asset.position_y != null && canManagePlacedAsset(asset))
   const selectedGroupBounds = selectedMovableAssets.length > 1 ? selectedMovableAssets.reduce((bounds, asset) => {
     const x = Number(asset.position_x) || 0
     const y = Number(asset.position_y) || 0
@@ -2677,15 +2824,18 @@ const RoomPage = () => {
         onClick={(event) => {
           handleMaskCanvasClick(event)
           if (activeTool !== 'select') return
-          if (event.target === tabletopRef.current || event.target === tabletopFrameRef.current) {
-            if (marqueeCompletedRef.current) {
-              marqueeCompletedRef.current = false
-              return
-            }
+          if (marqueeCompletedRef.current) {
+            marqueeCompletedRef.current = false
+            return
+          }
+          const clickedAssetId = Number(event.target.closest?.('[data-asset-id]')?.dataset.assetId)
+          if (!clickedAssetId || clickedAssetId !== Number(selectedAssetIdRef.current)) {
             setSelectedAssetId(null)
             setSelectedAssetIds([])
             selectedAssetIdsRef.current = []
             selectedAssetIdRef.current = null
+            setTokenActionMenuId(null)
+            setTokenActionMenuPosition(null)
             setSelectedTextId(null)
             selectedTextIdRef.current = null
             setSelectedTextIds([])
@@ -2731,11 +2881,20 @@ const RoomPage = () => {
           {tabletopAssets.filter((asset) => asset.position_x != null && asset.position_y != null).map((asset) => {
             const width = Number(asset.width) || defaultTokenSize
             const height = Number(asset.height) || defaultTokenSize
-            const isSelected = selectedAssetIds.includes(asset.id) || selectedAssetId === asset.id
-            const canEdit = asset.layer === workOnLayer
-            const orderedLayerAssets = getLayerAssets(tabletopAssets, asset.layer)
-            const layerPosition = orderedLayerAssets.findIndex((item) => item.id === asset.id)
-            const layerBase = { map: 1000, master: 100000, players: 200000 }[asset.layer] || 0
+            const isToken = isTokenAsset(asset)
+            const canEdit = asset.layer === workOnLayer && canManagePlacedAsset(asset)
+            const isSelected = canEdit && (selectedAssetIds.includes(asset.id) || selectedAssetId === asset.id)
+            const tokenSettings = normalizeTokenSettings(asset.token_settings)
+            const canSeeTokenSetting = (visibility) => visibility === 'everyone'
+              || (visibility === 'owner' && (isRoomMaster || Number(asset.owner_user_id) === Number(currentUserIdRef.current)))
+              || (visibility === 'dm' && isRoomMaster)
+            const auraRadiusPixels = (aura) => {
+              const radius = Number(aura.radius)
+              const mapScale = Number(backgroundSettings.mapScaleValue) || 1
+              if (!Number.isFinite(radius) || radius <= 0) return 0
+              return radius / mapScale * gridCellSize
+            }
+            const layerZIndex = getTabletopStackZIndex(asset.layer, asset.layer_order, 'asset')
             return (
               <div
                 key={asset.id}
@@ -2750,15 +2909,17 @@ const RoomPage = () => {
                   top: `${asset.position_y}px`,
                   width: `${width}px`,
                   height: `${height}px`,
-                  zIndex: layerBase + orderedLayerAssets.length - layerPosition,
+                  zIndex: layerZIndex,
                   opacity: asset.layer === 'master' ? 0.48 : 1,
                   display: asset.visible === false ? 'none' : undefined,
                   cursor: canEdit ? 'grab' : 'default',
                 }}
                 data-asset-id={asset.id}
                 onClick={(event) => {
-                  if (activeTool !== 'select') return
+                  if (activeTool !== 'select' || !canEdit) return
                   event.stopPropagation()
+                  setTokenActionMenuId(null)
+                  setTokenActionMenuPosition(null)
                   selectedAssetIdRef.current = asset.id
                   setSelectedAssetId(asset.id)
                   if (!selectedAssetIds.includes(asset.id)) {
@@ -2781,7 +2942,52 @@ const RoomPage = () => {
                   })
                 }}
               >
-                <img className={s.tabletopAssetImage} src={asset.asset_image_url} alt={asset.asset_image_file_name || 'Token'} draggable="false" />
+                {isToken && tokenSettings.auras.map((aura, index) => {
+                  if (!canSeeTokenSetting(aura.visibility)) return null
+                  const diameter = auraRadiusPixels(aura) * 2
+                  if (!diameter) return null
+                  const shape = aura.shape.replace('-border', '')
+                  const borderOnly = aura.shape.endsWith('-border')
+                  const common = { fill: borderOnly ? 'none' : aura.color, fillOpacity: borderOnly ? 0 : Number(aura.opacity) / 100, stroke: aura.color, strokeOpacity: Number(aura.opacity) / 100, strokeWidth: borderOnly ? 3 : 0 }
+                  return <svg key={`aura-${index}`} className={s.tokenAura} style={{ width: diameter, height: diameter }} viewBox="0 0 100 100" aria-hidden="true">
+                    {shape === 'circle' ? <circle cx="50" cy="50" r="48" {...common} /> : shape === 'square' ? <rect x="2" y="2" width="96" height="96" {...common} /> : <polygon points="50,2 94,26 94,74 50,98 6,74 6,26" {...common} />}
+                  </svg>
+                })}
+                {isToken && tokenSettings.bars.map((bar, index) => {
+                  const isSheetComponent = bar.component !== 'none'
+                  const sheetComponent = isSheetComponent ? asset.sheet_components?.[bar.component] : null
+                  const maxValue = isSheetComponent ? sheetComponent?.max : bar.max
+                  const currentValue = isSheetComponent ? sheetComponent?.current : bar.current
+                  if (!canSeeTokenSetting(bar.visibility) || maxValue === '' || maxValue == null) return null
+                  const max = Math.max(0, Number(maxValue) || 0)
+                  const current = Math.max(0, Math.min(max, Number(currentValue) || 0))
+                  const widthPercent = max > 0 ? current / max * 100 : 0
+                  const positionClass = { above: 'tokenBarAbove', below: 'tokenBarBelow', 'top-overlap': 'tokenBarTopOverlap', 'bottom-overlap': 'tokenBarBottomOverlap' }[bar.location]
+                  const precedingBarsAtLocation = tokenSettings.bars.slice(0, index).filter((candidate) => {
+                    if (candidate.location !== bar.location || !canSeeTokenSetting(candidate.visibility)) return false
+                    const candidateIsSheetComponent = candidate.component !== 'none'
+                    const candidateSheetComponent = candidateIsSheetComponent ? asset.sheet_components?.[candidate.component] : null
+                    const candidateMax = candidateIsSheetComponent ? candidateSheetComponent?.max : candidate.max
+                    return candidateMax !== '' && candidateMax != null
+                  }).length
+                  const barHeight = tokenSettings.general.showNumbers ? 12 : 5
+                  const barGap = 3
+                  const stackOffset = precedingBarsAtLocation * (barHeight + barGap)
+                  const stackStyle = bar.location === 'above'
+                    ? { top: `-${barHeight + 4 + stackOffset}px` }
+                    : bar.location === 'below'
+                      ? { top: `calc(100% + ${4 + stackOffset}px)` }
+                      : bar.location === 'top-overlap'
+                        ? { top: `${stackOffset}px` }
+                        : { top: 'auto', bottom: `${stackOffset}px` }
+                  return <div key={`bar-${index}`} className={cx('tokenBar', positionClass, { tokenBarNoNumbers: !tokenSettings.general.showNumbers })} style={{ ...stackStyle, backgroundColor: `rgb(255, 255, 255, 0.35)`, borderColor: bar.color }}>
+                    <span style={{ width: `${widthPercent}%`, backgroundColor: bar.color }} />
+                    {tokenSettings.general.showNumbers && <output>{current}/{max}</output>}
+                  </div>
+                })}
+                <img className={s.tabletopAssetImage} style={{ opacity: Number(tokenSettings.general.opacity) / 100 }} src={asset.asset_image_url} alt={asset.asset_image_file_name || 'Token'} draggable="false" />
+                {Number(tokenSettings.general.maskOpacity) > 0 && <span className={s.tokenColorMask} style={{ backgroundColor: tokenSettings.general.maskColor, opacity: Number(tokenSettings.general.maskOpacity) / 100 }} aria-hidden="true" />}
+                {isToken && tokenSettings.general.nameplate && (!tokenSettings.general.nameplateDm || isRoomMaster) && asset.sheet_name && <span className={s.tokenNameplate}>{asset.sheet_name}</span>}
                 {isSelected && <span className={s.assetSelectionBorder} aria-hidden="true" />}
                 {isSelected && canEdit && selectedMovableAssets.length <= 1 && ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map((direction) => (
                   <span
@@ -2791,6 +2997,26 @@ const RoomPage = () => {
                     onPointerDown={(event) => startAssetResize(event, asset, direction)}
                   />
                 ))}
+                {isSelected && isToken && canEdit && <div className={s.tokenActionAnchor}>
+                  <button className={s.tokenGearButton} type="button" aria-label="Opções do token" title="Clique para abrir as opções do token" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => {
+                    event.stopPropagation()
+                    if (tokenActionMenuId === asset.id) {
+                      setTokenActionMenuId(null)
+                      setTokenActionMenuPosition(null)
+                      return
+                    }
+                    const rect = event.currentTarget.getBoundingClientRect()
+                    const menuWidth = 160
+                    const menuHeight = 174
+                    const left = Math.max(8, Math.min(rect.left + rect.width / 2 - menuWidth / 2, window.innerWidth - menuWidth - 8))
+                    const below = rect.bottom + 6
+                    const top = below + menuHeight <= window.innerHeight - 8 ? below : Math.max(8, rect.top - menuHeight - 6)
+                    setTokenActionMenuPosition({ left, top })
+                    setTokenActionMenuId(asset.id)
+                  }}>
+                    {icons.settings}
+                  </button>
+                </div>}
               </div>
             )
           })}
@@ -2798,7 +3024,7 @@ const RoomPage = () => {
             <div
               key={item.id}
               className={cx('tabletopText', { tabletopTextSelected: selectedTextIds.includes(item.id) || selectedTextId === item.id })}
-              style={{ left: `${item.position_x}px`, top: `${item.position_y}px`, zIndex: item.layer === 'master' ? 250000 : item.layer === 'map' ? 150000 : 250000, color: item.color, fontFamily: item.font_family, fontSize: `${item.font_size}px`, fontWeight: item.bold ? 700 : 400, fontStyle: item.italic ? 'italic' : 'normal' }}
+              style={{ left: `${item.position_x}px`, top: `${item.position_y}px`, zIndex: getTabletopStackZIndex(item.layer, item.layer_order, 'text'), color: item.color, fontFamily: item.font_family, fontSize: `${item.font_size}px`, fontWeight: item.bold ? 700 : 400, fontStyle: item.italic ? 'italic' : 'normal' }}
               data-text-id={item.id}
               onPointerDown={(event) => {
                   if (activeTool === 'text') { event.preventDefault(); event.stopPropagation(); setSelectedTextId(item.id); selectedTextIdRef.current = item.id; setSelectedTextIds([item.id]); selectedTextIdsRef.current = [item.id]; setEditingTextId(item.id); setTextSettings({ fontFamily: item.font_family, fontSize: item.font_size, color: item.color, bold: item.bold, italic: item.italic }); return }
@@ -2827,7 +3053,7 @@ const RoomPage = () => {
               className={cx('tabletopDrawing', { tabletopDrawingSelected: selected })}
               data-drawing-id={drawing.id}
               viewBox={`0 0 ${width} ${height}`}
-              style={{ left: `${Number(drawing.position_x) - padding}px`, top: `${Number(drawing.position_y) - padding}px`, width: `${width}px`, height: `${height}px`, zIndex: drawing.layer === 'master' ? 290000 : drawing.layer === 'map' ? 180000 : 280000, overflow: 'visible' }}
+              style={{ left: `${Number(drawing.position_x) - padding}px`, top: `${Number(drawing.position_y) - padding}px`, width: `${width}px`, height: `${height}px`, zIndex: getTabletopStackZIndex(drawing.layer, drawing.layer_order, 'drawing'), overflow: 'visible', pointerEvents: 'none' }}
               aria-label="Desenho no tabletop"
               onPointerDown={(event) => {
                 if (activeTool !== 'select' || event.button !== 0) return
@@ -2844,10 +3070,9 @@ const RoomPage = () => {
                 event.currentTarget.setPointerCapture(event.pointerId)
               }}
             >
-              {selected && <rect className={s.drawingSelectionBorder} x="1" y="1" width={Math.max(0, width - 2)} height={Math.max(0, height - 2)} />}
-              <path d={drawingPath(points, padding)} fill="none" stroke={drawing.color} strokeWidth={drawing.stroke_width} strokeLinecap="round" strokeLinejoin="round" />
-              <path d={drawingPath(points, padding)} fill="none" stroke="transparent" strokeWidth={Math.max(12, Number(drawing.stroke_width) || 4)} pointerEvents="stroke" />
-              {points.length === 1 && <circle cx={Number(points[0].x) + padding} cy={Number(points[0].y) + padding} r={Number(drawing.stroke_width) / 2} fill={drawing.color} />}
+              {selected && <rect className={s.drawingSelectionBorder} x="1" y="1" width={Math.max(0, width - 2)} height={Math.max(0, height - 2)} pointerEvents="none" />}
+              <path d={drawingPath(points, padding)} fill="none" stroke={drawing.color} strokeWidth={drawing.stroke_width} strokeLinecap="round" strokeLinejoin="round" pointerEvents="stroke" />
+              {points.length === 1 && <circle cx={Number(points[0].x) + padding} cy={Number(points[0].y) + padding} r={Number(drawing.stroke_width) / 2} fill={drawing.color} pointerEvents="visiblePainted" />}
             </svg>
           })}
           {backgroundSettings.visibleGrid && <div
@@ -3285,8 +3510,101 @@ const RoomPage = () => {
             />
           ))}
         </div>
-        <IconButton label="Settings" icon="settings" pressed={activeSidePanel === 'Settings'} onClick={() => setActiveSidePanel((current) => current === 'Settings' ? null : 'Settings')} />
+        <div className={s.sideMenuBottom}>
+          {isRoomMaster && <>
+            <div className={s.sideMenuLayers}>
+              <span className={s.sideMenuLayersLabel}>Layers</span>
+              <div className={s.sideMenuLayerButtons} role="group" aria-label="Camada ativa">
+                {[{ value: 'players', label: 'PL' }, { value: 'map', label: 'MAP' }, { value: 'master', label: 'DM' }].map((layer) => (
+                  <button key={layer.value} type="button" aria-pressed={workOnLayer === layer.value} aria-label={{ players: 'Players', map: 'Map', master: 'DM' }[layer.value]} onClick={() => changeWorkOnLayer(layer.value)}>{layer.label}</button>
+                ))}
+              </div>
+            </div>
+            <span className={s.sideMenuDivider} aria-hidden="true" />
+          </>}
+          <IconButton label="Settings" icon="settings" pressed={activeSidePanel === 'Settings'} onClick={() => setActiveSidePanel((current) => current === 'Settings' ? null : 'Settings')} />
+        </div>
       </nav>
+
+      {tokenActionMenuId != null && tokenActionMenuPosition && createPortal((() => {
+        const asset = tabletopAssets.find((item) => item.id === tokenActionMenuId)
+        if (!asset || !canManagePlacedToken(asset)) return null
+        const closeMenu = () => {
+          setTokenActionMenuId(null)
+          setTokenActionMenuPosition(null)
+        }
+        return <div className={s.tokenActionMenu} style={{ left: tokenActionMenuPosition.left, top: tokenActionMenuPosition.top }} onPointerDown={(event) => event.stopPropagation()}>
+          <button type="button" onClick={() => { setTokenSettingsAssetId(asset.id); setTokenSettingsDropdown(null); closeMenu() }}>Properties</button>
+          <button type="button" onClick={closeMenu}>Open Sheet</button>
+          <button type="button" onClick={() => { duplicateToken(asset); closeMenu() }}>Duplicate</button>
+          <button type="button" className={s.tokenDeleteAction} onClick={() => { removeAssetFromTabletop([asset.id]); closeMenu() }}>Delete</button>
+        </div>
+      })(), document.body)}
+
+      {tokenSettingsAssetId != null && (() => {
+        const asset = tabletopAssets.find((item) => item.id === tokenSettingsAssetId)
+        if (!asset || !canManagePlacedToken(asset)) return null
+        const settings = normalizeTokenSettings(asset.token_settings)
+        const valueInput = (value, onChange, placeholder, disabled = false) => <input type="number" min="0" value={value} placeholder={placeholder} disabled={disabled} onChange={(event) => onChange(event.target.value === '' ? '' : Number(event.target.value))} />
+        const selectField = (id, label, value, options, onChange) => {
+          const currentLabel = options.find(([optionValue]) => optionValue === value)?.[1] || options[0]?.[1] || 'None'
+          return <div className={s.tokenSettingsSelectGroup} key={id}><span>{label}</span><div className={s.measureSelectWrap}>
+            <button type="button" className={s.measureSelectTrigger} aria-expanded={tokenSettingsDropdown === id} onClick={() => setTokenSettingsDropdown((current) => current === id ? null : id)}>
+              <span className={s.measureSelectValue}>{currentLabel}</span><Icon name="chevronDown" size={20} color="#DCD4FA" />
+            </button>
+            {tokenSettingsDropdown === id && <div className={s.measureDropdown}>{options.map(([optionValue, optionLabel]) => <button key={optionValue} type="button" aria-pressed={value === optionValue} onClick={() => { onChange(optionValue); setTokenSettingsDropdown(null) }}><span>{optionLabel}</span></button>)}</div>}
+          </div></div>
+        }
+        const colorField = (id, label, value, onChange) => <label className={s.tokenSettingsColorGroup} key={id}><span>{label}</span><div><input aria-label={`${label} color`} type="color" value={value} onChange={(event) => onChange(event.target.value)} /><code>{value.toUpperCase()}</code></div></label>
+        const checkField = (label, value, onChange) => <label className={cx('measureCheckbox', 'tokenSettingsCheck')} key={label}><span>{label}</span><input type="checkbox" checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} /></label>
+        const rangeField = (id, label, value, onChange) => <div className={s.tokenSettingsRangeGroup} key={id}><label htmlFor={`token-${id}`}>{label}</label><div className={s.tokenSettingsRangeControl}>
+          <div className={s.tokenSettingsRangeBox}><input id={`token-${id}`} type="range" min="0" max="100" value={value} style={{ background: `linear-gradient(to right, #DCD4FA ${value}%, #777587 ${value}%)` }} onChange={(event) => onChange(Number(event.target.value))} /></div>
+          <label className={s.tokenSettingsPercentBox}><input aria-label={`${label} value`} type="number" min="0" max="100" value={value} onChange={(event) => onChange(Math.max(0, Math.min(100, Number(event.target.value) || 0)))} /><span>%</span></label>
+        </div></div>
+        return <section className={s.tokenSettingsPanel} data-token-settings-panel style={{ left: tokenSettingsPanelPosition.x, top: tokenSettingsPanelPosition.y }} aria-label="Token settings">
+          <header className={s.tokenSettingsHeader} onPointerDown={startTokenSettingsPanelDrag} onPointerMove={moveTokenSettingsPanelDrag} onPointerUp={stopTokenSettingsPanelDrag} onPointerCancel={stopTokenSettingsPanelDrag}>
+            <span aria-hidden="true">{icons.settings}</span><strong>Token Settings</strong>
+            <button type="button" aria-label="Close token properties" title="Close" onPointerDown={(event) => event.stopPropagation()} onClick={() => { setTokenSettingsAssetId(null); setTokenSettingsDropdown(null) }}>{icons.quit}</button>
+          </header>
+          <div className={s.tokenSettingsContent}>
+            <section className={s.tokenSettingsBars}><h3>Token Bars</h3><div className={s.tokenBarSettingsGrid}>
+              {settings.bars.map((bar, index) => <div className={s.tokenBarSettingsRow} key={`bar-settings-${index}`}>
+                <label className={s.tokenBarValueGroup}><span>Bar {index + 1}</span><div className={s.tokenBarValuePair}>
+                  {valueInput(bar.current, (value) => changeTokenSetting(asset, 'bars', index, 'current', value), 'Value', bar.component !== 'none')}
+                  <b>/</b>
+                  {valueInput(bar.max, (value) => changeTokenSetting(asset, 'bars', index, 'max', value), 'Max', bar.component !== 'none')}
+                </div></label>
+                {selectField(`bar-${index}-component`, 'Sheet Component', bar.component, asset.sheet_components && Object.keys(asset.sheet_components).length ? [['none', 'None'], ...Object.entries(asset.sheet_components).map(([value, component]) => [value, component.label])] : [['none', 'None']], (value) => changeTokenSetting(asset, 'bars', index, 'component', value))}
+                {selectField(`bar-${index}-visibility`, 'Visibility', bar.visibility, tokenVisibilityOptions, (value) => changeTokenSetting(asset, 'bars', index, 'visibility', value))}
+                {selectField(`bar-${index}-location`, 'Location', bar.location, [['above', 'Above'], ['below', 'Bellow'], ['top-overlap', 'Top overlapping'], ['bottom-overlap', 'Bottom overlapping']], (value) => changeTokenSetting(asset, 'bars', index, 'location', value))}
+                {colorField(`bar-${index}-color`, 'Color', bar.color, (value) => changeTokenSetting(asset, 'bars', index, 'color', value))}
+              </div>)}
+            </div></section>
+            <div className={s.tokenSettingsColumns}>
+              <section className={s.tokenSettingsGeneral}><h3>General</h3>
+                {rangeField('image-opacity', 'Token Image Opacity', settings.general.opacity, (value) => changeTokenSetting(asset, 'general', null, 'opacity', value))}
+                {checkField('Nameplate', settings.general.nameplate, (value) => changeTokenSetting(asset, 'general', null, 'nameplate', value))}
+                {checkField('Nameplate only for DM', settings.general.nameplateDm, (value) => changeTokenSetting(asset, 'general', null, 'nameplateDm', value))}
+                {checkField('Show numbers', settings.general.showNumbers, (value) => changeTokenSetting(asset, 'general', null, 'showNumbers', value))}
+                {colorField('mask-color', 'Mask Color', settings.general.maskColor, (value) => changeTokenSetting(asset, 'general', null, 'maskColor', value))}
+                {rangeField('mask-opacity', 'Mask Color Opacity', settings.general.maskOpacity, (value) => changeTokenSetting(asset, 'general', null, 'maskOpacity', value))}
+              </section>
+              <section className={s.tokenSettingsAuras}><h3>Token Auras</h3>{settings.auras.map((aura, index) => <div className={s.tokenAuraSettings} key={`aura-settings-${index}`}>
+                <h4>Aura {index + 1}</h4>
+                <div className={s.tokenAuraTopGrid}>
+                  <label className={s.tokenAuraRadiusField}><span>Radius</span><div><input type="number" min="0" step="any" placeholder="Value" value={aura.radius} onChange={(event) => changeTokenSetting(asset, 'auras', index, 'radius', event.target.value === '' ? '' : Number(event.target.value))} /><output>{{ meters: 'm', feet: 'ft', kilometers: 'km', miles: 'mi' }[backgroundSettings.mapScaleUnity] || 'm'}</output></div></label>
+                  {selectField(`aura-${index}-shape`, 'Shape', aura.shape, [['circle', 'Circle'], ['square', 'Square'], ['hexagon', 'Hexagon'], ['circle-border', 'Circle border'], ['square-border', 'Square border'], ['hexagon-border', 'Hexagon border']], (value) => changeTokenSetting(asset, 'auras', index, 'shape', value))}
+                  {selectField(`aura-${index}-visibility`, 'Visibility', aura.visibility, tokenVisibilityOptions, (value) => changeTokenSetting(asset, 'auras', index, 'visibility', value))}
+                </div>
+                <div className={s.tokenAuraBottomGrid}>
+                  {rangeField(`aura-${index}-opacity`, 'Aura Opacity', aura.opacity, (value) => changeTokenSetting(asset, 'auras', index, 'opacity', value))}
+                  {colorField(`aura-${index}-color`, 'Color', aura.color, (value) => changeTokenSetting(asset, 'auras', index, 'color', value))}
+                </div>
+              </div>)}</section>
+            </div>
+          </div>
+        </section>
+      })()}
 
       {isMeasurePanelOpen && <section
         className={cx('measurePanel', { measurePanelWithShapeDropdown: measureDropdown === 'shape' })}
@@ -3394,12 +3712,12 @@ const RoomPage = () => {
             <h3 className={s.tokenSectionTitle}>My Images</h3>
             {tokensError && <p className={s.tokenMessage} role="alert">{tokensError}</p>}
             {tokensLoading ? <p className={s.tokenMessage}>Carregando imagens...</p> : filteredTokens.length ? <ul className={s.tokenList}>
-              {filteredTokens.map((token) => <li className={s.tokenItem} key={token.id} draggable="true" onDragStart={(event) => handleTokenDragStart(event, token)}>
+              {filteredTokens.map((token) => <li className={s.tokenItem} key={token.id} draggable="true" onDragStart={(event) => handleLibraryImageDragStart(event, token)}>
                 <div className={s.tokenThumbnail}>{token.asset_image_url && <img src={token.asset_image_url} alt="" />}</div>
                 <span title={token.asset_image_file_name}>{token.asset_image_file_name || 'Imagem sem nome'}</span>
               </li>)}
             </ul> : <p className={s.tokenMessage}>{tokenSearch ? 'Nenhuma imagem encontrada.' : 'Você ainda não tem imagens.'}</p>}
-          </> : activeSidePanel === 'Sheets' ? null : activeSidePanel === 'Maps' ? <>
+          </> : activeSidePanel === 'Sheets' ? <RoomSheetsPanel room={room} /> : activeSidePanel === 'Maps' ? <>
             {roomSyncError && <p className={s.tokenMessage} role="alert">{roomSyncError}</p>}
             <section className={s.mapsSection}>
               <header className={s.mapsSectionHeader}>
@@ -3564,7 +3882,7 @@ const RoomPage = () => {
               <header className={s.mapsSectionHeader}><h3>Work on layer</h3></header>
               <div className={s.workLayerButtons} role="group" aria-label="Layer ativa para movimentação">
                 {[{ value: 'players', label: 'Players' }, { value: 'map', label: 'Map' }, { value: 'master', label: 'DM' }].map((layer) => (
-                  <button key={layer.value} type="button" aria-pressed={workOnLayer === layer.value} onClick={() => setWorkOnLayer(layer.value)}>{layer.label}</button>
+                  <button key={layer.value} type="button" aria-pressed={workOnLayer === layer.value} onClick={() => changeWorkOnLayer(layer.value)}>{layer.label}</button>
                 ))}
               </div>
             </section>

@@ -6,7 +6,7 @@ import RoomPage from "../features/rooms/pages/RoomPage";
 import { Navigate } from "react-router-dom";
 
 const mainRoutes = [
-  { path: '/rooms/:roomId', element: <RoomPage /> },
+  { path: '/rooms/:publicRoomId', element: <RoomPage /> },
   {
     path: '/',
     element: <Layout />,
