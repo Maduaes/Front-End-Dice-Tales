@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import cn from "classnames/bind"
 import { AiSheetModal } from "../components/AiSheetModal"
 import { CreateSheetModal } from "../components/CreateSheetModal"
 import { Icon } from "../../../shared/icones/Icon"
 import { getAllSheets } from "../../../services/sheetsService"
+import { getGameById } from "../../../services/gamesService"
 import defaultCharacterArt from "../../../assets/default_character_art.webp"
 import s from "./SheetsPage.module.scss"
 
@@ -14,6 +16,7 @@ const getRoomName = (sheet) => sheet.room?.room_name ?? "No room"
 const avatarColors = ["blue", "purple", "gold"]
 
 const SheetsPage = () => {
+  const navigate = useNavigate()
   const [sheets, setSheets] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedRoom, setSelectedRoom] = useState("All rooms")
@@ -22,6 +25,8 @@ const SheetsPage = () => {
   const [showViewer, setShowViewer] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState("")
+  const [roomOpenError, setRoomOpenError] = useState("")
+  const [openingSheetId, setOpeningSheetId] = useState(null)
 
   useEffect(() => {
     const fetchSheets = async () => {
@@ -91,6 +96,23 @@ const SheetsPage = () => {
       },
       ...currentSheets,
     ])
+  }
+
+  const handleOpenRoom = async (sheet) => {
+    if (!sheet.room?.id) return
+
+    setOpeningSheetId(sheet.id)
+    setRoomOpenError("")
+    try {
+      const room = sheet.room.public_id ? sheet.room : await getGameById(sheet.room.id)
+      if (!room?.public_id) throw new Error("Room public ID is missing")
+      navigate(`/rooms/${room.public_id}`)
+    } catch (error) {
+      console.error(error)
+      setRoomOpenError(`Unable to open the room “${getRoomName(sheet)}”.`)
+    } finally {
+      setOpeningSheetId(null)
+    }
   }
 
   return (
@@ -192,6 +214,8 @@ const SheetsPage = () => {
         ) : filteredSheets.length === 0 ? (
           <p className={cx(s.stateMessage)}>No sheets match these filters.</p>
         ) : (
+          <>
+          {roomOpenError && <p className={cx(s.roomOpenError)} role="alert">{roomOpenError}</p>}
           <section className={cx(s.cardsGrid)}>
             {filteredSheets.map((sheet) => (
               <article key={sheet.id} className={cx(s.sheetCard)}>
@@ -211,10 +235,17 @@ const SheetsPage = () => {
                     </span>
                   </div>
 
-                  <div className={cx(s.roomPill)}>
+                  <button
+                    type="button"
+                    className={cx(s.roomPill)}
+                    disabled={!sheet.room?.id || openingSheetId === sheet.id}
+                    onClick={() => handleOpenRoom(sheet)}
+                    aria-label={`Open room ${getRoomName(sheet)}`}
+                    title={sheet.room?.id ? `Open room ${getRoomName(sheet)}` : getRoomName(sheet)}
+                  >
                     <span className={cx(s.playIcon)}></span>
-                    {getRoomName(sheet)}
-                  </div>
+                    {openingSheetId === sheet.id ? "Opening room..." : getRoomName(sheet)}
+                  </button>
 
                   <div className={cx(s.cardFooter)}>
                     <div>
@@ -246,6 +277,7 @@ const SheetsPage = () => {
               </article>
             ))}
           </section>
+          </>
         )}
       </section>
 

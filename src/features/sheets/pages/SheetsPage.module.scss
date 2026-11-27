@@ -130,18 +130,16 @@
   min-width: 229px;
   height: 46px;
   border: 0;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #845ce6 0%, #672ecf 100%);
-  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.34);
+  border-radius: 5vh;
+  background-color: #7758D1;
   color: white;
   font-size: 15px;
-  font-weight: 700;
-  transition: transform 0.2s ease, filter 0.2s ease;
+  font-weight: 600;
+  transition: background-color 0.45s;
 
   &:hover,
   &:focus-visible{
-    filter: brightness(1.07);
-    transform: translateY(-1px);
+    background-color: #5c47b7;
   }
 }
 
@@ -325,6 +323,7 @@
   align-items: center;
   gap: 8px;
   overflow: hidden;
+  border: 0;
   border-radius: 4px;
   background-color: #363547;
   color: white;
@@ -333,6 +332,18 @@
   font-weight: 900;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .2s ease, transform .2s ease;
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled){
+    background-color: #4a4961;
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible{ outline: 2px solid $primary-green; outline-offset: 2px; }
+
+  &:disabled{ cursor: default; opacity: .75; }
 }
 
 .playIcon{
@@ -420,6 +431,13 @@
   color: #d1cff4;
   font-weight: 700;
   text-align: center;
+}
+
+.roomOpenError{
+  margin: 0 0 16px;
+  color: #ffd0d0;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 @media screen and (max-width: 991px) {

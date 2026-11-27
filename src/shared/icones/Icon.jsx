@@ -3,9 +3,11 @@ import * as LucideIcons from "lucide-react";
 const icons = {
   circlePlus: LucideIcons.CirclePlus,
   copyPlus: LucideIcons.CopyPlus,
+  copy: LucideIcons.Copy,
   swords: LucideIcons.Swords,
   dices: LucideIcons.Dices,
   search: LucideIcons.Search,
+  play: LucideIcons.Play,
   phone: LucideIcons.Phone,
   mail: LucideIcons.Mail,
   user: LucideIcons.User,

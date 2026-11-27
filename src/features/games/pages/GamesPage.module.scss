@@ -1,0 +1,262 @@
+@use '../../../styles/variables' as *;
+
+.gamesPage {
+  padding-top: clamp(1.5rem, 3vw, 2.5rem);
+  padding-bottom: 3rem;
+}
+
+.roomsPanel {
+  position: relative;
+  min-width: 0;
+  padding: 0 1.5rem 1.5rem;
+  border-bottom-left-radius: 7px;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 7px;
+  border-bottom-right-radius: 7px;
+  // background: #529692;
+  background: rgb(82, 150, 146, 0.95);
+  color: #fff;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  margin: 0 0 -1.5rem;
+}
+
+.titleRibbon {
+  position: relative;
+  width: 186px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  margin-top: 0;
+  margin-left: -24px;
+  padding-left: 17px;
+  border-bottom-left-radius: 7px;
+  border-top-left-radius: 7px;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+  background: #363547;
+  color: #61D9BA;
+  transform: scale(1.15);
+  transform-origin: left top;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    width: 70px;
+    height: 23px;
+    border-radius: 0 20px 20px 0;
+    background: #363547;
+  }
+
+  &::after { top: 18px; right: -47px; }
+  &::before { top: 33px; right: -24px; }
+
+  .ribbonExtension {
+    position: absolute;
+    top: 0;
+    right: -11px;
+    width: 70px;
+    height: 23px;
+    border-radius: 0 20px 20px 0;
+    background: #363547;
+  }
+
+  h1 {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    font-size: 23px;
+    font-weight: 800;
+    line-height: 1;
+  }
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 39px;
+  min-width: 0;
+  padding: 0 13px 0 22px;
+  border: 2px solid #363547;
+  border-radius: 999px;
+  color: #363547;
+
+  input {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 14px;
+  }
+
+  input::placeholder { color: #363547; font-weight: 500; }
+  input[type="search"]::-webkit-search-cancel-button { appearance: none; display: none; }
+}
+
+.controlsRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 1.25rem;
+  margin: 0 .25rem 2.3rem;
+}
+
+.filterColumn {
+  display: grid;
+  min-width: 0;
+  gap: .8rem;
+}
+
+.actionsGroup {
+  display: flex;
+  align-self: end;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem;
+  // margin: 0 0 1rem;
+}
+
+.actionsGroup > button {
+  flex: 0 0 auto;
+  min-width: 195px;
+  padding: .8rem 1rem;
+  font-size: 1rem;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .8rem 1rem;
+}
+
+.filterLabel {
+  display: grid;
+  gap: .35rem;
+  margin: 0;
+  color: #292837;
+  font-size: .85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.selectWrap {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: .8rem;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid white;
+    border-bottom: 2px solid white;
+    transform: translateY(-66%) rotate(45deg);
+    pointer-events: none;
+  }
+
+  select {
+    width: 100%;
+    height: 34px;
+    appearance: none;
+    border: 0;
+    border-radius: 5px;
+    outline: 0;
+    padding: 0 2rem 0 .75rem;
+    background: #363547;
+    color: white;
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: none;
+  }
+}
+
+.roomList { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; padding: 0 .25rem .25rem; }
+
+.roomCard {
+  display: grid;
+  grid-template-columns: minmax(150px, 44%) minmax(0, 1fr);
+  min-height: 180px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: $bg-dark-primary;
+}
+
+.cover {
+  position: relative;
+  z-index: 1;
+  align-self: stretch;
+  min-width: 0;
+  min-height: 180px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #7758d1, #529692 65%, #61d9ba);
+  color: #fff;
+  box-shadow: 8px 3px 12px -2px rgba(0, 0, 0, .38);
+
+  img { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: cover; border-radius: inherit; }
+}
+
+.coverFallback { background-size: 160% 160%; }
+
+.coverCode { position: absolute; z-index: 1; right: 2.4rem; bottom: .65rem; border-radius: 999px; padding: .25rem .6rem; background: rgba(17, 24, 39, .84); color: #fff; font-size: .63rem; font-weight: 700; letter-spacing: .04em; }
+.copyCodeButton { position: absolute; z-index: 2; right: .65rem; bottom: .65rem; display: grid; place-items: center; width: 1.65rem; height: 1.65rem; border: 0; border-radius: 50%; padding: 0; background: rgba(17, 24, 39, .84); color: #fff; }
+.copyCodeButton:hover, .copyCodeButton:focus-visible { background: rgba(255, 255, 255, .24); }
+.copyCodeButtonCopied { background: rgba(33, 150, 83, .9); }
+.copyTooltip { position: absolute; right: 50%; bottom: calc(100% + .4rem); transform: translateX(50%); border-radius: .35rem; padding: .25rem .45rem; background: rgba(17, 24, 39, .92); color: #fff; font-size: .7rem; font-weight: 700; white-space: nowrap; }
+
+.roomDetails {
+  position: relative;
+  z-index: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+  padding: 1rem;
+}
+
+.roomTitleRow { position: relative; display: flex; align-items: flex-start; min-height: 2rem; }
+.roomTitleRow h2 { width: 100%; min-width: 0; margin: 0; padding-right: 2.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: clamp(1rem, 1.65vw, 1.35rem); font-weight: 650; }
+.roleBadge { position: absolute; top: 0; right: 0; max-width: 8rem; border-radius: 999px; padding: .25rem .7rem; background: $primary-purple; color: #fff; font-size: .7rem; line-height: 1.2; white-space: nowrap; }
+.playerBadge { background: #5f49b1; }
+.roomActions { display: flex; flex-direction: column; align-items: flex-start; gap: .3rem; }
+.actionButton { display: inline-flex; align-items: center; gap: .35rem; min-height: 26px; border: 0; border-radius: 6px; padding: .2rem .45rem; background: #252432; color: #fff; font-size: .72rem; font-weight: 600; white-space: nowrap; }
+.actionButton:hover { background: #4b4862; }
+.roomMeta { display: flex; align-items: flex-end; justify-content: space-between; gap: .5rem; margin-top: auto; }
+.players { min-width: 0; }
+.playersLabel { display: block; margin-bottom: .25rem; font-size: .75rem; }
+.avatarList { display: flex; align-items: center; padding-left: 2px; }
+.avatar { display: grid; place-items: center; width: 28px; height: 28px; margin-left: -2px; overflow: hidden; border: 2px solid $bg-dark-primary; border-radius: 50%; background: linear-gradient(135deg, $primary-green, $primary-purple); color: #fff; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.system { flex: 0 0 auto; padding-bottom: .12rem; font-size: .75rem; white-space: nowrap; }
+.message { padding: 2rem 1rem; margin: 0; text-align: center; }
+@media (max-width: 1199.98px) {
+  .roomCard { grid-template-columns: minmax(130px, 44%) minmax(0, 1fr); }
+  .roomTitleRow h2 { padding-right: 7.5rem; }
+}
+
+@media (max-width: 767.98px) {
+  .roomsPanel { padding: 0 1rem 1rem; }
+  .panelHeader { align-items: flex-start; }
+  .titleRibbon { width: 165px; margin-top: 0; margin-left: -16px; }
+  .titleRibbon h1 { font-size: 20px; }
+  .controlsRow { grid-template-columns: 1fr; gap: 1.2rem; margin-right: 0; margin-left: 0; }
+  .actionsGroup { display: grid; grid-template-columns: 1fr; }
+  .actionsGroup > button { width: 100%; }
+  .filters { grid-template-columns: 1fr; }
+  .roomList { grid-template-columns: 1fr; }
+  .roomCard { grid-template-columns: minmax(0, 1fr); }
+  .cover { min-height: 190px; max-height: 230px; }
+  .roomDetails { min-height: 150px; }
+  .roomTitleRow h2 { font-size: 1.2rem; }
+}

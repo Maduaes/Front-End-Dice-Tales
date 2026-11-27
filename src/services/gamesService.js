@@ -24,6 +24,16 @@ export const getGameByPublicId = async (publicId) => {
   }
 }
 
+export const getGameById = async (roomId) => {
+  try {
+    const response = await api.get(`/rooms/${roomId}`)
+    return normalizeRoom(response.data)
+  } catch (error) {
+    console.error(error || 'Erro ao carregar a sala!')
+    throw error
+  }
+}
+
 export const getRecentGames = async () => {
   try{
     const response = await api.get('/rooms/recent/')
